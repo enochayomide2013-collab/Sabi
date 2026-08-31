@@ -201,14 +201,25 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
           </h1>
         </div>
 
-        <button
-          onClick={() => setIsReportModalOpen(true)}
-          className="text-xs font-semibold text-gray-500 hover:text-red-600 flex items-center gap-1 p-2 rounded-xl hover:bg-gray-100 transition-all"
-          title="Report this content"
-        >
-          <Flag className="w-4 h-4" />
-          <span className="hidden sm:inline">Report</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleNativeShare}
+            className="text-xs font-semibold text-gray-500 hover:text-[#0A3D2E] flex items-center gap-1 p-2 rounded-xl hover:bg-gray-100 transition-all"
+            title="Share this investigation"
+          >
+            <Share2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Share</span>
+          </button>
+          
+          <button
+            onClick={() => setIsReportModalOpen(true)}
+            className="text-xs font-semibold text-gray-500 hover:text-red-600 flex items-center gap-1 p-2 rounded-xl hover:bg-gray-100 transition-all"
+            title="Report this content"
+          >
+            <Flag className="w-4 h-4" />
+            <span className="hidden sm:inline">Report</span>
+          </button>
+        </div>
       </div>
 
       <DeepfakeScanner />
@@ -414,11 +425,13 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
           <div className="bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-800 relative aspect-[9/13] max-w-sm mx-auto flex flex-col justify-between text-white select-none">
             
             {/* Background Image / Motion Simulation */}
-            <img
-              src={selectedResult.videoThumbnail}
-              alt={selectedResult.claim}
-              className="absolute inset-0 w-full h-full object-cover opacity-65 scale-105 transition-transform duration-1000"
-            />
+            <div className="absolute inset-0 bg-gray-800">
+                <div className="absolute inset-0 bg-[url('/news-studio-bg.jpg')] opacity-20"></div>
+                {/* Simulated AI Anchor Persona - improved */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-40 h-40 rounded-full bg-emerald-900 border-4 border-emerald-500 flex items-center justify-center text-6xl shadow-2xl">👨‍💼</div>
+                </div>
+            </div>
 
             {/* Dynamic Dark Gradient Backdrop */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/95 pointer-events-none" />

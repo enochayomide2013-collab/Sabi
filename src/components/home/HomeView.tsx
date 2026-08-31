@@ -19,13 +19,15 @@ import {
   Sparkles, 
   Search,
   Crown,
-  Compass
+  Compass,
+  BookOpen
 } from 'lucide-react';
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { VerificationTask, TruthResult, MarketItem } from '../../types';
 import { GlobalSearch } from './GlobalSearch';
 import { StreakCard } from './StreakCard';
 import { LatestNewsSection } from './LatestNewsSection';
+import { TrendingNearYou } from './TrendingNearYou';
 
 interface HomeViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -47,9 +49,35 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fetch live rumors
+    const fetchLiveRumors = async () => {
+      try {
+        const response = await fetch('/api/rumors', { method: 'POST' });
+        if (!response.ok) {
+          throw new Error('Failed to fetch');
+        }
+        const liveRumors = await response.json();
+        
+        // Ensure liveRumors is an array
+        const rumorsArray = Array.isArray(liveRumors) ? liveRumors : [];
+        
+        // Merge and deduplicate
+        const local = storageService.getTruthResults();
+        const combined = [...local, ...rumorsArray];
+        const unique = combined.filter((v,i,a)=>a.findIndex(t=>t.claim === v.claim)===i);
+        setTruthResults(unique);
+      } catch (e) {
+        console.error('Failed to fetch live rumors', e);
+      }
+    };
+    fetchLiveRumors();
+
     const unsubscribe = storageService.subscribe(() => {
       setTasks(storageService.getTasks());
-      setTruthResults(storageService.getTruthResults());
+      // Re-fetch live rumors on change too, or just merge local changes?
+      // For now, keep it simple.
+      const local = storageService.getTruthResults();
+      setTruthResults(local);
       setMarketItems(storageService.getMarketItems());
       setLocation(storageService.getLocation());
     });
@@ -97,14 +125,23 @@ export const HomeView: React.FC<HomeViewProps> = ({
             Browsing verification feed for <strong>{location.state}</strong> ({location.area})
           </span>
         </div>
-        {onOpenLocationModal && (
+        <div className="flex items-center gap-3 shrink-0 ml-2">
           <button
-            onClick={onOpenLocationModal}
-            className="text-[#0A3D2E] font-bold hover:underline shrink-0 ml-2"
+            onClick={() => onNavigate('tutorial')}
+            className="text-[#0A3D2E] font-bold hover:underline flex items-center gap-1 bg-emerald-100/60 px-2 py-0.5 rounded-lg border border-emerald-200"
           >
-            Change
+            <BookOpen className="w-3 h-3" />
+            <span>Guide & Tutorial</span>
           </button>
-        )}
+          {onOpenLocationModal && (
+            <button
+              onClick={onOpenLocationModal}
+              className="text-[#0A3D2E] font-bold hover:underline"
+            >
+              Change
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Global Search across Reports, Truths & Market Prices */}
@@ -162,6 +199,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* LATEST VERIFIED NEWS SECTION */}
       <LatestNewsSection onShowToast={onShowPointsToast} />
+      
+      {/* TRENDING NEAR YOU */}
+      <TrendingNearYou location={location} onNavigate={onNavigate} />
 
       {/* INTERACTIVE RUMOR MAP BANNER */}
       <section className="bg-gradient-to-r from-emerald-900 via-[#0A3D2E] to-emerald-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-emerald-800/50 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">

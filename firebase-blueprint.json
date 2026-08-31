@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Represents a registered or guest Sabi spotter profile",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique user ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the user"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "moderator", "admin"],
+          "description": "System role"
+        },
+        "tier": {
+          "type": "string",
+          "description": "Reputation tier"
+        },
+        "points": {
+          "type": "number",
+          "description": "Total accumulated Sabi Points"
+        },
+        "streak": {
+          "type": "number",
+          "description": "Consecutive days active"
+        }
+      },
+      "required": ["id", "name"]
+    },
+    "Presence": {
+      "title": "Presence",
+      "description": "Heartbeat and live online presence state for a spotter",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The user ID of the spotter"
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the spotter"
+        },
+        "lastActive": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the last recorded heartbeat"
+        }
+      },
+      "required": ["userId", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user profile data"
+    },
+    "/presence/{userId}": {
+      "schema": "Presence",
+      "description": "Tracks active spotter heartbeat records"
+    }
+  }
+}

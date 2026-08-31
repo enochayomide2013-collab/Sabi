@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Newspaper, 
   CheckCircle2, 
@@ -8,18 +8,31 @@ import {
   ShieldCheck, 
   TrendingUp, 
   AlertCircle,
-  Share2
+  Share2,
+  Bot
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { NewsArticle } from '../../types';
+import { NewsAnchorSimulation } from './NewsAnchorSimulation';
 
 interface LatestNewsSectionProps {
   onShowToast?: (points: number, message: string) => void;
 }
 
 export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToast }) => {
-  const [news] = useState<NewsArticle[]>(storageService.getNewsArticles());
+  const [news, setNews] = useState<NewsArticle[]>(storageService.getNewsArticles());
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [anchorArticle, setAnchorArticle] = useState<NewsArticle | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = storageService.subscribe(() => {
+      setNews(storageService.getNewsArticles());
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const handleShare = (article: NewsArticle, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -122,6 +135,13 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToas
                 >
                   <Share2 className="w-3.5 h-3.5" />
                 </button>
+                <button
+                   onClick={() => setAnchorArticle(item)}
+                   className="bg-[#0A3D2E] text-white font-bold text-[10px] px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-[#0c4b38]"
+                 >
+                   <Bot className="w-3 h-3" />
+                   <span>Watch Anchor</span>
+                 </button>
                 <span className="text-[#0A3D2E] font-bold text-xs flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                   <span>Read</span>
                   <ChevronRight className="w-3.5 h-3.5" />

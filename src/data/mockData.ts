@@ -78,7 +78,8 @@ export const INITIAL_USER: UserProfile = {
       description: 'Earned "Price Spotter" Community Badge',
       timestamp: '5 days ago'
     }
-  ]
+  ],
+  hasSeenOnboarding: false
 };
 
 export const INITIAL_LEADERBOARD = [
@@ -1321,59 +1322,59 @@ export const FREE_SABIATION_RESOURCES: SabiationResource[] = [
 export const LATEST_NEWS_ARTICLES: NewsArticle[] = [
   {
     id: 'news_001',
-    title: 'Tomato & Tatashe Prices Drop 22% in Southern Markets as Northern Influx Expands',
-    summary: 'Trailers arriving daily at Mile 12, Bodija, and Relief markets have expanded fresh tomato supply, bringing wholesale rafia basket prices down significantly.',
-    content: 'According to SABI on-ground verifiers and transport dispatchers, fresh produce shipments from Kano, Plateau, and Kaduna have peaked this week. Over 40 articulated trucks offloaded fresh baskets at Mile 12 Market Lagos, driving the large rafia basket price from ₦85,000 down to ₦52,000–₦55,000. Retail sachet tomato pastes also remain stable at ₦200–₦220 per sachet across neighbourhood kiosks.',
-    category: 'Market Intelligence',
-    author: 'SABI Market Desk',
-    publishedAt: '2 hours ago',
-    readTime: '3 min read',
-    imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80',
-    verifiedSource: 'Mile 12 & Bodija Traders Union',
-    tags: ['Food Prices', 'Mile 12', 'Tomatoes', 'Lagos'],
-    trendingScore: 98
+    title: 'President Tinubu Commences Three-Week Vacation in Europe',
+    summary: 'President Bola Tinubu has begun a three-week vacation in Europe to rest ahead of the 2027 political season.',
+    content: 'President Bola Tinubu has commenced a three-week vacation in Europe, described by his media aide as an opportunity to rest and re-energize ahead of the demanding political season leading up to the January 2027 presidential election.',
+    category: 'Political News',
+    author: 'SABI News Desk',
+    publishedAt: 'Just now',
+    readTime: '2 min read',
+    imageUrl: 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=800&auto=format&fit=crop&q=80',
+    verifiedSource: 'Official Presidency Media Aide',
+    tags: ['Politics', 'President Tinubu', '2027 Election'],
+    trendingScore: 99
   },
   {
     id: 'news_002',
-    title: 'Fact Check Alert: Viral Audio Warning of Bridge Shutdown in Asaba-Onitsha Proven FALSE',
-    summary: 'A widely circulated WhatsApp audio claimed traffic stoppage at the Second Niger Bridge. SABI verifiers on both Onitsha and Asaba corridors confirmed zero disruptions.',
-    content: 'The viral WhatsApp voice note alleging sudden closure of the Second Niger Bridge was analyzed by SABI Media Forensics and physically verified by 4 trusted contributors in Onitsha North and Asaba. Traffic remains fluid with standard patrol operations. Citizens are urged to check the SABI Truth Feed before forwarding alarming social media clips.',
-    category: 'Fact Check Alert',
-    author: 'SABI Truth Sentinel',
-    publishedAt: '4 hours ago',
-    readTime: '2 min read',
-    imageUrl: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80',
-    verifiedSource: 'Federal Road Safety Corps & Local Spotters',
-    tags: ['Debunked', 'Second Niger Bridge', 'Viral Audio'],
-    trendingScore: 94
+    title: 'Central Bank Reports Record High Overseas Remittances',
+    summary: 'Nigeria\'s Central Bank reported a record monthly high in overseas remittances, reaching $947 million in July 2026.',
+    content: 'Nigeria\'s Central Bank reported a record monthly high in overseas remittances, reaching $947 million in July 2026. This marks a 50.2% increase compared to the same period in 2025 and is nearing the CBN\'s $1 billion monthly target, attributed to reforms aimed at making formal remittance channels more competitive.',
+    category: 'Economy',
+    author: 'SABI Economic Analyst',
+    publishedAt: '2 hours ago',
+    readTime: '3 min read',
+    imageUrl: 'https://images.unsplash.com/photo-1579621970588-a35d0e7bb9b6?w=800&auto=format&fit=crop&q=80',
+    verifiedSource: 'Central Bank of Nigeria',
+    tags: ['Economy', 'Remittances', 'CBN'],
+    trendingScore: 95
   },
   {
     id: 'news_003',
-    title: 'Abakaliki & Dawanau Rice Mills Report Stable 50kg Parboiled Supply',
-    summary: 'Local polished rice mill outputs in Ebonyi and Kebbi continue to stabilize prices between ₦84,000 and ₦92,000 for standard 50kg bags.',
-    content: 'Millers in Abakaliki and Kano Dawanau grain depot confirmed steady processing schedules. A standard Derica cup of local polished rice sells for ₦1,750 while milk tin cups remain at ₦480 at retail stalls. Subsidized agricultural transport corridors have prevented further logistics spikes.',
-    category: 'National Food Security',
-    author: 'SABI Grains Analyst',
-    publishedAt: '6 hours ago',
-    readTime: '4 min read',
-    imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80',
-    verifiedSource: 'National Grains Association of Nigeria',
-    tags: ['Rice Prices', 'Abakaliki', 'Dawanau', 'Grains'],
-    trendingScore: 89
+    title: 'Nigerian Army Secures Official X Account After Unauthorized Access',
+    summary: 'The Nigerian Army reported an attempted unauthorized access to its official X account and urged the public to disregard unverified content.',
+    content: 'The Nigerian Army\'s official X (formerly Twitter) account experienced an attempted unauthorized access, leading to the publication of memecoin-related updates. The Army has initiated measures to secure the account and urged the public to disregard unverified content.',
+    category: 'Security Alert',
+    author: 'SABI Security Desk',
+    publishedAt: '4 hours ago',
+    readTime: '1 min read',
+    imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
+    verifiedSource: 'Nigerian Army Official',
+    tags: ['Security', 'Cybersecurity', 'Army'],
+    trendingScore: 92
   },
   {
     id: 'news_004',
-    title: 'The Sabiers Community Hits 15,000 Daily Verified Spotters Across 36 States',
-    summary: 'Grassroots citizens and local market buyers are collaborating on real-time prices, earning tiered upgrades from Bronze Sentinel to Deluxe Sovereign.',
-    content: 'The SABI verification network has reached a milestone with active reporting in over 350 LGAs. Users can now maintain a 14-day streak starting with 300 points on Day 1, unlock "The Sabiation" AI tool suite at 28,000 points, or obtain VIP Deluxe benefits.',
-    category: 'SABI Community',
-    author: 'SABI Network Team',
-    publishedAt: '12 hours ago',
+    title: 'Experts Warn of Potential Misinformation Risks for 2027 Elections',
+    summary: 'Peacebuilders and experts have warned that misinformation could deepen political tensions as Nigeria approaches the 2027 general elections.',
+    content: 'There are warnings from peacebuilders and experts that misinformation could deepen political tensions and incite violence as Nigeria approaches the 2027 general elections. The public is encouraged to cross-reference rumors with verified platforms like SABI.',
+    category: 'Fact Check Alert',
+    author: 'SABI Truth Sentinel',
+    publishedAt: '6 hours ago',
     readTime: '3 min read',
-    imageUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&auto=format&fit=crop&q=80',
-    verifiedSource: 'SABI Platform Analytics',
-    tags: ['Community', 'Sabiers', 'Gamification', 'Streaks'],
-    trendingScore: 85
+    imageUrl: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&auto=format&fit=crop&q=80',
+    verifiedSource: 'Democracy & Peace Experts',
+    tags: ['Election', 'Misinformation', 'Fact Check'],
+    trendingScore: 90
   }
 ];
 
@@ -1655,8 +1656,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Lagos',
     lga: 'Lagos Mainland',
     currentActivity: 'Admin Desk: Moderating live reports & truth consensus',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🟢 Verifying claims 24/7 for Nigeria'
   },
   {
@@ -1669,8 +1670,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Lagos',
     lga: 'Kosofe (Mile 12)',
     currentActivity: 'Logging fresh 50kg bag rice prices at Mile 12',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🍅 Tomato supply is high today!'
   },
   {
@@ -1683,8 +1684,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Kano',
     lga: 'Dala (Dawanau Market)',
     currentActivity: 'Verifying grain depot wholesale price rates',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🌾 Beans & maize shipments arrived'
   },
   {
@@ -1697,8 +1698,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Rivers',
     lga: 'Port Harcourt City',
     currentActivity: 'Checking 25L pure palm oil rates at Oil Mill',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🛢️ Oil Mill prices steady'
   },
   {
@@ -1711,8 +1712,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'FCT - Abuja',
     lga: 'Bwari (Dei-Dei)',
     currentActivity: 'Debunking foreign rice viral WhatsApp audio',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🔍 Fact-checking rumors'
   },
   {
@@ -1725,8 +1726,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Oyo',
     lga: 'Ibadan North (Bodija)',
     currentActivity: 'Comparing garri and yam prices at Bodija',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🍠 Live at Bodija market'
   },
   {
@@ -1739,8 +1740,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Enugu',
     lga: 'Enugu North (Ogbete)',
     currentActivity: 'Confirming retail egg crate prices at Ogbete',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🥚 Ogbete Main Market spotter'
   },
   {
@@ -1753,8 +1754,8 @@ export const INITIAL_ONLINE_SABIERS = [
     state: 'Kaduna',
     lga: 'Kaduna North (Central Market)',
     currentActivity: 'Checking onion bag and chili pepper rates',
-    isOnline: true,
-    lastActive: 'Active now',
+    isOnline: false,
+    lastActive: 'Offline',
     statusMessage: '🧅 Fresh onion trucks arrived'
   }
 ];

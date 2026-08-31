@@ -129,6 +129,61 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate }) => {
         </div>
       </div>
 
+      {/* CREATOR PROFILE SECTION */}
+      <div className="bg-emerald-50/50 rounded-3xl p-6 sm:p-8 border border-emerald-100 shadow-2xs space-y-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-emerald-100">
+          <div className="space-y-2">
+            <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">
+              Meet The Creator 🇳🇬
+            </span>
+            <h2 className="text-2xl font-black text-gray-900 font-display">
+              Ayomide Adebayo
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium">
+              Ambitious Nigerian Teen Developer & Community Innovator
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 bg-white border border-emerald-200 px-4 py-2.5 rounded-2xl shadow-3xs shrink-0">
+            <MapPin className="w-4 h-4 text-emerald-700" />
+            <div className="text-left">
+              <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider">State of Origin</span>
+              <span className="text-xs font-black text-[#0A3D2E]">Osun State, Ile-Ife</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3 text-xs text-gray-700 leading-relaxed">
+            <p>
+              SABI was envisioned and designed by <strong className="text-gray-950">Ayomide Adebayo</strong>, an ambitious Nigerian teenage developer from the ancient historical city of <strong className="text-gray-950">Ile-Ife in Osun State</strong>. Driven by the mission of engineering practical digital solutions for everyday Nigerian challenges, Ayomide built SABI to unite technology and grassroots citizen journalism.
+            </p>
+            <p>
+              Observing how viral social media hoaxes and sudden food price fluctuations in local markets directly impact average households, Ayomide crafted a platform that pairs advanced generative AI tools (such as forensic computer vision) with the collective honesty of local spotters on the ground.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-3xs space-y-2">
+              <span className="text-[10px] text-emerald-800 font-black uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>The Developer's Vision</span>
+              </span>
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                "As a teenager coding in Osun State, I saw firsthand how fast fake WhatsApp broadcasts spread panic. I built SABI to give Nigerians a clean, interactive tool where people can instantly crosscheck facts with neighbors on the street and see live market food prices across Bodija, Mile 12, or Dawanau."
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
+              <span className="text-[11px] font-bold text-gray-500">
+                Proudly representing Ile-Ife technological innovation on the national scale.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* THE GOLDEN SOVEREIGN PORTAL NOTE */}
       <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 text-gray-950 rounded-3xl p-6 sm:p-7 shadow-md border border-amber-300 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

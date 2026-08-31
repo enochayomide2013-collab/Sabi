@@ -24,9 +24,12 @@ import {
   Upload,
   X,
   Image as ImageIcon,
-  Check
+  Check,
+  BookOpen
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
+import { AuthService } from '../../services/authService';
+import { auth } from '../../lib/firebase';
 import { UserProfile } from '../../types';
 import { AuthModal } from '../auth/AuthModal';
 import { TierUpgradeSection } from './TierUpgradeSection';
@@ -94,8 +97,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     return true;
   });
 
-  const handleSignOut = () => {
-    storageService.signOut();
+  const handleSignOut = async () => {
+    await AuthService.signOut();
     onShowPointsToast(0, 'Signed out of your SABI account');
   };
 
@@ -289,6 +292,33 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </button>
             )}
 
+            {/* Truth Alert Subscription Toggle */}
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+               <span className="text-xs font-bold text-gray-700">Truth Alerts</span>
+               <button 
+                  onClick={async () => {
+                    const next = !user.subscribedToAlerts;
+                    if (next && Notification.permission !== 'granted') {
+                      await Notification.requestPermission();
+                    }
+                    storageService.updateAlertPreference(next);
+                  }}
+                  className={`w-10 h-5 rounded-full transition-colors flex items-center p-0.5 ${user.subscribedToAlerts ? 'bg-emerald-600 justify-end' : 'bg-gray-300 justify-start'}`}
+               >
+                  <div className="w-4 h-4 bg-white rounded-full"></div>
+               </button>
+            </div>
+
+            {/* How SABI Works Tutorial Trigger */}
+            <button
+              onClick={() => onNavigate('tutorial')}
+              className="bg-emerald-50 hover:bg-emerald-100 text-[#0A3D2E] text-xs font-bold px-3.5 py-2 rounded-xl border border-emerald-200 flex items-center gap-1.5 transition-colors"
+              title="View How SABI Works Guide"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-[#0A3D2E]" />
+              <span>How SABI Works</span>
+            </button>
+ 
             {isLoggedIn && (
               <button
                 id="profile-signout-icon-btn"

@@ -202,6 +202,8 @@ export interface UserProfile {
   hasSabiationAccess?: boolean;
   hasDeluxeVipService?: boolean;
   streak?: StreakData;
+  subscribedToAlerts?: boolean;
+  hasSeenOnboarding?: boolean;
   recentActivity: {
     id: string;
     type: 'verified_task' | 'submitted_report' | 'approved_price' | 'badge_earned' | 'tier_upgrade' | 'streak_reward';

@@ -32,6 +32,7 @@ interface SabiersChatViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
   onShowPointsToast?: (points: number, message: string) => void;
   onOpenSaboAi?: () => void;
+  onlineCount?: number;
 }
 
 const CHANNELS = [
@@ -47,7 +48,8 @@ const CHANNELS = [
 export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
   onNavigate,
   onShowPointsToast = (_points: number, _message: string) => {},
-  onOpenSaboAi = () => {}
+  onOpenSaboAi = () => {},
+  onlineCount
 }) => {
   const [user, setUser] = useState<UserProfile>(storageService.getUser());
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
@@ -64,6 +66,10 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const displayOnlineCount = typeof onlineCount === 'number' && onlineCount > 0
+    ? onlineCount
+    : onlineSabiers.filter(s => s.isOnline).length || 1;
 
   useEffect(() => {
     const unsubscribe = storageService.subscribe(() => {
@@ -184,7 +190,7 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
               </span>
               <span>The Sabiers Network</span>
               <span className="bg-[#0A3D2E] text-white text-[10px] px-2 py-0.2 rounded-full">
-                {onlineSabiers.length} On Sabiers
+                {displayOnlineCount} On Sabiers
               </span>
             </div>
 
@@ -211,8 +217,8 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
             <div className="bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/15 text-center text-[11px] text-emerald-100 flex items-center justify-around gap-3">
               <div>
                 <span className="font-black text-white block text-sm sm:text-base flex items-center justify-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                  {onlineSabiers.length}
+                  <span className={`w-2 h-2 rounded-full inline-block ${displayOnlineCount > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`}></span>
+                  {displayOnlineCount}
                 </span>
                 <span className="text-[10px] text-emerald-200">Online Sabiers</span>
               </div>
@@ -260,7 +266,7 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
               activeChatTab === 'online_sabiers' ? 'bg-[#FFD60A] text-[#0A3D2E]' : 'bg-[#0A3D2E] text-white'
             }`}>
-              {onlineSabiers.length}
+              {displayOnlineCount}
             </span>
           </button>
         </div>
@@ -296,7 +302,7 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
                     Live "On Sabiers" Directory
                   </h3>
                   <span className="bg-emerald-500 text-black text-xs font-black px-2 py-0.5 rounded-full">
-                    {onlineSabiers.length} Active Now
+                    {displayOnlineCount} Active Now
                   </span>
                 </div>
                 <p className="text-xs text-emerald-200 leading-relaxed mt-0.5">
@@ -334,11 +340,15 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
                       <img
                         src={sabier.avatarUrl}
                         alt={sabier.name}
-                        className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500 shadow-2xs"
+                        className={`w-12 h-12 rounded-2xl object-cover border-2 shadow-2xs ${sabier.isOnline ? 'border-emerald-500' : 'border-gray-200'}`}
                       />
-                      <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
-                      </span>
+                      {sabier.isOnline ? (
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
+                        </span>
+                      ) : (
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-300 border-2 border-white rounded-full flex items-center justify-center"></span>
+                      )}
                     </div>
 
                     {/* Sabier Details */}
@@ -367,7 +377,7 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
                   {/* Actions: Chat & Wave */}
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
                     <span className="text-[10px] text-gray-400 font-medium">
-                      🟢 {sabier.lastActive}
+                      {sabier.isOnline ? '🟢' : '⚫'} {sabier.lastActive}
                     </span>
 
                     <div className="flex items-center gap-1.5">

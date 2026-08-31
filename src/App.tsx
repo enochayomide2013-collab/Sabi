@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { storageService, SelectedLocation } from './services/storageService';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
@@ -6,6 +7,9 @@ import { LocationModal } from './components/common/LocationModal';
 import { PointsCelebration } from './components/common/PointsCelebration';
 import { AuthModal } from './components/auth/AuthModal';
 import { NotificationsModal } from './components/common/NotificationsModal';
+import { OnboardingModal } from './components/onboarding/OnboardingModal';
+import { updatePresenceInFirestore, subscribeToPresenceList } from './services/firestoreService';
+import { Tooltip } from './components/common/Tooltip';
 
 // Views
 import { HomeView } from './components/home/HomeView';
@@ -29,6 +33,7 @@ export const App: React.FC = () => {
 
   const [location, setLocation] = useState<SelectedLocation>(storageService.getLocation());
   const [isLocationModalOpen, setIsLocationModalOpen] = useState<boolean>(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
 
   // Sabo AI Modal state
   const [isSaboAiOpen, setIsSaboAiOpen] = useState<boolean>(false);
@@ -43,6 +48,8 @@ export const App: React.FC = () => {
   // Points celebration banner/toast
   const [pointsEarned, setPointsEarned] = useState<number | null>(null);
   const [pointsMessage, setPointsMessage] = useState<string>('');
+
+  const [onlineCount, setOnlineCount] = useState<number>(0);
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('sabi_dark_mode') === 'true';
@@ -61,10 +68,60 @@ export const App: React.FC = () => {
     const unsubscribe = storageService.subscribe(() => {
       setLocation(storageService.getLocation());
     });
+    
+    // Check onboarding & show interactive tutorial when user lands
+    const user = storageService.getUser();
+    const hasSeenThisSession = sessionStorage.getItem('sabi_tutorial_session_landed');
+    if (!user.hasSeenOnboarding || !hasSeenThisSession) {
+      setIsOnboardingOpen(true);
+      sessionStorage.setItem('sabi_tutorial_session_landed', 'true');
+    }
+    
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const user = storageService.getUser();
+    
+    const pingPresence = async () => {
+      try {
+        updatePresenceInFirestore(user.id, user.name);
+        const res = await fetch(`/api/online-users?userId=${encodeURIComponent(user.id)}&name=${encodeURIComponent(user.name)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.count === 'number' && data.count > 0) {
+            setOnlineCount(data.count);
+          }
+        }
+      } catch {
+        // Silently tolerate initial connection establishment delays
+      }
+    };
+
+    // Initial presence ping
+    pingPresence();
+    
+    // Pulse/heartbeat every 20 seconds
+    const interval = setInterval(pingPresence, 20 * 1000);
+    
+    // Subscribe to presence in Firestore
+    const unsubscribePresence = subscribeToPresenceList((activeIds) => {
+      if (activeIds && activeIds.length > 0) {
+        setOnlineCount(activeIds.length);
+      }
+    });
+    
+    return () => {
+      clearInterval(interval);
+      if (unsubscribePresence) unsubscribePresence();
+    };
+  }, []);
+
   const handleNavigate = (tab: string, extraData?: any) => {
+    if (tab === 'tutorial' || tab === 'onboarding') {
+      setIsOnboardingOpen(true);
+      return;
+    }
     if (tab === 'notifications') {
       setIsNotificationsModalOpen(true);
       return;
@@ -86,6 +143,25 @@ export const App: React.FC = () => {
     setIsAuthModalOpen(true);
   };
 
+  const SWIPEABLE_TABS = ['home', 'map', 'sabiers'];
+  const handleDragEnd = (event: any, info: any) => {
+    const swipeThreshold = 50;
+    if (Math.abs(info.offset.x) > swipeThreshold) {
+      const currentIndex = SWIPEABLE_TABS.indexOf(activeTab);
+      if (currentIndex === -1) return;
+
+      if (info.offset.x < 0) {
+        // Swiped left, go to next
+        const nextIndex = Math.min(currentIndex + 1, SWIPEABLE_TABS.length - 1);
+        if (nextIndex !== currentIndex) handleNavigate(SWIPEABLE_TABS[nextIndex]);
+      } else {
+        // Swiped right, go to previous
+        const prevIndex = Math.max(currentIndex - 1, 0);
+        if (prevIndex !== currentIndex) handleNavigate(SWIPEABLE_TABS[prevIndex]);
+      }
+    }
+  };
+
   return (
     <div className={`min-h-screen flex flex-col selection:bg-[#FFD60A] selection:text-[#0A3D2E] transition-colors duration-200 ${
       isDarkMode ? 'dark bg-gray-950 text-gray-100' : 'bg-[#FDFBF7] text-gray-900'
@@ -100,12 +176,20 @@ export const App: React.FC = () => {
         onOpenAuthModal={handleOpenAuthModal}
         onOpenSaboAi={() => setIsSaboAiOpen(true)}
         onOpenNotifications={() => setIsNotificationsModalOpen(true)}
+        onOpenTutorial={() => setIsOnboardingOpen(true)}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onlineCount={onlineCount}
       />
 
       {/* Main Content Area */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+      <motion.main 
+        className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6"
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        onDragEnd={handleDragEnd}
+        dragElastic={0.1}
+      >
         {activeTab === 'home' && (
           <HomeView 
             onNavigate={handleNavigate} 
@@ -156,6 +240,7 @@ export const App: React.FC = () => {
             onNavigate={handleNavigate}
             onShowPointsToast={handleShowPointsToast}
             onOpenSaboAi={() => setIsSaboAiOpen(true)}
+            onlineCount={onlineCount}
           />
         )}
 
@@ -199,24 +284,25 @@ export const App: React.FC = () => {
             onNavigate={handleNavigate}
           />
         )}
-      </main>
+      </motion.main>
 
       {/* Floating Sabo AI Quick Launcher */}
       <div className="fixed bottom-20 right-4 sm:right-6 z-30">
-        <button
-          id="floating-sabo-ai-launcher"
-          onClick={() => setIsSaboAiOpen(true)}
-          className="bg-gradient-to-r from-[#0A3D2E] to-[#0d4a38] text-white hover:to-[#115d47] active:scale-95 shadow-xl hover:shadow-2xl rounded-full p-3.5 sm:px-4 sm:py-3 flex items-center gap-2 border-2 border-[#FFD60A] transition-all group"
-          title="Ask Sabo AI (SABI Fact-Checker & Price Guide)"
-        >
-          <div className="relative">
-            <Bot className="w-5 h-5 text-[#FFD60A]" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#FFD60A] animate-ping" />
-          </div>
-          <span className="hidden sm:inline font-black text-xs text-white font-display">
-            Ask Sabo AI
-          </span>
-        </button>
+        <Tooltip content="Ask Sabo AI (SABI Fact-Checker & Price Guide)" position="left">
+          <button
+            id="floating-sabo-ai-launcher"
+            onClick={() => setIsSaboAiOpen(true)}
+            className="bg-gradient-to-r from-[#0A3D2E] to-[#0d4a38] text-white hover:to-[#115d47] active:scale-95 shadow-xl hover:shadow-2xl rounded-full p-3.5 sm:px-4 sm:py-3 flex items-center gap-2 border-2 border-[#FFD60A] transition-all group"
+          >
+            <div className="relative">
+              <Bot className="w-5 h-5 text-[#FFD60A]" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#FFD60A] animate-ping" />
+            </div>
+            <span className="hidden sm:inline font-black text-xs text-white font-display">
+              Ask Sabo AI
+            </span>
+          </button>
+        </Tooltip>
       </div>
 
       {/* Persistent Bottom Navigation for Mobile */}
@@ -259,6 +345,17 @@ export const App: React.FC = () => {
         initialMode={authInitialMode}
         onAuthSuccess={(msg) => handleShowPointsToast(msg.includes('Signed up') ? 100 : 0, msg)}
         onAdminSuccess={() => handleNavigate('admin')}
+      />
+
+      {/* Onboarding & Interactive Tutorial Modal */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => {
+          setIsOnboardingOpen(false);
+          const user = storageService.getUser();
+          storageService.updateUser({ ...user, hasSeenOnboarding: true });
+        }}
+        onNavigate={handleNavigate}
       />
 
       {/* Points Celebration Toast / Banner */}

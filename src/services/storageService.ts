@@ -1,3 +1,4 @@
+import { saveUserToFirestore } from './firestoreService';
 import {
   UserProfile,
   UserAccount,
@@ -186,6 +187,7 @@ class StorageService {
 
   public updateUser(user: UserProfile) {
     localStorage.setItem(KEYS.USER, JSON.stringify(user));
+    saveUserToFirestore(user);
     // Also sync in registered users list
     const users = this.getRegisteredUsers();
     const updatedUsers = users.map(u => u.id === user.id ? { ...u, ...user } : u);
@@ -903,6 +905,15 @@ Platform: SABI Nigeria`;
     const results = this.getTruthResults();
     const updated = [result, ...results];
     localStorage.setItem(KEYS.TRUTH_RESULTS, JSON.stringify(updated));
+    
+    // Trigger notification if user is subscribed
+    const user = this.getUser();
+    if (user.subscribedToAlerts && Notification.permission === 'granted') {
+      new Notification(`Truth Alert: New ${result.result} status for ${result.claim}`, {
+        body: `A rumor in ${result.state} has been ${result.result}.`,
+      });
+    }
+
     this.notify();
   }
 
@@ -918,6 +929,11 @@ Platform: SABI Nigeria`;
     const updated = results.map(r => r.id === result.id ? result : r);
     localStorage.setItem(KEYS.TRUTH_RESULTS, JSON.stringify(updated));
     this.notify();
+  }
+
+  public updateAlertPreference(subscribed: boolean) {
+    const user = this.getUser();
+    this.updateUser({ ...user, subscribedToAlerts: subscribed });
   }
 
   // --- MARKET ITEMS ---
@@ -1125,6 +1141,20 @@ Platform: SABI Nigeria`;
   public getNewsArticles(): NewsArticle[] {
     const raw = localStorage.getItem(KEYS.NEWS);
     return raw ? JSON.parse(raw) : LATEST_NEWS_ARTICLES;
+  }
+
+  public addNewsArticle(article: NewsArticle) {
+    const articles = this.getNewsArticles();
+    const updated = [article, ...articles];
+    localStorage.setItem(KEYS.NEWS, JSON.stringify(updated));
+    this.notify();
+  }
+
+  public addNewsArticles(articles: NewsArticle[]) {
+    const existing = this.getNewsArticles();
+    const updated = [...articles, ...existing];
+    localStorage.setItem(KEYS.NEWS, JSON.stringify(updated));
+    this.notify();
   }
 
   public getSabiationResources() {

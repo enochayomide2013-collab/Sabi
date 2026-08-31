@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return (isSignedIn() && request.auth.token.email == 'enochayomide2013@gmail.com') ||
+             (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Presence collection: used for live on-the-ground spotter counters
+    match /presence/{userId} {
+      allow read, list: if true;
+      allow create, update, delete: if isValidId(userId);
+    }
+
+    // Users collection: user profiles and spotter rankings
+    match /users/{userId} {
+      allow read, list: if true;
+      allow create, update: if isValidId(userId);
+      allow delete: if isAdmin();
+    }
+
+    // Admins collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
