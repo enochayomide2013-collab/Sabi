@@ -21,6 +21,7 @@ import {
 import { storageService } from '../../services/storageService';
 import { UserProfile, SabiationResource } from '../../types';
 import { FREE_SABIATION_RESOURCES } from '../../data/mockData';
+import { AiImageGenerator } from './AiImageGenerator';
 
 interface SabiationViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -187,6 +188,9 @@ export const SabiationView: React.FC<SabiationViewProps> = ({ onNavigate, onShow
           </div>
         </div>
       )}
+
+      {/* AI IMAGE GENERATOR (720p · 1080p · 4K Engine) */}
+      <AiImageGenerator onShowToast={onShowToast} />
 
       {/* QUICK PROMPT COPIER & GENERATOR */}
       <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4">

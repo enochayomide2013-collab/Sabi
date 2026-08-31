@@ -49,25 +49,31 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch live rumors
+    // Fetch live rumors with graceful fallback
     const fetchLiveRumors = async () => {
       try {
-        const response = await fetch('/api/rumors', { method: 'POST' });
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
+        const response = await fetch('/api/rumors', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+          const liveRumors = await response.json();
+          const rumorsArray = Array.isArray(liveRumors) ? liveRumors : [];
+          
+          if (rumorsArray.length > 0) {
+            // Merge and deduplicate
+            const local = storageService.getTruthResults();
+            const combined = [...local, ...rumorsArray];
+            const unique = combined.filter((v, i, a) => a.findIndex(t => t.claim === v.claim) === i);
+            setTruthResults(unique);
+          }
         }
-        const liveRumors = await response.json();
-        
-        // Ensure liveRumors is an array
-        const rumorsArray = Array.isArray(liveRumors) ? liveRumors : [];
-        
-        // Merge and deduplicate
+      } catch {
+        // Quietly maintain local offline truth results if network/endpoint is unavailable
         const local = storageService.getTruthResults();
-        const combined = [...local, ...rumorsArray];
-        const unique = combined.filter((v,i,a)=>a.findIndex(t=>t.claim === v.claim)===i);
-        setTruthResults(unique);
-      } catch (e) {
-        console.error('Failed to fetch live rumors', e);
+        if (local && local.length > 0) {
+          setTruthResults(local);
+        }
       }
     };
     fetchLiveRumors();

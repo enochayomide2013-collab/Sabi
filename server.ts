@@ -3,65 +3,77 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
-const aiClient = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-  httpOptions: {
-      headers: {
-      'User-Agent': 'aistudio-build',
+let aiClientInstance: GoogleGenAI | null = null;
+function getAiClient(): GoogleGenAI | null {
+  if (!process.env.GEMINI_API_KEY) return null;
+  if (!aiClientInstance) {
+    aiClientInstance = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
       }
+    });
   }
-});
+  return aiClientInstance;
+}
 
 const FALLBACK_RUMORS = [
   {
-    "id": "mock-rumor-1",
-    "claim": "Federal Government to distribute 100,000 Naira relief fund to all citizens via WhatsApp links",
+    "id": "mock-rumor-tiktok-1",
+    "claim": "Viral TikTok video claiming Federal Government opened instant ₦100,000 disbursement via bio link",
     "state": "Lagos",
     "area": "Ikeja",
+    "platform": "TikTok",
     "result": "FALSE",
     "mediaThumbnailUrl": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=120&auto=format&fit=crop&q=80",
-    "availableEvidenceQuote": "The Ministry of Humanitarian Affairs clarified that no such campaign is run on WhatsApp. Official relief initiatives are announced only on the Ministry's verified portal.",
+    "availableEvidenceQuote": "The Ministry of Humanitarian Affairs clarified that no such campaign is run on TikTok or WhatsApp. Official relief initiatives are announced only on the Ministry's verified portal.",
     "verifiedAt": "August 31, 2026"
   },
   {
-    "id": "mock-rumor-2",
-    "claim": "Protests break out in Abuja over newly proposed interstate travel registration policy",
-    "state": "Abuja (FCT)",
-    "area": "Garki",
-    "result": "NEEDS MORE VERIFICATION",
-    "mediaThumbnailUrl": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=120&auto=format&fit=crop&q=80",
-    "availableEvidenceQuote": "While crowds gathered near FCT secretariat to submit inquiries, no active physical protests or blockades are currently verified by local reporters.",
-    "verifiedAt": "August 31, 2026"
-  },
-  {
-    "id": "mock-rumor-3",
-    "claim": "CBN officially suspends old banknotes starting from September 2026",
+    "id": "mock-rumor-twitter-2",
+    "claim": "Viral Twitter/X thread alleging CBN plans to decommission commercial bank licenses by midnight",
     "state": "Abuja (FCT)",
     "area": "Central Area",
+    "platform": "Twitter/X",
     "result": "FALSE",
     "mediaThumbnailUrl": "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=120&auto=format&fit=crop&q=80",
-    "availableEvidenceQuote": "The Central Bank of Nigeria has issued a statement confirming that both old and newly redesigned banknotes remain legal tender indefinitely.",
-    "verifiedAt": "August 30, 2026"
-  },
-  {
-    "id": "mock-rumor-4",
-    "claim": "NNPC denies nationwide fuel price hike to ₦1,500 per litre",
-    "state": "Lagos",
-    "area": "Marina",
-    "result": "TRUE",
-    "mediaThumbnailUrl": "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=120&auto=format&fit=crop&q=80",
-    "availableEvidenceQuote": "NNPC retail management stated that product supply is steady and advised the public against panic buying triggered by speculative social media posts.",
+    "availableEvidenceQuote": "The Central Bank of Nigeria (CBN) debunked the circulating Twitter/X document, confirming all licensed deposit money banks are solvent and operating normally.",
     "verifiedAt": "August 31, 2026"
   },
   {
-    "id": "mock-rumor-5",
-    "claim": "Viral audio of prominent politician warning of impending bank shutdown",
+    "id": "mock-rumor-facebook-3",
+    "claim": "Facebook viral post warning of nationwide petrol station shutdown and ₦1,500 fuel surge",
+    "state": "Lagos",
+    "area": "Marina",
+    "platform": "Facebook",
+    "result": "FALSE",
+    "mediaThumbnailUrl": "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=120&auto=format&fit=crop&q=80",
+    "availableEvidenceQuote": "NNPC and major oil marketers confirmed continuous fuel distribution across all depots and advised motorists against panic buying caused by unverified Facebook rumors.",
+    "verifiedAt": "August 31, 2026"
+  },
+  {
+    "id": "mock-rumor-tiktok-4",
+    "claim": "Viral TikTok audio claiming simulated voice memo is a leaked government emergency security broadcast",
     "state": "Kano",
     "area": "Fagge",
+    "platform": "TikTok",
     "result": "FALSE",
     "mediaThumbnailUrl": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=120&auto=format&fit=crop&q=80",
-    "availableEvidenceQuote": "Audio spectral analysis confirmed AI synthetic voice cloning with unnatural cadence and missing environmental acoustic reflections.",
+    "availableEvidenceQuote": "Deepfake audio forensic spectral analysis confirmed synthetic AI voice cloning with unnatural cadence and missing room impulse response.",
     "verifiedAt": "August 30, 2026"
+  },
+  {
+    "id": "mock-rumor-twitter-5",
+    "claim": "Trending Twitter hashtag claiming major Lagos-Ibadan expressway closure for unplanned inspection",
+    "state": "Ogun / Lagos",
+    "area": "Sagamu Interchange",
+    "platform": "Twitter/X",
+    "result": "NEEDS MORE VERIFICATION",
+    "mediaThumbnailUrl": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=120&auto=format&fit=crop&q=80",
+    "availableEvidenceQuote": "Federal Road Safety Corps (FRSC) reported moderate traffic flow with ongoing maintenance, but no complete blockade or shutdown.",
+    "verifiedAt": "August 31, 2026"
   }
 ];
 
@@ -134,8 +146,13 @@ async function startServer() {
         },
       };
 
-      const response = await aiClient.models.generateContent({
-        model: "gemini-3.6-flash",
+      const client = getAiClient();
+      if (!client) {
+        throw new Error("AI client not available");
+      }
+
+      const response = await client.models.generateContent({
+        model: "gemini-3.7-flash",
         contents: { parts: [imagePart, { text: prompt }] },
         config: {
           responseMimeType: "application/json",
@@ -166,39 +183,45 @@ async function startServer() {
     }
   });
 
-  app.post("/api/rumors", async (req, res) => {
+  app.all("/api/rumors", async (req, res) => {
     const now = Date.now();
     if (rumorsCache.data.length > 0 && now - rumorsCache.timestamp < CACHE_DURATION) {
       return res.json(rumorsCache.data);
     }
 
     try {
-      if (!process.env.GEMINI_API_KEY) {
+      const client = getAiClient();
+      if (!client) {
         return res.json(rumorsCache.data);
       }
 
-      const prompt = `Find the latest rumors and news in Nigeria today from social media platforms and news. 
+      const prompt = `Identify top circulating rumors, viral claims, and trending misinformation in Nigeria right now across major social media platforms: TikTok, Twitter (X), and Facebook.
+      Check for trending video clips, voice memos, viral WhatsApp/Facebook forward chains, TikTok deepfakes, and Twitter hashtags concerning fuel prices, banking/currency, government policies, interstate transport, relief funds, and security alerts.
       Provide the results in JSON format as a list of objects with the following fields: 
       {
         "id": string (unique),
         "claim": string,
         "state": string,
         "area": string,
+        "platform": "TikTok" | "Twitter/X" | "Facebook" | "Multi-platform",
         "result": "TRUE" | "FALSE" | "OUTDATED MEDIA" | "NEEDS MORE VERIFICATION",
         "mediaThumbnailUrl": string,
         "availableEvidenceQuote": string,
         "verifiedAt": string
       }. Deduplicate claims based on the claim text. Return only the valid JSON array.`;
 
-      const response = await aiClient.models.generateContent({
-        model: "gemini-3.6-flash",
+      // Limit call time to 5 seconds to ensure instant UI rendering
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+      const generatePromise = client.models.generateContent({
+        model: "gemini-3.7-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
         },
       });
 
-      const text = response.text || "[]";
+      const response: any = await Promise.race([generatePromise, timeoutPromise]);
+      const text = response?.text || "[]";
       const parsed = JSON.parse(text);
       if (Array.isArray(parsed) && parsed.length > 0) {
         rumorsCache = { data: parsed, timestamp: now };

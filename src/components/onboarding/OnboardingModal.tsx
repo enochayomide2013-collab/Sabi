@@ -21,7 +21,15 @@ import {
   FileText,
   Bot,
   Flame,
-  Check
+  Check,
+  Crown,
+  Lock,
+  Utensils,
+  Map,
+  CheckSquare,
+  Image as ImageIcon,
+  Play,
+  Volume2
 } from 'lucide-react';
 
 interface OnboardingModalProps {
@@ -50,7 +58,20 @@ interface TutorialSlide {
   keyFeatures: string[];
   howToUseSteps: string[];
   realLifeExample: RealLifeExample;
-  illustrationType: 'welcome' | 'rumors' | 'market' | 'deepfake' | 'sabiers' | 'sabo' | 'rewards';
+  illustrationType: 
+    | 'welcome' 
+    | 'anchor'
+    | 'rumors' 
+    | 'deepfake'
+    | 'market' 
+    | 'tasks'
+    | 'sabiation' 
+    | 'sabo' 
+    | 'sabiers' 
+    | 'heatmap' 
+    | 'recipes' 
+    | 'rewards' 
+    | 'admin';
   actionButton?: {
     text: string;
     tab: string;
@@ -61,22 +82,23 @@ interface TutorialSlide {
 const TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     id: 'welcome',
-    partNumber: 'OVERVIEW',
-    partName: 'The SABI Truth & Market Ecosystem',
-    badge: '🇳🇬 What is SABI?',
+    partNumber: 'PAGE 1 OF 13',
+    partName: 'The SABI Grassroots Truth & Market Ecosystem',
+    badge: '🇳🇬 Complete Overview',
     badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-    title: 'Nigeria’s Verified Truth, Market & Media Network',
-    subtitle: 'A grassroots intelligence platform designed to eliminate panic-spreading misinformation, track authentic commodity prices, and build local consensus.',
+    title: 'Nigeria’s Verified Truth, Market & Media Intelligence Hub',
+    subtitle: 'A grassroots intelligence platform engineered to eradicate viral misinformation, track authentic market commodity prices, and build state-by-state consensus.',
     icon: ShieldCheck,
     illustrationType: 'welcome',
-    whatItDoes: 'SABI connects everyday Nigerians across all 36 States & FCT to crowdsource factual truth. It integrates an automated rumor fact-checker, ground-truth food price tracker, AI deepfake detector, and verified local spotter chat.',
+    whatItDoes: 'SABI connects everyday Nigerians across all 36 States & FCT to crowdsource factual truth. It integrates an automated rumor fact-checker, ground-truth food price tracker, AI deepfake detector, live news anchor simulation, recipe budgeter, and verified local spotter chat.',
     whyItMatters: 'Viral WhatsApp broadcasts, doctored videos, and uncontrolled food price inflation create confusion. SABI provides instant, evidence-backed clarity straight from verified citizens on the ground.',
     keyFeatures: [
       'Crowdsourced Rumor Debunking with verified state-level evidence and community consensus.',
       'Daily Spot Market Commodity Tracker (50kg Rice, Garri, Palm Oil, Tomatoes, Fuel).',
       'AI Media Authenticity & Deepfake Scanner for images, voice notes, and screenshots.',
-      'State-by-State Live Sabiers Chat network with embedded Sabo AI Assistant.',
-      'Reputation tiers, verification streaks, and leaderboard rewards.'
+      'The Sabiation AI creative studio with 720p, 1080p, and 4K image generation.',
+      'State-by-State Live Sabiers Chat network with embedded multilingual Sabo AI Assistant.',
+      '14-Day Streaks, Reputation tiers, and Leaderboard status.'
     ],
     howToUseSteps: [
       'Browse verified claims and market rates in your current State and LGA.',
@@ -84,19 +106,58 @@ const TUTORIAL_SLIDES: TutorialSlide[] = [
       'Vote on claims using your local knowledge to earn Sabi Points.'
     ],
     realLifeExample: {
-      scenario: 'You receive a scary WhatsApp broadcast claiming an abrupt nationwide fuel subsidy strike started 2 hours ago.',
+      scenario: 'You receive a viral WhatsApp voice memo claiming a sudden fuel strike has shut down all filling stations in Lagos.',
       actionTaken: 'Instead of forwarding it to family group chats or rushing to panic-buy, you open SABI.',
-      outcome: 'You see 18 verified spotters across Lagos, Abuja, and Port Harcourt confirming petrol stations are operating normally. The rumor is flagged FALSE with a 98% consensus score.'
+      outcome: 'You see 18 verified spotters across Lagos Mainland, Ikeja, and Lekki confirming stations are operating normally. The rumor is flagged FALSE with a 98% consensus score.'
+    },
+    actionButton: {
+      text: 'Explore Live Feed',
+      tab: 'home',
+      icon: ArrowRight
+    }
+  },
+  {
+    id: 'anchor',
+    partNumber: 'PAGE 2 OF 13',
+    partName: 'News Anchor Live Broadcast Simulation',
+    badge: '📺 AI News Anchor',
+    badgeColor: 'bg-red-100 text-red-900 border-red-300',
+    title: 'Live Nigerian Truth & Breaking Headlines Broadcast',
+    subtitle: 'Experience an interactive television-style news broadcast with real-time teleprompter captions, anchor simulation, and audio synthesis.',
+    icon: Play,
+    illustrationType: 'anchor',
+    whatItDoes: 'Simulates a live Nigerian national news studio (SABI News Desk) presenting verified breaking reports, debunked claims, and market surges in real time with an animated anchor and live ticker.',
+    whyItMatters: 'Audio-visual news formats help citizens quickly digest complex facts, state security bulletins, and commodity price changes in under 60 seconds.',
+    keyFeatures: [
+      'Interactive Live Studio Player with play, pause, seek, and volume audio controls.',
+      'Synchronized Live Teleprompter displaying broadcast transcript word-by-word.',
+      'Breaking News Lower-Third Ticker highlighting live state-by-state alerts.',
+      'Toggleable Audio Speech Synth delivering clear Nigerian English narration.'
+    ],
+    howToUseSteps: [
+      'Click the "News Anchor" button in the top navigation bar or banner.',
+      'Press the green "Play Live Broadcast" button to start the studio broadcast.',
+      'Read along with the synchronized live teleprompter as the news progresses.'
+    ],
+    realLifeExample: {
+      scenario: 'You want a 2-minute morning summary of everything verified across Nigerian states before heading to work.',
+      actionTaken: 'You open the News Anchor Live Simulation and hit Play while getting ready.',
+      outcome: 'You hear verified updates on fuel prices in Abuja, food drops in Ibadan, and a debunk of a fake bank holiday circular.'
+    },
+    actionButton: {
+      text: 'Watch Live News Anchor',
+      tab: 'anchor',
+      icon: Play
     }
   },
   {
     id: 'rumors',
-    partNumber: 'PART 1',
+    partNumber: 'PAGE 3 OF 13',
     partName: 'Rumor Debunker & Fact-Checking Engine',
     badge: '🔍 Rumor Fact-Checker',
     badgeColor: 'bg-red-100 text-red-900 border-red-300',
-    title: 'Unmask Viral WhatsApp Broadcasts & News Claims',
-    subtitle: 'Identify fake government grants, banking hoaxes, doctored audio, and sensational headlines before they cause harm.',
+    title: 'Unmask Viral WhatsApp Broadcasts & Social Media Hoaxes',
+    subtitle: 'Identify fake government grants, banking scams, doctored audio, and sensational political headlines before they cause panic.',
     icon: AlertTriangle,
     illustrationType: 'rumors',
     whatItDoes: 'Monitors breaking social media claims, viral broadcasts, and political news. Users vote on authenticity and attach official circulars, resulting in a community-verified ruling (TRUE, FALSE, MISLEADING, or OUTDATED MEDIA).',
@@ -104,7 +165,8 @@ const TUTORIAL_SLIDES: TutorialSlide[] = [
     keyFeatures: [
       'Official Truth Status Badges: VERIFIED TRUE (Green), FALSE (Red), MISLEADING (Amber), OUTDATED (Blue).',
       'Source Citations & Evidence Quotes: Direct links to official gazettes, CBN circulars, or press statements.',
-      'State & LGA Filtering: Track rumors specific to your local government or hometown.'
+      'State & LGA Filtering: Track rumors specific to your local government or hometown.',
+      'Social Platform Attribution: Explicitly flags whether a claim originated on TikTok, Twitter/X, or Facebook.'
     ],
     howToUseSteps: [
       'Open the "Truth" tab to view trending claims in your state.',
@@ -123,8 +185,41 @@ const TUTORIAL_SLIDES: TutorialSlide[] = [
     }
   },
   {
+    id: 'deepfake',
+    partNumber: 'PAGE 4 OF 13',
+    partName: 'AI Deepfake & Forensic Media Scanner',
+    badge: '🛡️ Forensic Media Scanner',
+    badgeColor: 'bg-indigo-100 text-indigo-900 border-indigo-300',
+    title: 'Detect AI Cloned Audio, Deepfake Images & Edited Receipts',
+    subtitle: 'Upload any suspicious image, voice note, or screenshot to run a multi-layered AI forensic verification scan.',
+    icon: Scan,
+    illustrationType: 'deepfake',
+    whatItDoes: 'Employs advanced multimodal computer vision to examine visual lighting vectors, boundary warping, pixel compression anomalies, cloned voice resonance, and metadata timestamps.',
+    whyItMatters: 'Generative AI tools are now used to fake political speeches, fake bank transfer receipts, and create synthetic images designed to incite riots.',
+    keyFeatures: [
+      'Overall Authenticity Score: Instant percentage confidence (e.g., 94.2% AI Generated).',
+      'Visual Anomaly Highlighting: "Show Me Why" breakdown pinpointing manipulated regions.',
+      'Recycled Media Detection: Identifies old footage from 2020 falsely captioned as "happening right now in 2026".'
+    ],
+    howToUseSteps: [
+      'Open the "AI Scanner" tab from the navigation bar.',
+      'Upload a picture, voice note, or screenshot from your device.',
+      'Click "Scan Media" to generate an immediate forensic analysis report.'
+    ],
+    realLifeExample: {
+      scenario: 'A dramatic photo surfaces on Twitter claiming a major fire broke out at a critical bank headquarters in Marina, Lagos.',
+      actionTaken: 'You save the photo and upload it into Sabi’s Deepfake X-Ray.',
+      outcome: 'The scanner reveals that the image is an old 2019 warehouse fire from another country with edited text overlaid on the building. You share the verified debunk card on Twitter.'
+    },
+    actionButton: {
+      text: 'Open AI Deepfake Scanner',
+      tab: 'deepfake',
+      icon: ArrowRight
+    }
+  },
+  {
     id: 'market',
-    partNumber: 'PART 2',
+    partNumber: 'PAGE 5 OF 13',
     partName: 'Real-Time Market Commodity Price Tracker',
     badge: '🛒 Live Commodity Rates',
     badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
@@ -156,42 +251,109 @@ const TUTORIAL_SLIDES: TutorialSlide[] = [
     }
   },
   {
-    id: 'deepfake',
-    partNumber: 'PART 3',
-    partName: 'AI Deepfake & Media Authenticity Scanner',
-    badge: '🛡️ Forensic Media Scanner',
-    badgeColor: 'bg-indigo-100 text-indigo-900 border-indigo-300',
-    title: 'Detect AI Cloned Audio, Deepfake Images & Edited Receipts',
-    subtitle: 'Upload any suspicious image, voice note, or screenshot to run a multi-layered AI forensic verification scan.',
-    icon: Scan,
-    illustrationType: 'deepfake',
-    whatItDoes: 'Employs advanced multimodal computer vision to examine visual lighting vectors, boundary warping, pixel compression anomalies, cloned voice resonance, and metadata timestamps.',
-    whyItMatters: 'Generative AI tools are now used to fake political speeches, fake bank transfer receipts, and create synthetic images designed to incite riots.',
+    id: 'tasks',
+    partNumber: 'PAGE 6 OF 13',
+    partName: 'On-Ground Verification Tasks & Verifier Missions',
+    badge: '🎯 Missions & Tasks',
+    badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+    title: 'Earn Points by Completing Verified Ground Missions',
+    subtitle: 'Participate in localized fact-checking tasks requested by the community and verify on-ground truth in your LGA.',
+    icon: CheckSquare,
+    illustrationType: 'tasks',
+    whatItDoes: 'Displays open verification quests (e.g. confirming whether a petrol station in Ikeja is dispensing fuel at official rate or taking a photo of tomato basket prices in Mile 12).',
+    whyItMatters: 'Empowers citizens to act as decentralised journalists, ensuring that rumors are answered with real physical proof within minutes.',
     keyFeatures: [
-      'Overall Authenticity Score: Instant percentage confidence (e.g., 94.2% AI Generated).',
-      'Visual Anomaly Highlighting: "Show Me Why" breakdown pinpointing manipulated regions.',
-      'Recycled Media Detection: Identifies old footage from 2020 falsely captioned as "happening right now in 2026".'
+      'LGA Proximity Sorting: Filter tasks happening within 5km of your location.',
+      'Evidence Photo & Receipt Upload: Attach geotagged photos to submit conclusive proof.',
+      'High Points Payouts: Earn +25 to +100 Sabi Points per completed mission.'
     ],
     howToUseSteps: [
-      'Open the "AI Scanner" tab from the navigation bar.',
-      'Upload a picture, voice note, or screenshot from your device.',
-      'Click "Scan Media" to generate an immediate forensic analysis report.'
+      'Open the "Tasks" tab to see open verification requests in your state.',
+      'Select a task near your location (e.g., "Verify Bag of Rice Price in Dei-Dei Market").',
+      'Upload your verdict and evidence photo to claim your points reward.'
     ],
     realLifeExample: {
-      scenario: 'A dramatic photo surfaces on Twitter claiming a major fire broke out at a critical bank headquarters in Marina, Lagos.',
-      actionTaken: 'You save the photo and upload it into Sabi’s Deepfake X-Ray.',
-      outcome: 'The scanner reveals that the image is an old 2019 warehouse fire from another country with edited text overlaid on the building. You share the verified debunk card on Twitter.'
+      scenario: 'A user in Kaduna asks if foreign rice is really selling for ₦90,000 in Abuja Dei-Dei Market.',
+      actionTaken: 'An Abuja spotter visiting Dei-Dei market uploads a photo of the seller’s price board showing ₦84,000.',
+      outcome: 'The task is resolved, the claim is corrected for all users, and the spotter receives +35 Sabi Points.'
     },
     actionButton: {
-      text: 'Open AI Deepfake Scanner',
-      tab: 'deepfake',
-      icon: ArrowRight
+      text: 'View Open Verification Tasks',
+      tab: 'tasks',
+      icon: CheckSquare
+    }
+  },
+  {
+    id: 'sabiation',
+    partNumber: 'PAGE 7 OF 13',
+    partName: 'The Sabiation AI Studio & 720p / 1080p / 4K Engine',
+    badge: '✨ The Sabiation AI',
+    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+    title: 'Generative AI Image Creation in HD, Full HD & 4K',
+    subtitle: 'An elite creative studio offering instant AI image generation with dedicated resolution buttons (720p, 1080p, 4K) and free web AI tools.',
+    icon: Sparkles,
+    illustrationType: 'sabiation',
+    whatItDoes: 'Allows Golden Sovereign & Deluxe VIP members (and preview users) to generate hyper-realistic Nigerian and global digital artwork in customizable aspect ratios (16:9, 1:1, 9:16, 4:3) with downloadable high-res PNGs.',
+    whyItMatters: 'Provides creators, small businesses, and students with powerful generative tools tailored to African culture without requiring expensive subscriptions.',
+    keyFeatures: [
+      'Resolution Selector Buttons: 720p HD, 1080p Full HD, and 4K Ultra HD.',
+      'Nigerian Cultural & Aesthetic Presets (Lagos Cyberpunk, 8K Photography, Party Jollof Food Art).',
+      'Instant PNG Download and Prompt Copier with one-click export.',
+      'Curated Directory of 100% Free AI Web Tools & Prompts.'
+    ],
+    howToUseSteps: [
+      'Navigate to the "Sabiation" portal from the top header or navigation menu.',
+      'Select your desired resolution (720p, 1080p, or 4K) and aspect ratio.',
+      'Type or pick a creative prompt and tap "Generate AI Image" to render and download.'
+    ],
+    realLifeExample: {
+      scenario: 'You need an ultra-crisp 4K banner of modern Lagos Lekki bridge for a web project or presentation.',
+      actionTaken: 'You open Sabiation, select "4K Ultra HD", choose the 16:9 aspect ratio, and click Generate.',
+      outcome: 'The engine renders a 3840×2160 px masterpiece that you download with a single click.'
+    },
+    actionButton: {
+      text: 'Launch Sabiation Studio',
+      tab: 'sabiation',
+      icon: Sparkles
+    }
+  },
+  {
+    id: 'sabo',
+    partNumber: 'PAGE 8 OF 13',
+    partName: 'Sabo AI Assistant & Multilingual Copilot',
+    badge: '🤖 Sabo AI Copilot',
+    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+    title: 'Your 24/7 Nigerian Intelligence Assistant',
+    subtitle: 'Ask Sabo AI to fact-check rumors, budget food recipes in your state, or translate local news into Pidgin, Yoruba, Hausa, or Igbo.',
+    icon: Bot,
+    illustrationType: 'sabo',
+    whatItDoes: 'An intelligent AI assistant built specifically for Nigeria. It understands local markets, currency values, state geography, cultural context, and Nigerian languages.',
+    whyItMatters: 'Provides instant conversational answers without needing to search through lengthy articles or complex spreadsheets.',
+    keyFeatures: [
+      'Recipe & Dish Budgeting: "How much will it cost to cook Jollof Rice for 10 people in Abuja?"',
+      'Instant Fact-Check Inquiries: "Is the news about CBN new policy true?"',
+      'Multilingual Translation: Chat in English, Nigerian Pidgin, Yoruba, Hausa, or Igbo.'
+    ],
+    howToUseSteps: [
+      'Tap the Floating Sabo AI launcher button (🤖) in the bottom right corner.',
+      'Type any question about rumors, commodity prices, or local news.',
+      'Get an immediate, localized answer tailored to your state.'
+    ],
+    realLifeExample: {
+      scenario: 'You want to cook a large pot of Egusi soup for visitors this weekend in Port Harcourt and need an accurate budget.',
+      actionTaken: 'You ask Sabo AI: "Calculate the exact market cost to cook Egusi soup for 8 people in Oil Mill Market PH."',
+      outcome: 'Sabo AI provides an itemized grocery breakdown with current spot rates for Egusi, Palm Oil, Stockfish, and Goat Meat totaling ₦22,500.'
+    },
+    actionButton: {
+      text: 'Ask Sabo AI',
+      tab: 'sabo_modal',
+      icon: Bot
     }
   },
   {
     id: 'sabiers',
-    partNumber: 'PART 4',
-    partName: 'The Sabiers Network & State Channels',
+    partNumber: 'PAGE 9 OF 13',
+    partName: 'The Sabiers 36-State Real-Time Community Chat',
     badge: '👥 The Sabiers Hub',
     badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
     title: 'Connect Live with Verified Nigerian Spotters',
@@ -222,64 +384,136 @@ const TUTORIAL_SLIDES: TutorialSlide[] = [
     }
   },
   {
-    id: 'sabo',
-    partNumber: 'PART 5',
-    partName: 'Sabo AI Assistant & Smart Copilot',
-    badge: '🤖 Sabo AI Copilot',
-    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
-    title: 'Your 24/7 Nigerian Intelligence Assistant',
-    subtitle: 'Ask Sabo AI to fact-check rumors, budget food recipes in your state, or translate local news into Pidgin, Yoruba, Hausa, or Igbo.',
-    icon: Bot,
-    illustrationType: 'sabo',
-    whatItDoes: 'An intelligent AI assistant built specifically for Nigeria. It understands local markets, currency values, state geography, cultural context, and Nigerian languages.',
-    whyItMatters: 'Provides instant conversational answers without needing to search through lengthy articles or complex spreadsheets.',
+    id: 'heatmap',
+    partNumber: 'PAGE 10 OF 13',
+    partName: 'Interactive Nigerian Rumor & Risk Heatmap',
+    badge: '🗺️ National Heatmap',
+    badgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+    title: 'Geographic Visualization of Circulating Claims & Hotspots',
+    subtitle: 'Explore an interactive regional map displaying verified claim clusters, market surges, and misinformation activity.',
+    icon: Map,
+    illustrationType: 'heatmap',
+    whatItDoes: 'Visualizes the geographic concentration of active rumors and price spikes across the 6 geopolitical zones of Nigeria with interactive state pins and severity filters.',
+    whyItMatters: 'Enables researchers, journalists, and citizens to spot coordinated disinformation campaigns targeting specific states or borders.',
     keyFeatures: [
-      'Recipe & Dish Budgeting: "How much will it cost to cook Jollof Rice for 10 people in Abuja?"',
-      'Instant Fact-Check Inquiries: "Is the news about CBN new policy true?"',
-      'Multilingual Translation: Chat in English, Nigerian Pidgin, Yoruba, Hausa, or Igbo.'
+      'Geopolitical Zone Breakdown (South-West, South-South, North-Central, etc.).',
+      'Live Hotspot Severity Rings indicating high rumor concentration.',
+      'Interactive State Selector with instant local truth stats.'
     ],
     howToUseSteps: [
-      'Tap the Sparkles icon (✨) in the top header or in the Sabiers Chat.',
-      'Type any question about rumors, commodity prices, or local news.',
-      'Get an immediate, localized answer tailored to your state.'
+      'Open the "Heatmap" tab to load the interactive Nigerian map.',
+      'Click on any state pin to view active rumors, debunk scores, and local commodity trends.',
+      'Filter by category (Banking, Petrol, Food, Governance) to isolate specific trends.'
     ],
     realLifeExample: {
-      scenario: 'You want to cook a large pot of Egusi soup for visitors this weekend in Port Harcourt and need an accurate budget.',
-      actionTaken: 'You ask Sabo AI: "Calculate the exact market cost to cook Egusi soup for 8 people in Oil Mill Market PH."',
-      outcome: 'Sabo AI provides an itemized grocery breakdown with current spot rates for Egusi, Palm Oil, Stockfish, and Goat Meat totaling ₦22,500.'
+      scenario: 'You see a sudden flurry of posts about a market disturbance in the North-Central zone.',
+      actionTaken: 'You check the SABI Heatmap for Abuja and Plateau state.',
+      outcome: 'You see the area is calm and green, with local spotters debunking the claim as old 2021 video footage.'
+    },
+    actionButton: {
+      text: 'Open National Heatmap',
+      tab: 'heatmap',
+      icon: Map
+    }
+  },
+  {
+    id: 'recipes',
+    partNumber: 'PAGE 11 OF 13',
+    partName: 'Authentic Nigerian Food Recipes & Live Market Budgeting',
+    badge: '🍲 Recipe Budgeter',
+    badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    title: 'Cook Authentic Nigerian Dishes with Live Market Pricing',
+    subtitle: 'Access authentic culinary recipes (Jollof Rice, Egusi, Afang, Banga, Fried Rice) linked with real-time local market costs.',
+    icon: Utensils,
+    illustrationType: 'recipes',
+    whatItDoes: 'Connects traditional step-by-step Nigerian cooking recipes with live spot prices from markets like Mile 12, Bodija, and Dawanau, giving you an exact, itemized cooking budget per serving.',
+    whyItMatters: 'Eliminates meal planning guesswork by calculating exactly what ingredients will cost before you step foot in the market.',
+    keyFeatures: [
+      'Complete Step-by-Step Cooking Guides for authentic Nigerian delicacies.',
+      'Dynamic Market Cost Calculator based on current state commodity prices.',
+      'Serving Size Adjuster (Cook for 2, 5, 10, or 20 people).'
+    ],
+    howToUseSteps: [
+      'Open the "Recipes" tab to browse authentic dishes.',
+      'Select a recipe (e.g., Party Jollof Rice or Egusi Soup).',
+      'Adjust the serving slider to see the updated grocery budget at your local market.'
+    ],
+    realLifeExample: {
+      scenario: 'You are organizing a birthday gathering for 12 guests and need to budget for smoky Nigerian Party Jollof.',
+      actionTaken: 'You open the Recipe Budgeter, set servings to 12 in Lagos state.',
+      outcome: 'SABI itemizes the cost of 4 cups of rice, tomato paste, scotch bonnets, chicken, and groundnut oil totaling ₦18,200.'
+    },
+    actionButton: {
+      text: 'Explore Recipes & Budgets',
+      tab: 'recipes',
+      icon: Utensils
     }
   },
   {
     id: 'rewards',
-    partNumber: 'PART 6',
-    partName: 'Sabi Points, Streaks & Reputation Tiers',
-    badge: '🏆 Gamified Rewards',
-    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
-    title: 'Earn Points, Daily Streaks & Deluxe Privileges',
-    subtitle: 'Get rewarded for maintaining high truth accuracy and keeping Nigerian communities informed.',
-    icon: Award,
+    partNumber: 'PAGE 12 OF 13',
+    partName: 'Sabi Points, 14-Day Streaks & VIP Title Perks',
+    badge: '👑 Titles & Perks',
+    badgeColor: 'bg-yellow-100 text-yellow-900 border-yellow-300',
+    title: 'Earn Points, Daily Streaks & Unlock VIP Title Perks',
+    subtitle: 'Get rewarded for maintaining high truth accuracy: unlock Bronze Sentinel, Golden Sovereign, and Deluxe Grandmaster privileges.',
+    icon: Crown,
     illustrationType: 'rewards',
-    whatItDoes: 'Tracks your accuracy score, daily activity streaks, and community contributions. As you verify claims and log market prices, you earn points and rank up.',
-    whyItMatters: 'Incentivizes honest, high-quality crowd reporting while filtering out bad actors.',
+    whatItDoes: 'Tracks your accuracy score, daily activity streaks, and community contributions. Purchasing title tiers unlocks points multipliers (1.25x Bronze, 1.75x Golden, 2.5x Deluxe), full Sabiation AI access, and VIP customer service.',
+    whyItMatters: 'Recognizes dedicated verifiers with tangible community status, point multipliers, and creative AI tools.',
     keyFeatures: [
-      'Reputation Ranks: Community Spotter → Trusted Contributor → Truth Sentinel → Deluxe Sovereign.',
-      'Daily Verification Streaks: Earn point multipliers by logging in and fact-checking daily.',
-      'Exclusive Sentinel Badges: Display badges like "Market Authority" or "Consensus Guardian" on your profile.'
+      'Bronze Sentinel (8,000 PTS): 1.25x points multiplier + VIP Bronze badge.',
+      'Golden Sovereign (28,000 PTS): 1.75x points multiplier + Full Sabiation AI Access + avidayo.created.app portal link.',
+      'Deluxe Sovereign VIP (100,000 PTS): 2.5x multiplier + 1 Year 24/7 Concierge Support + Instant +60,000 Bonus Points!',
+      '14-Day Daily Streak Rewards with growing daily bonuses up to +2,000 PTS.'
     ],
     howToUseSteps: [
-      'Verify at least 3 claims or prices every day to maintain your streak.',
-      'Submit high-quality evidence links and receipts to maximize your points.',
-      'Check your rank on the national spotter leaderboard in the Profile tab.'
+      'Claim your daily streak reward every 24 hours in the Profile tab.',
+      'Earn points by voting on claims, reporting market rates, and completing tasks.',
+      'Upgrade your Title Tier in the Profile Store to activate your perks and multipliers.'
     ],
     realLifeExample: {
-      scenario: 'You want to build your reputation as a trusted market reporter in your community.',
-      actionTaken: 'You log market prices twice a week and vote on 3 community claims each morning.',
-      outcome: 'You maintain a 14-day streak, earn +450 Sabi Points, and unlock the "Truth Sentinel" badge, giving your reports higher voting weight in community consensus.'
+      scenario: 'You upgrade to the Golden Sovereign tier with your accumulated points.',
+      actionTaken: 'Your profile is instantly crowned with the Golden Sovereign title badge.',
+      outcome: 'Every task you complete now pays out 1.75x bonus points, and you gain full unrestricted access to the Sabiation AI generator!'
     },
     actionButton: {
-      text: 'Start Exploring SABI',
-      tab: 'home',
-      icon: Sparkles
+      text: 'View Title Store & Profile',
+      tab: 'profile',
+      icon: Crown
+    }
+  },
+  {
+    id: 'admin',
+    partNumber: 'PAGE 13 OF 13',
+    partName: 'Master Admin Desk & Community Moderation',
+    badge: '🔒 Admin Portal',
+    badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    title: 'PIN-Secured Governance & Verification Control Center',
+    subtitle: 'Authorized administrators can access a dedicated PIN-protected dashboard to verify pending submissions and dispatch alerts.',
+    icon: Lock,
+    illustrationType: 'admin',
+    whatItDoes: 'Provides a clean, dedicated Admin Login (Passcode PIN: 2013) that allows moderators to review flagged claims, approve submitted market prices, ban bad actors, and dispatch broadcast notifications.',
+    whyItMatters: 'Ensures community safety and prevents malicious actors from poisoning the decentralized truth consensus.',
+    keyFeatures: [
+      'Dedicated Admin Login interface with focused 4-digit PIN security (no distracting sign-in clutter).',
+      'One-Click Report Approval & Rejection workflow.',
+      'System Broadcast Dispatcher sending instant alerts to all 36 state spotters.'
+    ],
+    howToUseSteps: [
+      'Open your Profile and click "Admin Login" in the account section.',
+      'Enter the master security passcode (2013) to unlock the Admin Console.',
+      'Review pending community submissions and dispatch national alerts.'
+    ],
+    realLifeExample: {
+      scenario: 'A breaking claim about a bridge collapse needs official confirmation before reaching the national live ticker.',
+      actionTaken: 'An administrator logs in via Admin Mode, cross-checks spotter photos, and marks it verified.',
+      outcome: 'A national verified broadcast is instantly dispatched to all active users.'
+    },
+    actionButton: {
+      text: 'Go to Profile & Admin Access',
+      tab: 'profile',
+      icon: Lock
     }
   }
 ];
@@ -362,18 +596,18 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Header Bar */}
           <div className="bg-[#0A3D2E] text-white px-5 py-3.5 sm:py-4 flex items-center justify-between border-b border-emerald-800">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#FFD60A] text-[#0A3D2E] flex items-center justify-center font-black text-base shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-[#FFD60A] text-[#0A3D2E] flex items-center justify-center font-black text-base shadow-sm font-display">
                 S
               </div>
               <div>
                 <h3 className="text-sm font-black tracking-tight flex items-center gap-2 font-display">
-                  <span>How SABI Works — Interactive Tour</span>
+                  <span>How SABI Works — Complete Feature Guide</span>
                   <span className="text-[10px] bg-white/20 text-emerald-100 font-bold px-2 py-0.5 rounded-full">
                     {currentSlide.partNumber}
                   </span>
                 </h3>
-                <p className="text-[11px] text-emerald-200">
-                  {currentSlide.partName} • Slide {currentSlideIndex + 1} of {TUTORIAL_SLIDES.length}
+                <p className="text-[11px] text-emerald-200 truncate max-w-[280px] sm:max-w-md">
+                  {currentSlide.partName} • {currentSlideIndex + 1} of {TUTORIAL_SLIDES.length}
                 </p>
               </div>
             </div>
@@ -395,7 +629,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Quick Jump Bar */}
+          {/* Feature Selector Tabs / Quick Jump Bar */}
           <div className="bg-emerald-50/80 border-b border-emerald-100 px-3 sm:px-4 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             {TUTORIAL_SLIDES.map((slide, idx) => (
               <button
@@ -410,11 +644,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 <span>{idx + 1}.</span>
                 <span>
                   {slide.id === 'welcome' ? 'Overview' : 
+                   slide.id === 'anchor' ? 'News Anchor' :
                    slide.id === 'rumors' ? 'Rumors' : 
+                   slide.id === 'deepfake' ? 'AI Scanner' : 
                    slide.id === 'market' ? 'Market' : 
-                   slide.id === 'deepfake' ? 'Deepfake' : 
-                   slide.id === 'sabiers' ? 'Sabiers' : 
-                   slide.id === 'sabo' ? 'Sabo AI' : 'Rewards'}
+                   slide.id === 'tasks' ? 'Missions' :
+                   slide.id === 'sabiation' ? 'Sabiation' :
+                   slide.id === 'sabo' ? 'Sabo AI' : 
+                   slide.id === 'sabiers' ? 'Sabiers' :
+                   slide.id === 'heatmap' ? 'Heatmap' :
+                   slide.id === 'recipes' ? 'Recipes' :
+                   slide.id === 'rewards' ? 'Titles & Perks' : 'Admin'}
                 </span>
               </button>
             ))}
@@ -428,7 +668,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 initial={{ opacity: 0, x: direction * 35 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: direction * -35 }}
-                transition={{ duration: 0.22 }}
+                transition={{ duration: 0.2 }}
                 className="space-y-6"
               >
                 {/* Title & Badge */}
@@ -456,7 +696,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 space-y-1.5">
                     <div className="flex items-center gap-2 text-[#0A3D2E] font-black text-xs uppercase tracking-wider font-display">
                       <Lightbulb className="w-4 h-4 text-emerald-700" />
-                      <span>What This Part Does</span>
+                      <span>What This Feature Does</span>
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed">
                       {currentSlide.whatItDoes}
@@ -466,7 +706,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-1.5">
                     <div className="flex items-center gap-2 text-amber-900 font-black text-xs uppercase tracking-wider font-display">
                       <ShieldCheck className="w-4 h-4 text-amber-700" />
-                      <span>Why It Matters In Nigeria</span>
+                      <span>Why It Matters in Nigeria</span>
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed">
                       {currentSlide.whyItMatters}
@@ -479,10 +719,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div className="flex items-center justify-between border-b border-emerald-700/60 pb-2">
                     <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wider font-display text-[#FFD60A]">
                       <FileText className="w-4 h-4" />
-                      <span>Real-Life Practical Example</span>
+                      <span>Real-Life Practical Scenario</span>
                     </div>
                     <span className="text-[10px] bg-white/10 text-emerald-200 font-bold px-2 py-0.5 rounded-full">
-                      Nigeria Scenario
+                      Nigerian Context
                     </span>
                   </div>
 
@@ -509,23 +749,42 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       <div className="bg-white p-3 rounded-xl border border-gray-200 text-center space-y-1 shadow-2xs">
                         <AlertTriangle className="w-5 h-5 text-red-500 mx-auto" />
                         <span className="text-xs font-black text-gray-900 block">Rumor Feed</span>
-                        <span className="text-[10px] text-gray-500 block">Community votes</span>
+                        <span className="text-[10px] text-gray-500 block">Crowd voting</span>
                       </div>
                       <div className="bg-white p-3 rounded-xl border border-gray-200 text-center space-y-1 shadow-2xs">
                         <ShoppingBasket className="w-5 h-5 text-amber-500 mx-auto" />
                         <span className="text-xs font-black text-gray-900 block">Market Prices</span>
-                        <span className="text-[10px] text-gray-500 block">Rice, Garri, Oil</span>
+                        <span className="text-[10px] text-gray-500 block">Mile 12, Bodija</span>
                       </div>
                       <div className="bg-white p-3 rounded-xl border border-gray-200 text-center space-y-1 shadow-2xs">
-                        <Scan className="w-5 h-5 text-indigo-500 mx-auto" />
-                        <span className="text-xs font-black text-gray-900 block">Deepfake X-Ray</span>
-                        <span className="text-[10px] text-gray-500 block">AI Image & Audio</span>
+                        <Sparkles className="w-5 h-5 text-amber-500 mx-auto" />
+                        <span className="text-xs font-black text-gray-900 block">Sabiation AI</span>
+                        <span className="text-[10px] text-gray-500 block">720p · 1080p · 4K</span>
                       </div>
                       <div className="bg-white p-3 rounded-xl border border-gray-200 text-center space-y-1 shadow-2xs">
                         <Users className="w-5 h-5 text-emerald-600 mx-auto" />
                         <span className="text-xs font-black text-gray-900 block">The Sabiers</span>
-                        <span className="text-[10px] text-gray-500 block">State spotters</span>
+                        <span className="text-[10px] text-gray-500 block">36-State network</span>
                       </div>
+                    </div>
+                  )}
+
+                  {currentSlide.illustrationType === 'anchor' && (
+                    <div className="bg-gradient-to-r from-red-950 to-red-900 text-white p-4 rounded-xl space-y-2 border border-red-700 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                          <span className="text-xs font-black uppercase tracking-wider text-red-200 font-display">
+                            SABI NEWS DESK · LIVE ON AIR
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-red-800 text-red-200 font-mono px-2 py-0.5 rounded">
+                          02:14 / 04:30
+                        </span>
+                      </div>
+                      <p className="text-xs text-red-100 font-medium italic">
+                        "Good evening Nigeria, this is the SABI verified news desk. Food commodity prices in Bodija Market Ibadan have dropped by 12% following fresh harvest arrivals..."
+                      </p>
                     </div>
                   )}
 
@@ -540,13 +799,30 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                             <span className="text-xs font-black text-gray-900 block">
                               "CBN Re-introduces Old ₦500 and ₦1000 Banknotes Deadline"
                             </span>
-                            <span className="text-[10px] text-gray-500">Official CBN Statement: Both banknotes remain legal tender indefinitely</span>
+                            <span className="text-[10px] text-gray-500">Official CBN Circular: Both banknotes remain legal tender indefinitely</span>
                           </div>
                         </div>
                         <span className="bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap">
                           FALSE (99%)
                         </span>
                       </div>
+                    </div>
+                  )}
+
+                  {currentSlide.illustrationType === 'deepfake' && (
+                    <div className="bg-white p-3.5 rounded-xl border border-indigo-100 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <Scan className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-indigo-900 block">AI Deepfake Detection Engine</span>
+                          <span className="text-[10px] text-gray-500">Scans pitch variance, facial boundaries, and metadata cloning</span>
+                        </div>
+                      </div>
+                      <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap">
+                        94.2% AI Generated
+                      </span>
                     </div>
                   )}
 
@@ -581,19 +857,57 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     </div>
                   )}
 
-                  {currentSlide.illustrationType === 'deepfake' && (
-                    <div className="bg-white p-3.5 rounded-xl border border-indigo-100 flex items-center justify-between gap-3 shadow-2xs">
+                  {currentSlide.illustrationType === 'tasks' && (
+                    <div className="bg-white p-3.5 rounded-xl border border-blue-200 flex items-center justify-between gap-3 shadow-2xs">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
-                          <Scan className="w-4 h-4" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <CheckSquare className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="text-xs font-black text-indigo-900 block">AI Deepfake Detection Engine</span>
-                          <span className="text-[10px] text-gray-500">Scans pitch variance, facial boundaries, and metadata cloning</span>
+                          <span className="text-xs font-black text-gray-900 block">Verify Fuel Price at NNPC Ikeja</span>
+                          <span className="text-[10px] text-gray-500">Attach meter photo or POS receipt to claim reward</span>
                         </div>
                       </div>
-                      <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap">
-                        94.2% AI Generated
+                      <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap">
+                        +50 Sabi Points
+                      </span>
+                    </div>
+                  )}
+
+                  {currentSlide.illustrationType === 'sabiation' && (
+                    <div className="bg-gradient-to-r from-amber-900 to-amber-950 text-white p-3.5 rounded-xl border border-amber-500/50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-[#FFD60A]" />
+                          <span className="text-xs font-black font-display text-[#FFD60A]">
+                            SABIATION AI IMAGE ENGINE
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="bg-blue-900/80 text-blue-200 text-[9px] font-mono px-1.5 py-0.5 rounded">720p</span>
+                          <span className="bg-emerald-900/80 text-emerald-200 text-[9px] font-mono px-1.5 py-0.5 rounded">1080p</span>
+                          <span className="bg-[#FFD60A] text-black text-[9px] font-mono font-bold px-1.5 py-0.5 rounded">4K UHD</span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-amber-100">
+                        Select 720p, 1080p, or 4K buttons to generate ultra-clear Nigerian artwork and download instantly in full resolution!
+                      </p>
+                    </div>
+                  )}
+
+                  {currentSlide.illustrationType === 'sabo' && (
+                    <div className="bg-white p-3 rounded-xl border border-amber-200 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-black">
+                          🤖
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-gray-900 block">Sabo AI Recipe Budgeting</span>
+                          <span className="text-[10px] text-gray-500">"Egusi soup for 8 people in Port Harcourt: Total ₦22,500"</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded-full">
+                        Itemized
                       </span>
                     </div>
                   )}
@@ -615,19 +929,36 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     </div>
                   )}
 
-                  {currentSlide.illustrationType === 'sabo' && (
-                    <div className="bg-white p-3 rounded-xl border border-amber-200 flex items-center justify-between gap-3 shadow-2xs">
+                  {currentSlide.illustrationType === 'heatmap' && (
+                    <div className="bg-white p-3 rounded-xl border border-rose-200 flex items-center justify-between gap-3 shadow-2xs">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-black">
-                          🤖
+                        <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <Map className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="text-xs font-black text-gray-900 block">Sabo AI Recipe Budgeting</span>
-                          <span className="text-[10px] text-gray-500">"Egusi soup for 8 people in Port Harcourt: Total ₦22,500"</span>
+                          <span className="text-xs font-black text-gray-900 block">Interactive Regional Risk Map</span>
+                          <span className="text-[10px] text-gray-500">Track 6 Geopolitical Zones with live rumor intensity indicators</span>
                         </div>
                       </div>
-                      <span className="text-[10px] bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded-full">
-                        Itemized
+                      <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                        36 States
+                      </span>
+                    </div>
+                  )}
+
+                  {currentSlide.illustrationType === 'recipes' && (
+                    <div className="bg-white p-3 rounded-xl border border-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <Utensils className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-gray-900 block">Authentic Nigerian Recipe Pricing</span>
+                          <span className="text-[10px] text-gray-500">Jollof Rice, Egusi & Banga Soup with live market ingredient costs</span>
+                        </div>
+                      </div>
+                      <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                        Live Budget
                       </span>
                     </div>
                   )}
@@ -635,20 +966,37 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   {currentSlide.illustrationType === 'rewards' && (
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="bg-white p-2.5 rounded-xl border border-amber-200 shadow-2xs">
-                        <span className="text-base">🔥</span>
-                        <span className="text-xs font-black text-gray-900 block">7-Day Streak</span>
-                        <span className="text-[10px] text-amber-600 font-bold block">+350 Points</span>
+                        <span className="text-base">🥉</span>
+                        <span className="text-xs font-black text-gray-900 block">Bronze Sentinel</span>
+                        <span className="text-[10px] text-amber-600 font-bold block">1.25x Points</span>
                       </div>
-                      <div className="bg-white p-2.5 rounded-xl border border-emerald-200 shadow-2xs">
-                        <span className="text-base">🛡️</span>
-                        <span className="text-xs font-black text-gray-900 block">Truth Sentinel</span>
-                        <span className="text-[10px] text-emerald-600 font-bold block">Top 5% Rank</span>
+                      <div className="bg-white p-2.5 rounded-xl border border-yellow-300 bg-yellow-50/50 shadow-2xs">
+                        <span className="text-base">🥇</span>
+                        <span className="text-xs font-black text-gray-900 block">Golden Sovereign</span>
+                        <span className="text-[10px] text-amber-700 font-bold block">1.75x + Sabiation AI</span>
                       </div>
-                      <div className="bg-white p-2.5 rounded-xl border border-indigo-200 shadow-2xs">
+                      <div className="bg-white p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/50 shadow-2xs">
                         <span className="text-base">👑</span>
                         <span className="text-xs font-black text-gray-900 block">Deluxe Sovereign</span>
-                        <span className="text-[10px] text-indigo-600 font-bold block">VIP Access</span>
+                        <span className="text-[10px] text-emerald-700 font-bold block">2.5x + VIP Support</span>
                       </div>
+                    </div>
+                  )}
+
+                  {currentSlide.illustrationType === 'admin' && (
+                    <div className="bg-white p-3 rounded-xl border border-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-gray-900 block">Admin Passcode Login (PIN: 2013)</span>
+                          <span className="text-[10px] text-gray-500">Dedicated PIN gateway with no distracting sign up clutter</span>
+                        </div>
+                      </div>
+                      <span className="bg-[#0A3D2E] text-[#FFD60A] text-[10px] font-black px-2.5 py-1 rounded-full">
+                        Admin Only
+                      </span>
                     </div>
                   )}
                 </div>
@@ -659,7 +1007,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100 space-y-2.5">
                     <h4 className="text-xs font-black text-[#0A3D2E] uppercase tracking-wider flex items-center gap-1.5 font-display">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Key Features</span>
+                      <span>Key Highlights</span>
                     </h4>
                     <ul className="space-y-2 text-xs text-gray-700">
                       {currentSlide.keyFeatures.map((feat, i) => (
@@ -695,10 +1043,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <div className="pt-1 flex justify-center">
                     <button
                       onClick={() => handleActionButtonClick(currentSlide.actionButton!.tab)}
-                      className="inline-flex items-center gap-2 text-xs font-black text-[#0A3D2E] bg-emerald-100/80 hover:bg-emerald-200/80 border border-emerald-300 px-5 py-2.5 rounded-xl transition-all active:scale-95 shadow-xs"
+                      className="inline-flex items-center gap-2 text-xs font-black text-[#0A3D2E] bg-emerald-100/80 hover:bg-emerald-200/80 border border-emerald-300 px-5 py-2.5 rounded-xl transition-all active:scale-95 shadow-xs font-display"
                     >
                       <currentSlide.actionButton.icon className="w-4 h-4 text-emerald-800" />
-                      <span>Open: {currentSlide.actionButton.text}</span>
+                      <span>Try This Feature: {currentSlide.actionButton.text}</span>
                     </button>
                   </div>
                 )}
@@ -709,17 +1057,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Footer Controls: Dots & Navigation */}
           <div className="bg-gray-50 border-t border-gray-200 px-5 py-3.5 sm:py-4 flex items-center justify-between gap-3">
             {/* Step Dots */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 overflow-x-auto max-w-[160px] sm:max-w-none">
               {TUTORIAL_SLIDES.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => handleJumpToSlide(i)}
                   className={`h-2 rounded-full transition-all ${
                     i === currentSlideIndex
-                      ? 'w-6 bg-[#0A3D2E]'
-                      : 'w-2 bg-gray-300 hover:bg-gray-400'
+                      ? 'w-5 bg-[#0A3D2E]'
+                      : 'w-1.5 bg-gray-300 hover:bg-gray-400'
                   }`}
-                  title={`Go to slide ${i + 1}`}
+                  title={`Go to page ${i + 1}`}
                 />
               ))}
             </div>
@@ -740,7 +1088,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 onClick={handleNext}
                 className="flex items-center gap-1.5 bg-[#0A3D2E] hover:bg-[#082e22] text-white px-5 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 font-display"
               >
-                <span>{isLastSlide ? 'Complete Tour & Start SABI' : 'Next Part'}</span>
+                <span>{isLastSlide ? 'Complete Tour & Start SABI' : 'Next Feature'}</span>
                 {isLastSlide ? <Sparkles className="w-4 h-4 text-[#FFD60A]" /> : <ChevronRight className="w-4 h-4 text-emerald-200" />}
               </button>
             </div>

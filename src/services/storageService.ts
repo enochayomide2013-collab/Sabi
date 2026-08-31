@@ -15,7 +15,8 @@ import {
   UserTier,
   StreakData,
   ResultType,
-  OnlineSabier
+  OnlineSabier,
+  SaboAiSession
 } from '../types';
 import {
   INITIAL_USER,
@@ -46,7 +47,9 @@ const KEYS = {
   LEADERBOARD: 'sabi_leaderboard',
   SENT_EMAILS: 'sabi_sent_emails',
   SABIERS_MESSAGES: 'sabi_sabiers_chat_messages',
-  NEWS: 'sabi_latest_news_articles'
+  NEWS: 'sabi_latest_news_articles',
+  SABO_SESSIONS: 'sabi_sabo_ai_sessions',
+  SABO_ACTIVE_SESSION_ID: 'sabi_sabo_ai_active_session_id'
 };
 
 export const ADMIN_MASTER_PASSWORD = '2013';
@@ -340,6 +343,87 @@ class StorageService {
 
     this.notify();
     return { success: true, user: userMatch, isAdmin: userMatch.role === 'admin' };
+  }
+
+  public signInWithGoogleUser(googleUser: {
+    name: string;
+    email: string;
+    avatarUrl?: string;
+    uid?: string;
+  }): { success: boolean; user: UserProfile; isNewUser: boolean } {
+    const trimmedEmail = googleUser.email.trim().toLowerCase();
+    const users = this.getRegisteredUsers();
+    let existing = users.find(u => u.email.toLowerCase() === trimmedEmail);
+
+    if (existing) {
+      // Update avatar if provided
+      if (googleUser.avatarUrl && !existing.avatarUrl) {
+        existing.avatarUrl = googleUser.avatarUrl;
+      }
+      localStorage.setItem(KEYS.USER, JSON.stringify(existing));
+      this.notify();
+      return { success: true, user: existing, isNewUser: false };
+    }
+
+    // Create new account with Google details
+    const newUser: UserAccount = {
+      id: googleUser.uid || 'usr_' + Date.now().toString(36),
+      name: googleUser.name || 'Google Spotter',
+      email: trimmedEmail,
+      avatarUrl: googleUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      role: 'member',
+      trustLevel: 'Bronze',
+      userTier: 'Member',
+      sabiPoints: 100, // 100 welcome points!
+      completedVerificationsCount: 0,
+      submittedReportsCount: 0,
+      accuracyRate: 100,
+      joinedDate: 'Today',
+      state: 'Lagos',
+      lga: 'Lagos Mainland',
+      badges: ['New Contributor', 'Google Verified', 'SABI Pioneer'],
+      unlockedTitles: ['Community Spotter', 'Google Verified Spotter'],
+      hasSabiationAccess: false,
+      hasDeluxeVipService: false,
+      streak: {
+        currentDay: 1,
+        lastClaimDate: '',
+        totalClaimedPoints: 0,
+        streakHistory: INITIAL_STREAK_REWARDS.map(r => ({
+          day: r.day,
+          points: r.points,
+          claimed: false
+        }))
+      },
+      passwordHash: 'google_oauth_verified',
+      isRegistered: true,
+      recentActivity: [
+        {
+          id: 'act_signup_' + Date.now(),
+          type: 'badge_earned',
+          points: 100,
+          description: 'Welcome Bonus: Joined SABI with Google Account',
+          timestamp: 'Just now'
+        }
+      ]
+    };
+
+    const updatedList = [...users, newUser];
+    localStorage.setItem(KEYS.REGISTERED_USERS, JSON.stringify(updatedList));
+    localStorage.setItem(KEYS.USER, JSON.stringify(newUser));
+
+    this.addNotification({
+      id: 'notif_welcome_' + Date.now(),
+      title: `Welcome to SABI, ${newUser.name}!`,
+      message: `You received +100 Welcome Points. Start exploring local truth verification!`,
+      type: 'points_earned',
+      timestamp: 'Just now',
+      read: false,
+      pointsAwarded: 100
+    });
+
+    this.notify();
+    return { success: true, user: newUser, isNewUser: true };
   }
 
   public adminSignIn(password: string): { success: boolean; user?: UserProfile; message?: string } {
@@ -665,13 +749,24 @@ Platform: SABI Nigeria`;
   // --- POINTS & ACTIVITY ---
 
   public addPoints(amount: number, reason: string) {
+    if (amount <= 0) return;
     const user = this.getUser();
-    const newPoints = user.sabiPoints + amount;
+    
+    // Apply title tier multiplier
+    let multiplier = 1;
+    if (user.userTier === 'Bronze') multiplier = 1.25;
+    else if (user.userTier === 'Golden') multiplier = 1.75;
+    else if (user.userTier === 'Deluxe') multiplier = 2.5;
+
+    const multipliedAmount = Math.round(amount * multiplier);
+    const newPoints = user.sabiPoints + multipliedAmount;
     
     let newTrust = user.trustLevel;
     if (newPoints >= 4000) newTrust = 'Trusted Contributor';
     else if (newPoints >= 2500) newTrust = 'Gold';
     else if (newPoints >= 1500) newTrust = 'Silver';
+
+    const perkText = multiplier > 1 ? ` (${multiplier}x ${user.userTier} Tier Bonus)` : '';
 
     const updatedUser: UserProfile = {
       ...user,
@@ -681,8 +776,8 @@ Platform: SABI Nigeria`;
         {
           id: 'act_' + Date.now(),
           type: 'verified_task',
-          points: amount,
-          description: reason,
+          points: multipliedAmount,
+          description: `${reason}${perkText}`,
           timestamp: 'Just now'
         },
         ...user.recentActivity
@@ -693,12 +788,12 @@ Platform: SABI Nigeria`;
 
     this.addNotification({
       id: 'notif_' + Date.now(),
-      title: `You Earned +${amount} Stat Points!`,
-      message: reason,
+      title: `You Earned +${multipliedAmount} Stat Points!`,
+      message: `${reason}${perkText}`,
       type: 'points_earned',
       timestamp: 'Just now',
       read: false,
-      pointsAwarded: amount
+      pointsAwarded: multipliedAmount
     });
   }
 
@@ -1159,6 +1254,86 @@ Platform: SABI Nigeria`;
 
   public getSabiationResources() {
     return FREE_SABIATION_RESOURCES;
+  }
+
+  // --- SABO AI CONVERSATION SESSIONS (PERSIST LAST 3-5 SESSIONS) ---
+
+  public getSaboSessions(): SaboAiSession[] {
+    try {
+      const raw = localStorage.getItem(KEYS.SABO_SESSIONS);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.slice(0, 5) : [];
+    } catch (e) {
+      console.error('Failed to get Sabo AI sessions from localStorage', e);
+      return [];
+    }
+  }
+
+  public saveSaboSession(session: SaboAiSession): void {
+    try {
+      const sessions = this.getSaboSessions();
+      const existingIndex = sessions.findIndex(s => s.id === session.id);
+      let updated: SaboAiSession[];
+      if (existingIndex >= 0) {
+        updated = [...sessions];
+        updated[existingIndex] = { ...session, updatedAt: Date.now() };
+      } else {
+        updated = [{ ...session, updatedAt: session.updatedAt || Date.now() }, ...sessions];
+      }
+      // Sort by latest update and keep the last 5 sessions
+      updated.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      const trimmed = updated.slice(0, 5);
+      localStorage.setItem(KEYS.SABO_SESSIONS, JSON.stringify(trimmed));
+      this.setActiveSaboSessionId(session.id);
+      this.notify();
+    } catch (e) {
+      console.error('Failed to save Sabo AI session', e);
+    }
+  }
+
+  public deleteSaboSession(sessionId: string): void {
+    try {
+      const sessions = this.getSaboSessions().filter(s => s.id !== sessionId);
+      localStorage.setItem(KEYS.SABO_SESSIONS, JSON.stringify(sessions));
+      const activeId = this.getActiveSaboSessionId();
+      if (activeId === sessionId) {
+        if (sessions.length > 0) {
+          this.setActiveSaboSessionId(sessions[0].id);
+        } else {
+          localStorage.removeItem(KEYS.SABO_ACTIVE_SESSION_ID);
+        }
+      }
+      this.notify();
+    } catch (e) {
+      console.error('Failed to delete Sabo AI session', e);
+    }
+  }
+
+  public clearAllSaboSessions(): void {
+    try {
+      localStorage.removeItem(KEYS.SABO_SESSIONS);
+      localStorage.removeItem(KEYS.SABO_ACTIVE_SESSION_ID);
+      this.notify();
+    } catch (e) {
+      console.error('Failed to clear Sabo AI sessions', e);
+    }
+  }
+
+  public getActiveSaboSessionId(): string | null {
+    try {
+      return localStorage.getItem(KEYS.SABO_ACTIVE_SESSION_ID);
+    } catch {
+      return null;
+    }
+  }
+
+  public setActiveSaboSessionId(sessionId: string): void {
+    try {
+      localStorage.setItem(KEYS.SABO_ACTIVE_SESSION_ID, sessionId);
+    } catch (e) {
+      console.error('Failed to set active Sabo session ID', e);
+    }
   }
 }
 

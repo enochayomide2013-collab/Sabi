@@ -290,6 +290,15 @@ export interface SaboAiMessage {
   sources?: string[];
 }
 
+export interface SaboAiSession {
+  id: string;
+  title: string;
+  messages: SaboAiMessage[];
+  createdAt: number;
+  updatedAt: number;
+  snippet?: string;
+}
+
 export interface StreakRewardItem {
   day: number;
   points: number;
