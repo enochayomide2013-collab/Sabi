@@ -1,0 +1,7 @@
+{
+  "name": "SABI",
+  "description": "Nigeria-wide community-powered platform for verifying rumors, claims, suspicious media, market prices, and food information.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
