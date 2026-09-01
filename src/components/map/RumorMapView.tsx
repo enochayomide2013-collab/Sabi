@@ -14,10 +14,13 @@ import {
   Navigation,
   Layers,
   Compass,
-  Radio
+  Radio,
+  BarChart2,
+  Globe2
 } from 'lucide-react';
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { TruthResult } from '../../types';
+import { ALL_36_NIGERIAN_STATES } from '../../data/nigerianStatesData';
 
 interface RumorMapViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -51,7 +54,7 @@ export const RumorMapView: React.FC<RumorMapViewProps> = ({ onNavigate }) => {
     return matchesState && matchesStatus && matchesSearch;
   });
 
-  const availableStates = ['All', 'Lagos', 'Abuja (FCT)', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 'Anambra'];
+  const availableStates = ['All', ...ALL_36_NIGERIAN_STATES.map(s => s.name)];
 
   const getStatusBadge = (result: string) => {
     switch (result) {
@@ -77,15 +80,25 @@ export const RumorMapView: React.FC<RumorMapViewProps> = ({ onNavigate }) => {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider bg-[#FFD60A] text-[#0A3D2E] px-3.5 py-1 rounded-full font-display">
-              <Radio className="w-3.5 h-3.5 animate-pulse text-[#0A3D2E]" />
-              <span>Live Community Radar Map</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider bg-[#FFD60A] text-[#0A3D2E] px-3.5 py-1 rounded-full font-display">
+                <Radio className="w-3.5 h-3.5 animate-pulse text-[#0A3D2E]" />
+                <span>Live Community Radar Map</span>
+              </div>
+              <button
+                onClick={() => onNavigate('stats')}
+                className="inline-flex items-center gap-1.5 text-xs font-black bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-700/80 px-3.5 py-1 rounded-full transition-all shadow-sm"
+              >
+                <BarChart2 className="w-3.5 h-3.5 text-[#FFD60A]" />
+                <span>Open D3 36-States Stats Dashboard →</span>
+              </button>
             </div>
+
             <h1 className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight">
-              Active Rumor Pins in {selectedStateFilter === 'All' ? 'Nigeria' : selectedStateFilter}
+              Active Rumor Pins Across All 36 States ({selectedStateFilter === 'All' ? 'Nigeria' : selectedStateFilter})
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium">
-              Explore community-reported rumors, viral claims, and local market intelligence pinned live across Nigerian states and LGAs. Click any pin to inspect the full SABI Evidence Report.
+              Explore community-reported rumors, viral claims, and local market intelligence pinned live across all 36 Nigerian states and the FCT. Click any pin to inspect the full SABI Evidence Report.
             </p>
           </div>
 
@@ -110,22 +123,34 @@ export const RumorMapView: React.FC<RumorMapViewProps> = ({ onNavigate }) => {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           
-          {/* State Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-xs font-bold text-gray-500 shrink-0 mr-1">Region:</span>
-            {availableStates.map(st => (
-              <button
-                key={st}
-                onClick={() => setSelectedStateFilter(st)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition-all ${
-                  selectedStateFilter === st
-                    ? 'bg-[#0A3D2E] text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {st}
-              </button>
-            ))}
+          {/* State Filter Selector Dropdown & Popular Pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-gray-500 shrink-0">State (36 States + FCT):</span>
+            <select
+              value={selectedStateFilter}
+              onChange={(e) => setSelectedStateFilter(e.target.value)}
+              className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
+            >
+              {availableStates.map(st => (
+                <option key={st} value={st}>{st === 'All' ? '🇳🇬 All 36 States + FCT' : st}</option>
+              ))}
+            </select>
+
+            <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {['All', 'Lagos', 'Abuja (FCT)', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 'Enugu', 'Edo', 'Delta'].map(st => (
+                <button
+                  key={st}
+                  onClick={() => setSelectedStateFilter(st)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition-all ${
+                    selectedStateFilter === st
+                      ? 'bg-[#0A3D2E] text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Status Filter */}
@@ -153,7 +178,7 @@ export const RumorMapView: React.FC<RumorMapViewProps> = ({ onNavigate }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search rumors by keyword, area (e.g. Yaba, Alaba, Lekki, Kano)..."
+            placeholder="Search rumors by keyword, area (e.g. Yaba, Alaba, Lekki, Kano, Port Harcourt)..."
             className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
           />
         </div>

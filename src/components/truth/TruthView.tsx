@@ -21,12 +21,19 @@ import {
   Film,
   FileText,
   Video,
-  ExternalLink
+  ExternalLink,
+  Globe,
+  Radio,
+  Tv,
+  Camera
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { TruthResult } from '../../types';
 import { ReportContentModal } from '../common/ReportContentModal';
 import { DeepfakeScanner } from './DeepfakeScanner';
+import { DeepfakeXRay } from './DeepfakeXRay';
+import { DirectEvidenceLinksGrid } from './DirectEvidenceLinksGrid';
+import { AiService } from '../../services/aiService';
 
 interface TruthViewProps {
   initialTruthId?: string;
@@ -34,13 +41,26 @@ interface TruthViewProps {
 }
 
 export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate }) => {
+  const [activeMainTab, setActiveMainTab] = useState<'rumors' | 'xray'>('rumors');
   const [truthResults, setTruthResults] = useState<TruthResult[]>(storageService.getTruthResults());
+  const [regionFilter, setRegionFilter] = useState<'ALL' | 'NIGERIA' | 'WORLDWIDE'>('ALL');
+  const [platformFilter, setPlatformFilter] = useState<'ALL' | 'tiktok' | 'twitter' | 'facebook' | 'youtube'>('ALL');
+  const [isRefreshingRumors, setIsRefreshingRumors] = useState<boolean>(false);
+
+  const filteredResults = truthResults.filter(tr => {
+    const matchesRegion = regionFilter === 'ALL' || 
+      (regionFilter === 'NIGERIA' && !tr.isWorldwide) || 
+      (regionFilter === 'WORLDWIDE' && tr.isWorldwide);
+    const matchesPlatform = platformFilter === 'ALL' || tr.platform === platformFilter;
+    return matchesRegion && matchesPlatform;
+  });
+
   const [selectedResult, setSelectedResult] = useState<TruthResult>(
     initialTruthId ? truthResults.find(t => t.id === initialTruthId) || truthResults[0] : truthResults[0]
   );
 
-  // View mode: 'evidence' vs 'video'
-  const [viewMode, setViewMode] = useState<'evidence' | 'video'>('evidence');
+  // View mode: 'evidence' vs 'video' vs 'social_clip'
+  const [viewMode, setViewMode] = useState<'evidence' | 'video' | 'social_clip'>('evidence');
 
   // Video playback & 20s timeline chapter state
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -52,12 +72,33 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
   const durationSec = 20;
   const progressTimerRef = useRef<any>(null);
 
+  const handleRefreshWorldwideRumors = async () => {
+    setIsRefreshingRumors(true);
+    try {
+      const live = await AiService.fetchWorldwideRumors(
+        regionFilter === 'ALL' ? 'all' : regionFilter === 'NIGERIA' ? 'nigeria' : 'worldwide',
+        platformFilter === 'ALL' ? 'all' : platformFilter
+      );
+      if (live && live.length > 0) {
+        const local = storageService.getTruthResults();
+        const merged = [...local, ...live];
+        const unique = merged.filter((v, i, a) => a.findIndex(t => t.claim.toLowerCase() === v.claim.toLowerCase()) === i);
+        setTruthResults(unique);
+      }
+    } catch {
+      // Keep local
+    } finally {
+      setIsRefreshingRumors(false);
+    }
+  };
+
   useEffect(() => {
+    handleRefreshWorldwideRumors();
     const unsubscribe = storageService.subscribe(() => {
       setTruthResults(storageService.getTruthResults());
     });
     return unsubscribe;
-  }, []);
+  }, [regionFilter, platformFilter]);
 
   useEffect(() => {
     if (initialTruthId) {
@@ -156,6 +197,97 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
     alert('Truth Video link copied! You can now paste and share this investigation clip to TikTok.');
   };
 
+  const handleWatchSocialMedia = (targetPlatform?: string) => {
+    if (!selectedResult) return;
+    
+    // Check if user specifically requested a platform or if we have a direct debunking video URL
+    if (!targetPlatform && selectedResult.debunkVideoUrl) {
+      window.open(selectedResult.debunkVideoUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const platformToUse = targetPlatform || selectedResult.debunkPlatform || selectedResult.platform || 'youtube';
+    let targetUrl = '';
+
+    // If platform matches the debunk platform, use debunkVideoUrl
+    if (selectedResult.debunkVideoUrl && (!targetPlatform || selectedResult.debunkPlatform === platformToUse)) {
+      targetUrl = selectedResult.debunkVideoUrl;
+    } else if (platformToUse === 'youtube') {
+      if (selectedResult.youtubeVideoId) {
+        targetUrl = `https://www.youtube.com/watch?v=${selectedResult.youtubeVideoId}`;
+      } else if (selectedResult.debunkVideoUrl && selectedResult.debunkVideoUrl.includes('youtube.com')) {
+        targetUrl = selectedResult.debunkVideoUrl;
+      } else {
+        targetUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(selectedResult.claim + ' fact check Africa Check Dubawa')}`;
+      }
+    } else if (platformToUse === 'tiktok') {
+      if (selectedResult.debunkVideoUrl && selectedResult.debunkVideoUrl.includes('tiktok.com')) {
+        targetUrl = selectedResult.debunkVideoUrl;
+      } else if (selectedResult.socialMediaPostUrl && selectedResult.socialMediaPostUrl.includes('tiktok.com')) {
+        targetUrl = selectedResult.socialMediaPostUrl;
+      } else {
+        targetUrl = `https://www.tiktok.com/search?q=${encodeURIComponent(selectedResult.claim + ' fact check debunk')}`;
+      }
+    } else if (platformToUse === 'twitter') {
+      if (selectedResult.debunkVideoUrl && (selectedResult.debunkVideoUrl.includes('twitter.com') || selectedResult.debunkVideoUrl.includes('x.com'))) {
+        targetUrl = selectedResult.debunkVideoUrl;
+      } else if (selectedResult.socialMediaPostUrl && (selectedResult.socialMediaPostUrl.includes('twitter.com') || selectedResult.socialMediaPostUrl.includes('x.com'))) {
+        targetUrl = selectedResult.socialMediaPostUrl;
+      } else {
+        targetUrl = `https://twitter.com/search?q=${encodeURIComponent(selectedResult.claim + ' fact check')}&f=live`;
+      }
+    } else if (platformToUse === 'facebook') {
+      if (selectedResult.debunkVideoUrl && selectedResult.debunkVideoUrl.includes('facebook.com')) {
+        targetUrl = selectedResult.debunkVideoUrl;
+      } else if (selectedResult.socialMediaPostUrl && selectedResult.socialMediaPostUrl.includes('facebook.com')) {
+        targetUrl = selectedResult.socialMediaPostUrl;
+      } else {
+        targetUrl = `https://www.facebook.com/search/top?q=${encodeURIComponent(selectedResult.claim + ' fact check')}`;
+      }
+    }
+
+    if (!targetUrl) {
+      targetUrl = selectedResult.debunkVideoUrl || (selectedResult.youtubeVideoId ? `https://www.youtube.com/watch?v=${selectedResult.youtubeVideoId}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(selectedResult.claim + ' debunk')}`);
+    }
+
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const getPlatformBadge = (platform?: string) => {
+    switch (platform) {
+      case 'tiktok':
+        return (
+          <span className="inline-flex items-center gap-1 bg-black text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
+            <span>🎵</span> TikTok Viral Claim
+          </span>
+        );
+      case 'twitter':
+        return (
+          <span className="inline-flex items-center gap-1 bg-sky-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
+            <span>𝕏</span> Twitter / X Broadcast
+          </span>
+        );
+      case 'facebook':
+        return (
+          <span className="inline-flex items-center gap-1 bg-blue-700 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
+            <span>📘</span> Facebook Community Post
+          </span>
+        );
+      case 'youtube':
+        return (
+          <span className="inline-flex items-center gap-1 bg-red-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
+            <span>▶️</span> YouTube Video / Short
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 bg-emerald-700 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
+            <span>💬</span> Social Media Claim
+          </span>
+        );
+    }
+  };
+
   const getResultBadge = (result: string) => {
     switch (result) {
       case 'TRUE':
@@ -197,8 +329,11 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
             <span>SABI Investigation Center</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 font-display mt-1">
-            Evidence Report & Truth Video
+            Evidence Report & Social Video Tracker
           </h1>
+          <p className="text-xs text-gray-600">
+            Debunking viral rumors across TikTok, Twitter (X), Facebook, YouTube & 36 Nigerian States + Worldwide.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -222,11 +357,120 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
         </div>
       </div>
 
-      <DeepfakeScanner />
+      {/* Main Tab Mode Selector */}
+      <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100/90 rounded-2xl border border-gray-200/80">
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('rumors')}
+          className={`py-3 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${
+            activeMainTab === 'rumors'
+              ? 'bg-[#0A3D2E] text-white shadow-md'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Tv className="w-4 h-4 text-[#FFD60A]" />
+          <span>Rumor & Social Video Hub</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('xray')}
+          className={`py-3 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${
+            activeMainTab === 'xray'
+              ? 'bg-[#0A3D2E] text-white shadow-md'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Camera className="w-4 h-4 text-[#FFD60A]" />
+          <span>Deepfake X-Ray Forensics</span>
+        </button>
+      </div>
+
+      {activeMainTab === 'xray' ? (
+        <DeepfakeXRay />
+      ) : (
+        <>
+          {/* Quick Banner to Launch Deepfake X-Ray */}
+          <div className="bg-gradient-to-r from-[#0A3D2E] to-[#14533f] text-white p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                <Camera className="w-5 h-5 text-[#FFD60A]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black font-display uppercase tracking-wide">
+                  Deepfake X-Ray Media Forensics
+                </h4>
+                <p className="text-[11px] text-emerald-100">
+                  Analyze suspect photos, voice memos, or video screenshots for AI face swaps and clone stamps.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveMainTab('xray')}
+              className="bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] text-xs font-black px-3.5 py-2 rounded-xl shrink-0 shadow-sm transition-all"
+            >
+              Launch X-Ray
+            </button>
+          </div>
+
+          {/* REGION & PLATFORM FILTER BAR */}
+          <div className="bg-white rounded-2xl p-3 border border-gray-200 shadow-sm space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              
+              {/* Region Tabs */}
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] font-bold text-gray-500 mr-1">Region:</span>
+                {[
+                  { key: 'ALL', label: 'All Rumors' },
+                  { key: 'NIGERIA', label: '🇳🇬 36 States' },
+                  { key: 'WORLDWIDE', label: '🌍 Worldwide' }
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setRegionFilter(tab.key as any)}
+                    className={`text-xs px-2.5 py-1 rounded-lg font-extrabold transition-all ${
+                      regionFilter === tab.key
+                        ? 'bg-[#0A3D2E] text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Platform Filters */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+                <span className="text-[11px] font-bold text-gray-500 mr-1">Source:</span>
+                {[
+                  { key: 'ALL', label: 'All Platforms' },
+                  { key: 'tiktok', label: '🎵 TikTok' },
+                  { key: 'twitter', label: '𝕏 Twitter' },
+                  { key: 'facebook', label: '📘 Facebook' },
+                  { key: 'youtube', label: '▶️ YouTube' }
+                ].map(p => (
+                  <button
+                    key={p.key}
+                    onClick={() => setPlatformFilter(p.key as any)}
+                    className={`text-[11px] px-2 py-0.5 rounded-lg font-bold shrink-0 transition-all ${
+                      platformFilter === p.key
+                        ? 'bg-emerald-800 text-white shadow-sm'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Result Selector Carousel */}
       <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-        {truthResults.map(tr => (
+        {filteredResults.map(tr => (
           <button
             key={tr.id}
             onClick={() => {
@@ -240,7 +484,15 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
             }`}
           >
-            <span className="block truncate max-w-[190px] font-display">{tr.claim}</span>
+            <div className="flex items-center gap-1 mb-1">
+              {getPlatformBadge(tr.platform)}
+              {tr.isWorldwide && (
+                <span className="text-[9px] bg-amber-200 text-amber-950 font-bold px-1.5 rounded">
+                  {tr.country || 'Global'}
+                </span>
+              )}
+            </div>
+            <span className="block truncate max-w-[200px] font-display">{tr.claim}</span>
             <span className={`text-[10px] font-semibold mt-0.5 block ${selectedResult.id === tr.id ? 'text-[#FFD60A]' : 'text-gray-500'}`}>
               {tr.result}
             </span>
@@ -248,35 +500,47 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
         ))}
       </div>
 
-      {/* MODE SWITCHER TAB: EVIDENCE REPORT vs TRUTH VIDEO */}
+      {/* MODE SWITCHER TAB: EVIDENCE REPORT vs SOCIAL MEDIA CLIP vs TRUTH VIDEO */}
       <div className="bg-gray-200 p-1.5 rounded-2xl flex items-center gap-1">
         <button
           onClick={() => setViewMode('evidence')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
             viewMode === 'evidence'
               ? 'bg-white text-[#0A3D2E] shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           <FileText className="w-4 h-4 text-[#0A3D2E]" />
-          <span>SABI Evidence Report</span>
+          <span>Evidence Report</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode('social_clip')}
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
+            viewMode === 'social_clip'
+              ? 'bg-white text-red-700 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Tv className="w-4 h-4 text-red-600" />
+          <span>Social Video Clip</span>
         </button>
 
         <button
           onClick={() => setViewMode('video')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
             viewMode === 'video'
               ? 'bg-[#0A3D2E] text-white shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           <Video className="w-4 h-4 text-[#FFD60A]" />
-          <span>🎥 Turn into Truth Video</span>
+          <span>🎥 Truth Video</span>
         </button>
       </div>
 
       {/* ======================================================== */}
-      {/* 1. SABI EVIDENCE REPORT VIEW (The Killer Feature)        */}
+      {/* 1. SABI EVIDENCE REPORT VIEW                             */}
       {/* ======================================================== */}
       {viewMode === 'evidence' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-xl space-y-6 animate-fade-in" id="sabi-evidence-report-card">
@@ -284,9 +548,12 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
           {/* Report Title & Verdict Banner */}
           <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-md">
-                Official SABI Audit Trail
-              </span>
+              <div className="flex items-center gap-2 mb-1">
+                {getPlatformBadge(selectedResult.platform)}
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                  Official SABI Audit Trail
+                </span>
+              </div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 font-display mt-1">
                 Investigation Result & Fact Sheet
               </h2>
@@ -307,6 +574,14 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
               <p className="text-sm sm:text-base font-bold text-gray-900 leading-snug">
                 "{selectedResult.originalClaimQuote}"
               </p>
+              {selectedResult.socialMediaHandle && (
+                <div className="text-[11px] text-gray-500 pt-1 font-medium flex items-center gap-1.5">
+                  <span>Originating Channel / Handle:</span>
+                  <span className="font-bold text-gray-800 bg-gray-200/80 px-2 py-0.5 rounded">
+                    {selectedResult.socialMediaHandle}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 2. LOCATION */}
@@ -316,7 +591,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
               </span>
               <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
                 <MapPin className="w-4 h-4 text-[#0A3D2E]" />
-                <span>{selectedResult.area}, {selectedResult.lga}, {selectedResult.state}</span>
+                <span>{selectedResult.area}, {selectedResult.lga}, {selectedResult.state} {selectedResult.country ? `(${selectedResult.country})` : ''}</span>
               </div>
             </div>
 
@@ -336,27 +611,62 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
             {/* 4. MEDIA */}
             <div className="bg-blue-50/70 rounded-2xl p-4 border border-blue-200 space-y-1">
               <span className="text-[11px] font-extrabold uppercase text-blue-900 tracking-wider block font-display">
-                🔍 MEDIA (What AI detected)
+                🔍 MEDIA & SOCIAL FORENSICS (What AI detected)
               </span>
               <p className="text-sm font-semibold text-blue-950 leading-relaxed">
                 {selectedResult.aiMediaAnalysis.details}
               </p>
               <div className="text-[11px] font-bold text-blue-800 pt-1">
                 AI Confidence Score: {selectedResult.aiMediaAnalysis.confidenceScore}% ({selectedResult.aiMediaAnalysis.status})
+                {selectedResult.aiMediaAnalysis.detectedOrigins && (
+                  <span className="block mt-0.5 text-blue-900">
+                    Origin Footprint: {selectedResult.aiMediaAnalysis.detectedOrigins}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* 5. SOURCES */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/80 space-y-1">
-              <span className="text-[11px] font-extrabold uppercase text-gray-500 tracking-wider block font-display">
-                🔗 SOURCES (Supporting & contextual information)
-              </span>
+            {/* 5. SOURCES & EXTERNAL FACT-CHECK LINKS */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase text-gray-500 tracking-wider block font-display">
+                  🔗 SOURCES & ACCREDITED FACT-CHECKERS
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const q = encodeURIComponent(selectedResult.claim);
+                    window.open(`https://toolbox.google.com/factcheck/explorer/search/list:recent;query=${q}`, '_blank');
+                  }}
+                  className="text-[11px] font-bold text-[#0A3D2E] hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Google Fact Check Explorer</span>
+                </button>
+              </div>
+
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {selectedResult.sources.map((src, idx) => (
                   <span key={idx} className="bg-white text-gray-800 text-xs font-semibold px-3 py-1 rounded-xl border border-gray-200">
                     {src}
                   </span>
                 ))}
+                {selectedResult.sourceOrg && (
+                  <span className="bg-emerald-100 text-emerald-900 text-xs font-bold px-3 py-1 rounded-xl border border-emerald-200">
+                    Verified by: {selectedResult.sourceOrg}
+                  </span>
+                )}
+                {selectedResult.factCheckUrl && (
+                  <a
+                    href={selectedResult.factCheckUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[#0A3D2E] text-white text-xs font-bold px-3 py-1 rounded-xl hover:bg-[#0c4b38] transition-all flex items-center gap-1"
+                  >
+                    <span>Read Full Debunk Report</span>
+                    <ExternalLink className="w-3 h-3 text-[#FFD60A]" />
+                  </a>
+                )}
               </div>
             </div>
 
@@ -393,23 +703,283 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
               </p>
             </div>
 
+            {/* 9. AUTOMATED DIRECT EVIDENCE LINKS GRID (TikTok, YouTube, Twitter/X) */}
+            <div className="pt-2">
+              <DirectEvidenceLinksGrid 
+                truthResult={selectedResult} 
+                onRefresh={() => {
+                  // Refresh truth list from local or remote
+                  setTruthResults(storageService.getTruthResults());
+                }}
+              />
+            </div>
+
+            {/* 10. WATCH SOCIAL MEDIA INVESTIGATION VIDEO */}
+            <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-5 text-white border border-gray-700 space-y-3.5 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-sm">
+                    <Tv className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-white font-display">
+                      Watch Social Media Debunk Video
+                    </h4>
+                    <p className="text-[11px] text-gray-300">
+                      Watch how this claim was verified or exposed as {selectedResult.result}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {getPlatformBadge(selectedResult.platform)}
+                </div>
+              </div>
+
+              {/* Primary Direct Watch Button */}
+              <button
+                type="button"
+                id="watch-social-media-main-btn"
+                onClick={() => handleWatchSocialMedia()}
+                className="w-full bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-sm py-3.5 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 font-display"
+              >
+                <Play className="w-4 h-4 fill-[#0A3D2E]" />
+                <span>Watch on {selectedResult.platform?.toUpperCase() || 'Social Media'} ({selectedResult.result})</span>
+                <ExternalLink className="w-4 h-4 stroke-[2.5]" />
+              </button>
+
+              {/* Multi-Platform Selectors */}
+              <div className="pt-1 border-t border-gray-700/80">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">
+                  Or watch and verify across other platforms:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleWatchSocialMedia('youtube')}
+                    className="bg-red-600/20 hover:bg-red-600 text-white border border-red-500/40 hover:border-red-500 text-[11px] font-bold py-2 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all"
+                  >
+                    <span>▶️</span>
+                    <span>YouTube</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleWatchSocialMedia('tiktok')}
+                    className="bg-gray-800 hover:bg-black text-white border border-gray-600 hover:border-white text-[11px] font-bold py-2 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all"
+                  >
+                    <span>🎵</span>
+                    <span>TikTok</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleWatchSocialMedia('twitter')}
+                    className="bg-sky-900/30 hover:bg-sky-600 text-white border border-sky-500/40 hover:border-sky-500 text-[11px] font-bold py-2 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all"
+                  >
+                    <span>𝕏</span>
+                    <span>Twitter (X)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleWatchSocialMedia('facebook')}
+                    className="bg-blue-900/30 hover:bg-blue-700 text-white border border-blue-500/40 hover:border-blue-500 text-[11px] font-bold py-2 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all"
+                  >
+                    <span>📘</span>
+                    <span>Facebook</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          {/* TRANSITION TO TRUTH VIDEO BUTTON */}
+          {/* TRANSITION BUTTONS */}
           <div className="pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="text-xs text-gray-500">
               Generated {selectedResult.verifiedAt} · {selectedResult.viewsCount.toLocaleString()} views
             </span>
 
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                id="watch-social-media-tab-btn"
+                onClick={() => handleWatchSocialMedia()}
+                className="flex-1 sm:flex-initial bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-4 py-3 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5"
+              >
+                <Play className="w-3.5 h-3.5 fill-white" />
+                <span>Watch Social Video</span>
+                <ExternalLink className="w-3 h-3" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode('social_clip')}
+                className="flex-1 sm:flex-initial bg-gray-100 hover:bg-gray-200 text-gray-900 font-extrabold text-xs px-3.5 py-3 rounded-2xl transition-all flex items-center justify-center gap-1.5"
+              >
+                <Tv className="w-3.5 h-3.5 text-gray-700" />
+                <span>In-App Clip</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode('video');
+                  setIsPlaying(true);
+                }}
+                className="flex-1 sm:flex-initial bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-extrabold text-xs px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 font-display"
+              >
+                <Film className="w-4 h-4" />
+                <span>🎥 20s Truth Video</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 2. 📺 SOCIAL MEDIA SOURCE & VIDEO CLIP VIEW               */}
+      {/* ======================================================== */}
+      {viewMode === 'social_clip' && (
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-xl space-y-6 animate-fade-in" id="social-video-clip-card">
+          
+          <div className="flex items-center justify-between border-b pb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                {getPlatformBadge(selectedResult.platform)}
+                <span className="text-xs font-bold text-gray-500">
+                  {selectedResult.socialMediaHandle || 'Viral Social Post'}
+                </span>
+              </div>
+              <h3 className="text-lg font-extrabold text-gray-900 font-display">
+                Originating Social Media Clip & Debunk Video
+              </h3>
+            </div>
+            {getResultBadge(selectedResult.result)}
+          </div>
+
+          {/* Video Container */}
+          <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-800 aspect-video max-w-lg mx-auto flex items-center justify-center text-white">
+            {selectedResult.youtubeVideoId ? (
+              <iframe 
+                className="w-full h-full"
+                src={`https://www.youtube-nocookie.com/embed/${selectedResult.youtubeVideoId}?autoplay=0&rel=0`}
+                title={selectedResult.claim}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div 
+                onClick={() => handleWatchSocialMedia()}
+                className="relative w-full h-full cursor-pointer group"
+              >
+                <img 
+                  src={selectedResult.videoThumbnail} 
+                  alt={selectedResult.claim} 
+                  className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-3 bg-black/50">
+                  <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 fill-white ml-0.5 text-white" />
+                  </div>
+                  <span className="text-sm font-extrabold font-display max-w-xs text-white">
+                    {selectedResult.claim}
+                  </span>
+                  <span className="text-xs text-gray-300 flex items-center gap-1">
+                    <span>Click to Watch on {selectedResult.platform?.toUpperCase() || 'Social Media'}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Social Video Summary & Direct Open Buttons */}
+          <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-gray-600">Platform Sourced:</span>
+              <span className="font-extrabold text-gray-900 uppercase">{selectedResult.platform || 'Social Media'}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-gray-600">Origin Handle:</span>
+              <span className="font-mono text-gray-800">{selectedResult.socialMediaHandle || '@viral_reporter'}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-gray-600">Forensic Verdict:</span>
+              <span className="font-extrabold text-red-700">{selectedResult.result} ({selectedResult.confidence} Confidence)</span>
+            </div>
+
+            {/* Primary Watch Button */}
+            <button
+              type="button"
+              id="watch-social-media-direct-btn"
+              onClick={() => handleWatchSocialMedia()}
+              className="w-full bg-[#0A3D2E] hover:bg-[#0c4b38] text-white font-extrabold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Play className="w-3.5 h-3.5 fill-[#FFD60A] text-[#FFD60A]" />
+              <span>Watch Full Video on {selectedResult.platform?.toUpperCase() || 'Social Media'}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Multi-Platform Alternative Quick Links */}
+            <div className="pt-2 border-t border-gray-200">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-2">
+                Watch on alternative platform:
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleWatchSocialMedia('youtube')}
+                  className="bg-white hover:bg-red-50 text-gray-800 border border-gray-300 hover:border-red-500 text-[11px] font-bold py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all"
+                >
+                  <span>▶️ YouTube</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWatchSocialMedia('tiktok')}
+                  className="bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 hover:border-black text-[11px] font-bold py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all"
+                >
+                  <span>🎵 TikTok</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWatchSocialMedia('twitter')}
+                  className="bg-white hover:bg-sky-50 text-gray-800 border border-gray-300 hover:border-sky-500 text-[11px] font-bold py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all"
+                >
+                  <span>𝕏 Twitter</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleWatchSocialMedia('facebook')}
+                  className="bg-white hover:bg-blue-50 text-gray-800 border border-gray-300 hover:border-blue-500 text-[11px] font-bold py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all"
+                >
+                  <span>📘 Facebook</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Full Evidence Links Grid in Social Clip Mode */}
+          <DirectEvidenceLinksGrid 
+            truthResult={selectedResult} 
+            onRefresh={() => setTruthResults(storageService.getTruthResults())}
+          />
+
+          <div className="pt-2 flex items-center justify-between gap-2">
             <button
               onClick={() => {
                 setViewMode('video');
                 setIsPlaying(true);
               }}
-              className="w-full sm:w-auto bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-extrabold text-xs px-6 py-3 rounded-2xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 font-display"
+              className="bg-[#FFD60A] text-[#0A3D2E] font-extrabold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5"
             >
-              <Film className="w-4 h-4" />
-              <span>🎥 Turn Result Into Truth Video</span>
+              <Film className="w-3.5 h-3.5" />
+              <span>Watch 20s Truth Video</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('evidence')}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all"
+            >
+              Back to Evidence Report
             </button>
           </div>
 
@@ -417,7 +987,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
       )}
 
       {/* ======================================================== */}
-      {/* 2. 🎥 TRUTH VIDEO ANIMATED PLAYER VIEW                   */}
+      {/* 3. 🎥 TRUTH VIDEO ANIMATED PLAYER VIEW                   */}
       {/* ======================================================== */}
       {viewMode === 'video' && (
         <div className="space-y-6 animate-fade-in" id="truth-video-player-container">
@@ -427,7 +997,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
             {/* Background Image / Motion Simulation */}
             <div className="absolute inset-0 bg-gray-800">
                 <div className="absolute inset-0 bg-[url('/news-studio-bg.jpg')] opacity-20"></div>
-                {/* Simulated AI Anchor Persona - improved */}
+                {/* Simulated AI Anchor Persona */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-40 h-40 rounded-full bg-emerald-900 border-4 border-emerald-500 flex items-center justify-center text-6xl shadow-2xl">👨‍💼</div>
                 </div>
@@ -472,7 +1042,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
               
               <div className="flex items-center justify-between">
                 <span className="inline-block bg-[#FFD60A] text-[#0A3D2E] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-display">
-                  {chapter.title} ({Math.floor(currentTimeSec)}s / 20s)
+                  {chapter.stage}: {chapter.title} ({Math.floor(currentTimeSec)}s / 20s)
                 </span>
                 <span className="text-[11px] text-gray-300">
                   {selectedResult.area}, {selectedResult.state}
@@ -505,12 +1075,22 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
 
           </div>
 
-          <div className="text-center">
+          {/* Video Control Bar */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={() => setViewMode('evidence')}
-              className="text-xs font-bold text-[#0A3D2E] hover:underline"
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="bg-gray-900 hover:bg-black text-white font-bold text-xs px-5 py-3 rounded-2xl transition-all flex items-center gap-2"
             >
-              ← Back to Full SABI Evidence Report
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              <span>{isPlaying ? 'Pause Clip' : 'Resume Clip'}</span>
+            </button>
+
+            <button
+              onClick={handleNativeShare}
+              className="bg-[#0A3D2E] hover:bg-[#0d4a38] text-white font-bold text-xs px-5 py-3 rounded-2xl transition-all flex items-center gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share Truth Video</span>
             </button>
           </div>
 
@@ -575,7 +1155,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
       </div>
 
       {/* REPORT CONTENT MODAL */}
-      <ReportContentModal
+      <ReportContentModal 
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         contentTitle={selectedResult.claim}

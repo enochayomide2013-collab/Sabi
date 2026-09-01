@@ -20,10 +20,11 @@ import {
   LogOut,
   ChevronRight,
   ExternalLink,
-  Lock
+  Lock,
+  Zap
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
-import { VerificationTask, TruthResult, UserAccount, SentEmailReport, ResultType } from '../../types';
+import { VerificationTask, TruthResult, UserAccount, SentEmailReport, ResultType, UserProfile } from '../../types';
 
 interface AdminViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -36,11 +37,18 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onShowToast,
   onExitAdmin
 }) => {
+  const [currentUser, setCurrentUser] = useState<UserProfile>(storageService.getUser());
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(storageService.isUserLoggedIn());
+
   const [tasks, setTasks] = useState<VerificationTask[]>(storageService.getTasks());
   const [truthResults, setTruthResults] = useState<TruthResult[]>(storageService.getTruthResults());
   const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>(storageService.getRegisteredUsers());
   const [sentEmails, setSentEmails] = useState<SentEmailReport[]>(storageService.getSentEmailReports());
-  const [activeAdminTab, setActiveAdminTab] = useState<'reports' | 'email_dispatch' | 'users' | 'sent_logs'>('reports');
+  const [activeAdminTab, setActiveAdminTab] = useState<'reports' | 'cheat_code' | 'email_dispatch' | 'users' | 'sent_logs'>('reports');
+
+  // Cheat code points generator state
+  const [cheatPointsInput, setCheatPointsInput] = useState<string>('50000');
+  const [cheatSuccessMsg, setCheatSuccessMsg] = useState<string | null>(null);
 
   // Custom Quick Email Dispatch form state
   const [customClaim, setCustomClaim] = useState<string>('Tomatoes price spike report in Mile 12 Market');
@@ -51,6 +59,8 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
   useEffect(() => {
     const unsubscribe = storageService.subscribe(() => {
+      setCurrentUser(storageService.getUser());
+      setIsLoggedIn(storageService.isUserLoggedIn());
       setTasks(storageService.getTasks());
       setTruthResults(storageService.getTruthResults());
       setRegisteredUsers(storageService.getRegisteredUsers());
@@ -61,6 +71,20 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
   // Filter tasks to only show active pending tasks in moderation queue
   const pendingTasks = tasks.filter(t => t.status !== 'completed');
+
+  // Handle Injecting Cheat Code Points
+  const handleInjectPoints = (amountToInject: number) => {
+    if (!amountToInject || amountToInject <= 0) return;
+
+    const updated = storageService.injectCheatPoints(amountToInject);
+    setCurrentUser(updated);
+    setCheatSuccessMsg(`⚡ Cheat Code Success! Injected +${amountToInject.toLocaleString()} SABI Points into ${updated.name}'s account.`);
+    onShowToast(amountToInject, `⚡ Cheat Code Activated: +${amountToInject.toLocaleString()} SABI Points credited!`);
+
+    setTimeout(() => {
+      setCheatSuccessMsg(null);
+    }, 6000);
+  };
 
   const handleSendCustomReport = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +134,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               SABI Central Admin Portal
             </h1>
             <p className="text-xs text-amber-100 max-w-xl">
-              Master control panel to moderate community reports, dispatch official audit reports, and inspect registered member accounts.
+              Master control panel to moderate community reports, inject points via cheat codes, dispatch official audit reports, and manage user telemetry.
             </p>
           </div>
 
@@ -118,11 +142,60 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <button
               id="exit-admin-btn"
               onClick={onExitAdmin}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/30 flex items-center gap-1.5 transition-all shadow-sm"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/30 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Exit Admin</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* SIGNED IN USER DETECTION & TELEMETRY CARD */}
+      <div className="bg-white rounded-3xl p-5 border border-amber-200 shadow-sm space-y-3" id="admin-user-detection-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="relative shrink-0">
+              <img
+                src={currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                alt={currentUser.name}
+                className="w-13 h-13 rounded-2xl object-cover border-2 border-[#0A3D2E] shadow"
+              />
+              <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${isLoggedIn ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-gray-900 text-base font-display">{currentUser.name}</span>
+                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${isLoggedIn ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900 border border-amber-300'}`}>
+                  {isLoggedIn ? '✓ User Signed In' : 'Guest Account Mode'}
+                </span>
+                {currentUser.role === 'admin' && (
+                  <span className="text-[10px] font-black uppercase bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                    ★ Master Admin
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                <Mail className="w-3.5 h-3.5 text-gray-400" />
+                <span className="font-semibold text-gray-800">{currentUser.email}</span>
+                <span>·</span>
+                <MapPin className="w-3.5 h-3.5 text-[#0A3D2E]" />
+                <span className="font-semibold text-emerald-800">{currentUser.lga}, {currentUser.state}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-emerald-50 px-4 py-3 rounded-2xl border border-emerald-200">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-emerald-800 block tracking-wider">SABI Points</span>
+              <span className="text-xl font-black text-[#0A3D2E] font-display">{currentUser.sabiPoints?.toLocaleString() || 0} PTS</span>
+            </div>
+            <div className="border-l border-emerald-300 pl-3">
+              <span className="text-[10px] uppercase font-bold text-emerald-800 block tracking-wider">Account Tier</span>
+              <span className="text-xs font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md inline-block">
+                {currentUser.userTier || 'Member'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -159,20 +232,33 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <button
           id="admin-tab-reports"
           onClick={() => setActiveAdminTab('reports')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
             activeAdminTab === 'reports'
               ? 'bg-[#0A3D2E] text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Report Moderation ({pendingTasks.length})</span>
+          <span>Moderation Queue ({pendingTasks.length})</span>
+        </button>
+
+        <button
+          id="admin-tab-cheat-code"
+          onClick={() => setActiveAdminTab('cheat_code')}
+          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
+            activeAdminTab === 'cheat_code'
+              ? 'bg-[#FFD60A] text-[#0A3D2E] shadow-sm font-black'
+              : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
+          }`}
+        >
+          <Zap className="w-4 h-4 fill-current text-amber-600" />
+          <span>⚡ SABI Cheat Code</span>
         </button>
 
         <button
           id="admin-tab-email"
           onClick={() => setActiveAdminTab('email_dispatch')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
             activeAdminTab === 'email_dispatch'
               ? 'bg-[#0A3D2E] text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
@@ -185,7 +271,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <button
           id="admin-tab-users"
           onClick={() => setActiveAdminTab('users')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
             activeAdminTab === 'users'
               ? 'bg-[#0A3D2E] text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
@@ -198,7 +284,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <button
           id="admin-tab-logs"
           onClick={() => setActiveAdminTab('sent_logs')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
             activeAdminTab === 'sent_logs'
               ? 'bg-[#0A3D2E] text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
@@ -209,7 +295,125 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </button>
       </div>
 
-      {/* 1. REPORT MODERATION TAB */}
+      {/* 1. SABI CHEAT CODE & POINTS INJECTOR TAB */}
+      {activeAdminTab === 'cheat_code' && (
+        <div className="bg-gradient-to-br from-[#0A3D2E] via-[#0d4c39] to-emerald-950 text-white rounded-3xl p-6 sm:p-7 shadow-xl border border-emerald-500/40 space-y-6" id="cheat-code-injector-panel">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-800/80 pb-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 bg-[#FFD60A] text-[#0A3D2E] text-xs font-black uppercase px-3 py-1 rounded-full shadow-sm font-display">
+                <Zap className="w-4 h-4 fill-current text-[#0A3D2E]" />
+                <span>SABI Cheat Code & Instant Points Injector</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white">
+                Instant Point Generator (50,000+ PTS/Day)
+              </h2>
+              <p className="text-xs text-emerald-200 max-w-lg">
+                Enter any custom amount of SABI points or select a preset to credit the active signed-in user instantly.
+              </p>
+            </div>
+
+            <div className="bg-emerald-900/90 border border-emerald-700/80 px-4 py-3 rounded-2xl text-right shrink-0">
+              <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold block">Target Account</span>
+              <span className="text-sm font-black text-[#FFD60A] block">{currentUser.name}</span>
+              <span className="text-[11px] text-white font-mono font-bold">{currentUser.sabiPoints?.toLocaleString()} PTS Current</span>
+            </div>
+          </div>
+
+          {cheatSuccessMsg && (
+            <div className="p-4 bg-[#FFD60A] text-[#0A3D2E] text-xs sm:text-sm font-black rounded-2xl flex items-center gap-2 shadow-lg animate-bounce">
+              <Sparkles className="w-5 h-5 shrink-0 fill-current text-[#0A3D2E]" />
+              <span>{cheatSuccessMsg}</span>
+            </div>
+          )}
+
+          <div className="space-y-5">
+            <div>
+              <label className="block text-xs font-bold text-emerald-200 mb-2 uppercase tracking-wider">
+                Custom SABI Points Injection Input:
+              </label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div className="relative flex-grow">
+                  <input
+                    id="custom-cheat-points-input"
+                    type="number"
+                    min="1"
+                    max="1000000"
+                    value={cheatPointsInput}
+                    onChange={(e) => setCheatPointsInput(e.target.value)}
+                    placeholder="e.g. 50000"
+                    className="w-full bg-emerald-950/90 border-2 border-emerald-400/80 rounded-2xl px-4 py-3 text-white font-mono font-black text-xl focus:outline-none focus:border-[#FFD60A] transition-colors placeholder:text-emerald-700 shadow-inner"
+                  />
+                  <span className="absolute right-4 top-3.5 text-xs font-black text-[#FFD60A]">PTS</span>
+                </div>
+                <button
+                  id="apply-cheat-code-btn"
+                  onClick={() => handleInjectPoints(Number(cheatPointsInput) || 50000)}
+                  className="bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 shrink-0 font-display cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 fill-current" />
+                  <span>Inject Points Now</span>
+                </button>
+              </div>
+            </div>
+
+            {/* PRESET BUTTONS GRID */}
+            <div>
+              <span className="text-xs font-bold text-emerald-200 uppercase tracking-wider block mb-2.5">
+                ⚡ Instant Preset Cheat Buttons:
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                <button
+                  onClick={() => handleInjectPoints(1000)}
+                  className="bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-600/80 text-emerald-100 p-3 rounded-2xl text-xs font-bold transition-all text-center hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  +1,000 PTS
+                  <span className="block text-[9px] text-emerald-300 font-normal">Starter Boost</span>
+                </button>
+
+                <button
+                  onClick={() => handleInjectPoints(5000)}
+                  className="bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-600/80 text-emerald-100 p-3 rounded-2xl text-xs font-bold transition-all text-center hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  +5,000 PTS
+                  <span className="block text-[9px] text-emerald-300 font-normal">Spotter Surge</span>
+                </button>
+
+                <button
+                  onClick={() => handleInjectPoints(10000)}
+                  className="bg-amber-900/80 hover:bg-amber-800 border border-amber-500/80 text-amber-200 p-3 rounded-2xl text-xs font-bold transition-all text-center hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  +10,000 PTS
+                  <span className="block text-[9px] text-amber-300 font-normal">Gold Verifier</span>
+                </button>
+
+                <button
+                  onClick={() => handleInjectPoints(25000)}
+                  className="bg-purple-900/80 hover:bg-purple-800 border border-purple-500/80 text-purple-200 p-3 rounded-2xl text-xs font-bold transition-all text-center hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  +25,000 PTS
+                  <span className="block text-[9px] text-purple-300 font-normal">Sabi Master</span>
+                </button>
+
+                <button
+                  onClick={() => handleInjectPoints(50000)}
+                  className="bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] p-3 rounded-2xl text-xs font-black transition-all text-center shadow-lg hover:scale-105 active:scale-95 border-2 border-white col-span-2 sm:col-span-1 cursor-pointer"
+                >
+                  🔥 +50,000 PTS
+                  <span className="block text-[9px] font-black uppercase">Daily Max Cheat</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-emerald-900/40 rounded-2xl border border-emerald-700/60 text-xs text-emerald-200 flex items-center justify-between">
+              <span>Cheat Code Allowance: Unlimited (50,000+ PTS per injection supported)</span>
+              <span className="font-bold text-[#FFD60A]">Instant Sync</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. REPORT MODERATION TAB */}
       {activeAdminTab === 'reports' && (
         <div className="space-y-4" id="admin-reports-section">
           <div className="flex items-center justify-between">
@@ -256,7 +460,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                         });
                         onShowToast(15, 'Dispatched report to official inbox');
                       }}
-                      className="text-xs font-bold text-[#0A3D2E] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1 transition-colors"
+                      className="text-xs font-bold text-[#0A3D2E] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Send Report</span>
@@ -282,7 +486,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       <button
                         id={`approve-true-${task.id}`}
                         onClick={() => handleApproveVerdict(task, 'TRUE')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all active:scale-95"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>Approve TRUE</span>
@@ -291,7 +495,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       <button
                         id={`mark-false-${task.id}`}
                         onClick={() => handleApproveVerdict(task, 'FALSE')}
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all active:scale-95"
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                       >
                         <XCircle className="w-3.5 h-3.5" />
                         <span>Mark FALSE</span>
@@ -300,7 +504,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       <button
                         id={`mark-outdated-${task.id}`}
                         onClick={() => handleApproveVerdict(task, 'OUTDATED MEDIA')}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all active:scale-95"
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                       >
                         <Clock className="w-3.5 h-3.5" />
                         <span>OUTDATED</span>
@@ -308,7 +512,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
                       <button
                         onClick={() => handleDismissTask(task.id)}
-                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs font-bold px-2 py-1.5 rounded-xl transition-colors"
+                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-xs font-bold px-2 py-1.5 rounded-xl transition-colors cursor-pointer"
                         title="Dismiss / Archive"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -322,7 +526,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
       )}
 
-      {/* 2. SEND REPORT TAB (No email address shown in UI) */}
+      {/* 3. SEND REPORT TAB */}
       {activeAdminTab === 'email_dispatch' && (
         <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-5" id="admin-email-dispatch-section">
           <div className="space-y-1">
@@ -400,7 +604,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                 id="dispatch-report-btn"
                 type="submit"
                 disabled={isSendingEmail}
-                className="bg-[#0A3D2E] hover:bg-[#0c4b38] text-white font-bold text-sm px-7 py-3 rounded-2xl shadow-lg flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 font-display"
+                className="bg-[#0A3D2E] hover:bg-[#0c4b38] text-white font-bold text-sm px-7 py-3 rounded-2xl shadow-lg flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 font-display cursor-pointer"
               >
                 <Send className="w-4 h-4 text-[#FFD60A]" />
                 <span>{isSendingEmail ? 'Sending...' : 'Send Report'}</span>
@@ -410,7 +614,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
       )}
 
-      {/* 3. REGISTERED USERS DIRECTORY TAB */}
+      {/* 4. REGISTERED USERS DIRECTORY TAB */}
       {activeAdminTab === 'users' && (
         <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4" id="admin-users-section">
           <div className="flex items-center justify-between">
@@ -471,7 +675,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
       )}
 
-      {/* 4. SENT EMAIL LOGS TAB */}
+      {/* 5. SENT EMAIL LOGS TAB */}
       {activeAdminTab === 'sent_logs' && (
         <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4" id="admin-sent-logs-section">
           <div className="flex items-center justify-between">
@@ -523,3 +727,5 @@ export const AdminView: React.FC<AdminViewProps> = ({
     </div>
   );
 };
+
+export default AdminView;

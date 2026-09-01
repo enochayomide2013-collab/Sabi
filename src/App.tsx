@@ -25,6 +25,7 @@ import { SabiationView } from './components/sabiation/SabiationView';
 import { SaboAiModal } from './components/sabo/SaboAiModal';
 import { AboutView } from './components/common/AboutView';
 import { RumorMapView } from './components/map/RumorMapView';
+import { RumorStatsDashboard } from './components/stats/RumorStatsDashboard';
 import { Sparkles, Bot } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -37,6 +38,7 @@ export const App: React.FC = () => {
 
   // Sabo AI Modal state
   const [isSaboAiOpen, setIsSaboAiOpen] = useState<boolean>(false);
+  const [isSaboBreathing, setIsSaboBreathing] = useState<boolean>(false);
 
   // Notifications Modal state
   const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState<boolean>(false);
@@ -116,6 +118,38 @@ export const App: React.FC = () => {
       if (unsubscribePresence) unsubscribePresence();
     };
   }, []);
+
+  // 30-second inactivity timer for subtle breathing animation on Floating Sabo AI launcher
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    const resetInactivityTimer = () => {
+      setIsSaboBreathing(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setIsSaboBreathing(true);
+      }, 30000); // 30 seconds
+    };
+
+    // Initial 30-second timer
+    resetInactivityTimer();
+
+    // Listen to user interaction to reset timer
+    const handleUserActivity = () => {
+      resetInactivityTimer();
+    };
+
+    window.addEventListener('mousemove', handleUserActivity);
+    window.addEventListener('keydown', handleUserActivity);
+    window.addEventListener('touchstart', handleUserActivity);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('mousemove', handleUserActivity);
+      window.removeEventListener('keydown', handleUserActivity);
+      window.removeEventListener('touchstart', handleUserActivity);
+    };
+  }, [isSaboAiOpen]);
 
   const handleNavigate = (tab: string, extraData?: any) => {
     if (tab === 'tutorial' || tab === 'onboarding') {
@@ -284,24 +318,59 @@ export const App: React.FC = () => {
             onNavigate={handleNavigate}
           />
         )}
+
+        {activeTab === 'stats' && (
+          <RumorStatsDashboard 
+            onNavigate={handleNavigate}
+            onVerifyQuery={(query) => {
+              setIsSaboAiOpen(true);
+            }}
+          />
+        )}
       </motion.main>
 
-      {/* Floating Sabo AI Quick Launcher */}
+      {/* Floating Sabo AI Quick Launcher with 30-second breathing pulse animation */}
       <div className="fixed bottom-20 right-4 sm:right-6 z-30">
         <Tooltip content="Ask Sabo AI (SABI Fact-Checker & Price Guide)" position="left">
-          <button
-            id="floating-sabo-ai-launcher"
-            onClick={() => setIsSaboAiOpen(true)}
-            className="bg-gradient-to-r from-[#0A3D2E] to-[#0d4a38] text-white hover:to-[#115d47] active:scale-95 shadow-xl hover:shadow-2xl rounded-full p-3.5 sm:px-4 sm:py-3 flex items-center gap-2 border-2 border-[#FFD60A] transition-all group"
+          <motion.div
+            animate={
+              isSaboBreathing
+                ? {
+                    scale: [1, 1.1, 1],
+                    boxShadow: [
+                      '0px 0px 0px rgba(255,214,10,0.2)',
+                      '0px 0px 24px rgba(255,214,10,0.85)',
+                      '0px 0px 0px rgba(255,214,10,0.2)'
+                    ]
+                  }
+                : { scale: 1, boxShadow: '0px 10px 25px -5px rgba(0,0,0,0.3)' }
+            }
+            transition={
+              isSaboBreathing
+                ? { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }
+                : { duration: 0.2 }
+            }
+            className="rounded-full"
           >
-            <div className="relative">
-              <Bot className="w-5 h-5 text-[#FFD60A]" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#FFD60A] animate-ping" />
-            </div>
-            <span className="hidden sm:inline font-black text-xs text-white font-display">
-              Ask Sabo AI
-            </span>
-          </button>
+            <button
+              id="floating-sabo-ai-launcher"
+              onClick={() => {
+                setIsSaboBreathing(false);
+                setIsSaboAiOpen(true);
+              }}
+              className={`bg-gradient-to-r from-[#0A3D2E] to-[#0d4a38] text-white hover:to-[#115d47] active:scale-95 shadow-xl hover:shadow-2xl rounded-full p-3.5 sm:px-4 sm:py-3 flex items-center gap-2 border-2 border-[#FFD60A] transition-all group ${
+                isSaboBreathing ? 'ring-4 ring-[#FFD60A]/40' : ''
+              }`}
+            >
+              <div className="relative">
+                <Bot className="w-5 h-5 text-[#FFD60A]" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#FFD60A] animate-ping" />
+              </div>
+              <span className="hidden sm:inline font-black text-xs text-white font-display">
+                Ask Sabo AI
+              </span>
+            </button>
+          </motion.div>
         </Tooltip>
       </div>
 

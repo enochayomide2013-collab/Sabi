@@ -42,6 +42,7 @@ const KEYS = {
   TRUTH_RESULTS: 'sabi_truth_results',
   MARKET_ITEMS: 'sabi_market_items',
   RECIPES: 'sabi_recipes',
+  SAVED_RECIPES: 'sabi_saved_recipes',
   NOTIFICATIONS: 'sabi_notifications',
   LOCATION: 'sabi_current_location',
   LEADERBOARD: 'sabi_leaderboard',
@@ -748,6 +749,57 @@ Platform: SABI Nigeria`;
 
   // --- POINTS & ACTIVITY ---
 
+  public injectCheatPoints(amount: number): UserProfile {
+    const user = this.getUser();
+    const cleanAmount = Math.max(1, Math.round(amount));
+    const newPoints = user.sabiPoints + cleanAmount;
+
+    let newTrust = user.trustLevel;
+    if (newPoints >= 10000) newTrust = 'Trusted Contributor';
+    else if (newPoints >= 4000) newTrust = 'Gold';
+    else if (newPoints >= 1500) newTrust = 'Silver';
+
+    let userTier = user.userTier;
+    if (newPoints >= 50000 && userTier !== 'Deluxe') {
+      userTier = 'Deluxe';
+    } else if (newPoints >= 10000 && userTier === 'Member') {
+      userTier = 'Golden';
+    }
+
+    const updatedUser: UserProfile = {
+      ...user,
+      sabiPoints: newPoints,
+      trustLevel: newTrust,
+      userTier: userTier,
+      hasSabiationAccess: newPoints >= 10000 || user.hasSabiationAccess,
+      hasDeluxeVipService: newPoints >= 50000 || user.hasDeluxeVipService,
+      recentActivity: [
+        {
+          id: 'cheat_' + Date.now(),
+          type: 'verified_task',
+          points: cleanAmount,
+          description: `⚡ CHEAT CODE ACTIVATED: +${cleanAmount.toLocaleString()} SABI Points Injected`,
+          timestamp: 'Just now'
+        },
+        ...(user.recentActivity || [])
+      ]
+    };
+
+    this.updateUser(updatedUser);
+    this.addNotification({
+      id: 'notif_cheat_' + Date.now(),
+      title: `⚡ Cheat Code Activated: +${cleanAmount.toLocaleString()} PTS!`,
+      message: `Admin cheat code executed. ${cleanAmount.toLocaleString()} SABI Points have been credited instantly to your account.`,
+      type: 'points_earned',
+      timestamp: 'Just now',
+      read: false,
+      pointsAwarded: cleanAmount
+    });
+
+    this.notify();
+    return updatedUser;
+  }
+
   public addPoints(amount: number, reason: string) {
     if (amount <= 0) return;
     const user = this.getUser();
@@ -1077,6 +1129,56 @@ Platform: SABI Nigeria`;
     const updated = [recipe, ...recipes];
     localStorage.setItem(KEYS.RECIPES, JSON.stringify(updated));
     this.notify();
+  }
+
+  public getSavedRecipeIds(): string[] {
+    const raw = localStorage.getItem(KEYS.SAVED_RECIPES);
+    if (!raw) {
+      // Default initial saved recipe is the first classic recipe
+      const defaults = ['default'];
+      localStorage.setItem(KEYS.SAVED_RECIPES, JSON.stringify(defaults));
+      return defaults;
+    }
+    return JSON.parse(raw);
+  }
+
+  public isRecipeSaved(recipeId: string): boolean {
+    const saved = this.getSavedRecipeIds();
+    return saved.includes(recipeId);
+  }
+
+  public toggleSaveRecipe(recipeId: string, recipeObj?: RecipeItem): boolean {
+    const saved = this.getSavedRecipeIds();
+    const recipes = this.getRecipes();
+
+    let isSavedNow = false;
+    let updatedSaved: string[] = [];
+
+    if (saved.includes(recipeId)) {
+      updatedSaved = saved.filter(id => id !== recipeId);
+      isSavedNow = false;
+    } else {
+      updatedSaved = [recipeId, ...saved];
+      isSavedNow = true;
+
+      // Ensure full recipe item exists in storage
+      if (recipeObj && !recipes.some(r => r.id === recipeId)) {
+        const updatedRecipes = [recipeObj, ...recipes];
+        localStorage.setItem(KEYS.RECIPES, JSON.stringify(updatedRecipes));
+      }
+    }
+
+    localStorage.setItem(KEYS.SAVED_RECIPES, JSON.stringify(updatedSaved));
+    this.notify();
+    return isSavedNow;
+  }
+
+  public getSavedRecipes(): RecipeItem[] {
+    const savedIds = this.getSavedRecipeIds();
+    const allRecipes = this.getRecipes();
+    return savedIds
+      .map(id => allRecipes.find(r => r.id === id))
+      .filter((r): r is RecipeItem => Boolean(r));
   }
 
   // --- NOTIFICATIONS ---

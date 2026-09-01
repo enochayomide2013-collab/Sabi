@@ -71,6 +71,13 @@ export interface TruthResult {
   state: string;
   lga: string;
   area: string;
+  country?: string; // 'Nigeria' | 'United States' | 'United Kingdom' | 'Ghana' | 'Kenya' | 'Global'
+  isWorldwide?: boolean;
+  platform?: 'tiktok' | 'twitter' | 'facebook' | 'youtube' | 'whatsapp';
+  socialMediaHandle?: string;
+  socialMediaPostUrl?: string;
+  videoUrl?: string;
+  youtubeVideoId?: string;
   verifiedAt: string;
   contributorCount: number;
   aiMediaAnalysis: {
@@ -83,11 +90,17 @@ export interface TruthResult {
   confidence: 'High' | 'Medium' | 'Needs Investigation';
   videoDurationSec: number;
   videoThumbnail: string;
-  videoUrl?: string;
   audioNarrationText?: string;
   viewsCount: number;
   sharesCount: number;
   sources: string[];
+  factCheckUrl?: string;
+  sourceOrg?: string;
+  debunkVideoUrl?: string;
+  debunkVideoTitle?: string;
+  debunkSourceOrg?: string;
+  debunkPlatform?: 'youtube' | 'tiktok' | 'twitter' | 'facebook';
+  debunkVideoThumbnail?: string;
 }
 
 export interface MarketPricePoint {
@@ -159,8 +172,13 @@ export interface RecipeItem {
   steps: RecipeStep[];
   videoDurationSec: number;
   videoThumbnail: string;
+  youtubeVideoUrl?: string;
+  youtubeVideoId?: string;
+  estimatedCost?: string;
   caloriesApprox?: number;
   originRegion: string;
+  isPinned?: boolean;
+  savedAt?: string;
 }
 
 export interface StreakData {

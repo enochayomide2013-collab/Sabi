@@ -98,7 +98,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   });
 
   const handleSignOut = async () => {
-    await AuthService.signOut();
+    try {
+      await AuthService.signOut();
+    } catch (e) {
+      console.warn('Firebase signout error:', e);
+    }
+    storageService.signOut();
+    setIsLoggedIn(false);
+    setUser(storageService.getUser());
     onShowPointsToast(0, 'Signed out of your SABI account');
   };
 

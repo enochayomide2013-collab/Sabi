@@ -20,7 +20,10 @@ import {
   Search,
   Crown,
   Compass,
-  BookOpen
+  BookOpen,
+  ExternalLink,
+  Tv,
+  BarChart2
 } from 'lucide-react';
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { VerificationTask, TruthResult, MarketItem } from '../../types';
@@ -47,6 +50,41 @@ export const HomeView: React.FC<HomeViewProps> = ({
   
   // Video player preview states
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+
+  const handleWatchSocialMedia = (e: React.MouseEvent, item: TruthResult) => {
+    e.stopPropagation();
+    const query = encodeURIComponent(`${item.claim} fact check verification`);
+    let targetUrl = item.socialMediaPostUrl;
+    if (item.platform === 'youtube') {
+      if (item.youtubeVideoId) {
+        targetUrl = `https://www.youtube.com/watch?v=${item.youtubeVideoId}`;
+      } else {
+        targetUrl = `https://www.youtube.com/results?search_query=${query}`;
+      }
+    } else if (item.platform === 'tiktok') {
+      if (!targetUrl || !targetUrl.includes('tiktok.com')) {
+        targetUrl = `https://www.tiktok.com/search?q=${encodeURIComponent(item.claim)}`;
+      }
+    } else if (item.platform === 'twitter') {
+      if (!targetUrl || (!targetUrl.includes('twitter.com') && !targetUrl.includes('x.com'))) {
+        targetUrl = `https://twitter.com/search?q=${encodeURIComponent(item.claim)}`;
+      }
+    } else if (item.platform === 'facebook') {
+      if (!targetUrl || !targetUrl.includes('facebook.com')) {
+        targetUrl = `https://www.facebook.com/search/top?q=${encodeURIComponent(item.claim)}`;
+      }
+    }
+
+    if (!targetUrl) {
+      if (item.youtubeVideoId) {
+        targetUrl = `https://www.youtube.com/watch?v=${item.youtubeVideoId}`;
+      } else {
+        targetUrl = `https://www.youtube.com/results?search_query=${query}`;
+      }
+    }
+
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
 
   useEffect(() => {
     // Fetch live rumors with graceful fallback
@@ -209,30 +247,44 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* TRENDING NEAR YOU */}
       <TrendingNearYou location={location} onNavigate={onNavigate} />
 
-      {/* INTERACTIVE RUMOR MAP BANNER */}
-      <section className="bg-gradient-to-r from-emerald-900 via-[#0A3D2E] to-emerald-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-emerald-800/50 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* INTERACTIVE RUMOR MAP & STATS BANNER */}
+      <section className="bg-gradient-to-r from-emerald-900 via-[#0A3D2E] to-emerald-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-emerald-800/50 relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
         <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-12 translate-y-12">
           <MapPin className="w-64 h-64 text-white" />
         </div>
         <div className="relative z-10 space-y-2 max-w-lg">
-          <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-[#FFD60A] text-[#0A3D2E] px-2.5 py-0.5 rounded-full font-display">
-            <Compass className="w-3 h-3 text-[#0A3D2E]" />
-            <span>Interactive Map Radar</span>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-[#FFD60A] text-[#0A3D2E] px-2.5 py-0.5 rounded-full font-display">
+              <Compass className="w-3 h-3 text-[#0A3D2E]" />
+              <span>National & State Intelligence</span>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-300">All 36 States + Global</span>
           </div>
           <h3 className="text-xl sm:text-2xl font-black font-display text-white">
-            Explore Active Rumor Pins in {location.state}
+            Explore Rumor Density & Live Maps
           </h3>
           <p className="text-xs sm:text-sm text-emerald-100/90 font-medium leading-relaxed">
-            Pinpoint viral community claims, price alerts, and verified investigations across your region in real time.
+            Track viral claims, misinformation density, and spotter verifications across every Nigerian state and diaspora region with D3.js choropleth and ranked analytics.
           </p>
         </div>
-        <button
-          onClick={() => onNavigate('map')}
-          className="relative z-10 bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-md transition-all active:scale-95 shrink-0 flex items-center gap-2 font-display"
-        >
-          <MapPin className="w-4 h-4" />
-          <span>Open Rumor Map →</span>
-        </button>
+
+        <div className="relative z-10 flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <button
+            onClick={() => onNavigate('stats')}
+            className="flex-1 lg:flex-none bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 font-display"
+          >
+            <BarChart2 className="w-4 h-4" />
+            <span>36-States D3 Stats →</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('map')}
+            className="flex-1 lg:flex-none bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700 text-white font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            <MapPin className="w-4 h-4 text-emerald-400" />
+            <span>Live Radar Map</span>
+          </button>
+        </div>
       </section>
 
       {/* QUICK ACTIONS (Section 13) */}
@@ -365,9 +417,21 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <p className="text-xs text-gray-600 line-clamp-2 italic">
                   "{item.availableEvidenceQuote}"
                 </p>
-                <div className="text-[11px] font-bold text-[#0A3D2E] flex items-center justify-end gap-1">
-                  <span>View Truth Video</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                <div className="flex items-center justify-between pt-1 border-t border-gray-200 gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => handleWatchSocialMedia(e, item)}
+                    className="text-[11px] font-extrabold text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 font-display"
+                    title={`Watch original ${item.platform || 'social'} video`}
+                  >
+                    <Play className="w-2.5 h-2.5 fill-red-600 text-red-600" />
+                    <span>Watch {item.platform?.toUpperCase() || 'Social'}</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </button>
+                  <div className="text-[11px] font-bold text-[#0A3D2E] flex items-center gap-1">
+                    <span>Evidence</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
                 </div>
               </div>
 

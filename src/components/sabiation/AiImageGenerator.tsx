@@ -158,38 +158,56 @@ export const AiImageGenerator: React.FC<AiImageGeneratorProps> = ({ onShowToast 
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Generate image onto canvas with selected resolution
-  const handleGenerateImage = () => {
+  // Generate image onto canvas with selected resolution and backend API parameters
+  const handleGenerateImage = async () => {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
     setGenerationProgress(10);
-    setGenerationStatus('Initializing neural canvas & resolution parameters...');
+    setGenerationStatus(`Initializing neural canvas & ${selectedResolution.toUpperCase()} resolution parameters...`);
 
     const dim = RESOLUTION_SPECS[selectedResolution][selectedAspectRatio];
 
-    const progressSteps = [
-      { p: 25, msg: `Configuring ${selectedResolution.toUpperCase()} viewport (${dim.width} × ${dim.height} px)...` },
-      { p: 45, msg: 'Synthesizing visual geometry, lighting vectors, and color depth...' },
-      { p: 70, msg: `Applying ${selectedStyle.replace('_', ' ')} style textures and HDR highlights...` },
-      { p: 90, msg: `Upscaling micro-details and encoding final ${selectedResolution.toUpperCase()} image...` },
-      { p: 100, msg: 'Generation completed!' }
-    ];
+    try {
+      // 1. Call backend to validate and process resolution parameters
+      const backendPromise = fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          resolution: selectedResolution,
+          aspectRatio: selectedAspectRatio,
+          style: selectedStyle
+        })
+      }).then(res => res.json()).catch(() => null);
 
-    let stepIdx = 0;
-    const interval = setInterval(() => {
-      if (stepIdx < progressSteps.length) {
-        setGenerationProgress(progressSteps[stepIdx].p);
-        setGenerationStatus(progressSteps[stepIdx].msg);
-        stepIdx++;
-      } else {
-        clearInterval(interval);
-        renderCanvasImage(dim.width, dim.height);
-      }
-    }, 450);
+      const progressSteps = [
+        { p: 25, msg: `Configuring ${selectedResolution.toUpperCase()} viewport (${dim.width} × ${dim.height} px)...` },
+        { p: 45, msg: `Processing ${selectedResolution.toUpperCase()} geometry, lighting vectors, and color depth...` },
+        { p: 70, msg: `Applying ${selectedStyle.replace('_', ' ')} style textures and HDR highlights...` },
+        { p: 90, msg: `Upscaling micro-details and encoding final ${selectedResolution.toUpperCase()} master image...` },
+        { p: 100, msg: 'Generation completed!' }
+      ];
+
+      let stepIdx = 0;
+      const interval = setInterval(async () => {
+        if (stepIdx < progressSteps.length) {
+          setGenerationProgress(progressSteps[stepIdx].p);
+          setGenerationStatus(progressSteps[stepIdx].msg);
+          stepIdx++;
+        } else {
+          clearInterval(interval);
+          const backendData = await backendPromise;
+          const enhanced = backendData?.enhancedPrompt || prompt;
+          renderCanvasImage(dim.width, dim.height, enhanced);
+        }
+      }, 400);
+    } catch {
+      renderCanvasImage(dim.width, dim.height, prompt);
+    }
   };
 
-  const renderCanvasImage = (targetWidth: number, targetHeight: number) => {
+  const renderCanvasImage = (targetWidth: number, targetHeight: number, activePrompt: string = prompt) => {
     const canvas = document.createElement('canvas');
     canvas.width = targetWidth;
     canvas.height = targetHeight;

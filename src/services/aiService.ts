@@ -330,4 +330,30 @@ export class AiService {
       ]
     };
   }
+
+  /**
+   * Fetches verified worldwide & Nigerian rumors across TikTok, Twitter/X, Facebook, and YouTube
+   */
+  public static async fetchWorldwideRumors(scope: 'all' | 'nigeria' | 'worldwide' = 'all', platform: string = 'all'): Promise<any[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (scope !== 'all') queryParams.set('scope', scope);
+      if (platform !== 'all') queryParams.set('platform', platform);
+
+      const res = await fetch(`/api/rumors?${queryParams.toString()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope, platform })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
 }
+

@@ -17,7 +17,8 @@ import {
   LogIn,
   LogOut,
   Map,
-  Activity
+  Activity,
+  BarChart2
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { storageService, SelectedLocation } from '../../services/storageService';
@@ -53,8 +54,16 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   
-  const user = storageService.getUser();
-  const isLoggedIn = storageService.isUserLoggedIn();
+  const [user, setUser] = useState<UserProfile>(storageService.getUser());
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(storageService.isUserLoggedIn());
+
+  React.useEffect(() => {
+    const unsubscribe = storageService.subscribe(() => {
+      setUser(storageService.getUser());
+      setIsLoggedIn(storageService.isUserLoggedIn());
+    });
+    return unsubscribe;
+  }, []);
 
   const handleShareApp = () => {
     if (navigator.clipboard) {
@@ -66,6 +75,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleSignOut = () => {
     storageService.signOut();
+    setUser(storageService.getUser());
+    setIsLoggedIn(false);
     onNavigate('home');
     setMobileMenuOpen(false);
   };
@@ -124,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Controls for Desktop */}
         <div className="hidden md:flex items-center gap-2">
           {/* Map navigation */}
-          <Tooltip content="Explore regional rumors, verify maps & state distributions" position="bottom">
+          <Tooltip content="Live Community Radar Map with active rumor pins" position="bottom">
             <button
               onClick={() => onNavigate('map')}
               className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all border ${
@@ -135,6 +146,21 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Rumor Map"
             >
               <Map className="w-4 h-4" />
+            </button>
+          </Tooltip>
+
+          {/* D3 Stats Dashboard navigation */}
+          <Tooltip content="D3.js 36-State & Global Rumor Misinformation Dashboard" position="bottom">
+            <button
+              onClick={() => onNavigate('stats')}
+              className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all border ${
+                currentTab === 'stats'
+                  ? 'bg-[#FFD60A] text-[#0A3D2E] border-[#FFD60A]'
+                  : 'bg-emerald-900/50 hover:bg-emerald-800 text-emerald-100 border-emerald-700'
+              }`}
+              aria-label="Rumor Stats Dashboard"
+            >
+              <BarChart2 className="w-4 h-4" />
             </button>
           </Tooltip>
 
@@ -238,93 +264,119 @@ export const Header: React.FC<HeaderProps> = ({
             <Tooltip content="Sign In to earn Sabi Points and verify local claims" position="bottom">
               <button
                 onClick={() => onOpenAuthModal('signin')}
-                className="bg-emerald-800 hover:bg-emerald-750 text-white border border-emerald-600 px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1"
+                className="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 border border-emerald-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
               >
-                <LogIn className="w-3.5 h-3.5" />
+                <LogIn className="w-3.5 h-3.5 text-[#FFD60A]" />
                 <span>Sign In</span>
               </button>
             </Tooltip>
           )}
         </div>
 
-        {/* Mobile controls */}
-        <div className="flex md:hidden items-center gap-1">
-          {/* Quick Sabo AI for mobile */}
-          <Tooltip content="Ask Sabo AI" position="bottom">
-            <button
-              onClick={onOpenSaboAi}
-              className="p-2 bg-[#FFD60A] text-[#0A3D2E] rounded-xl font-bold text-xs"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-          </Tooltip>
+        {/* Mobile Action Controls */}
+        <div className="flex md:hidden items-center gap-2">
+          <button
+            onClick={() => onNavigate('stats')}
+            className="p-2 rounded-xl bg-emerald-900/60 text-[#FFD60A] border border-emerald-700"
+            aria-label="Rumor Stats"
+          >
+            <BarChart2 className="w-4 h-4" />
+          </button>
 
-          <Tooltip content="More Options" position="bottom">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-emerald-100 hover:text-white"
-              aria-label="Open Menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </Tooltip>
+          <button
+            onClick={onOpenSaboAi}
+            className="bg-[#FFD60A] text-[#0A3D2E] px-2.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1 shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Sabo</span>
+          </button>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-xl bg-emerald-900 text-white"
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0A3D2E] border-t border-emerald-800 px-4 py-3 space-y-3 animate-slide-down">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="md:hidden bg-[#0A3D2E] border-t border-emerald-800 px-4 py-4 space-y-3 animate-fade-in shadow-2xl">
+          <div className="grid grid-cols-2 gap-2 pb-2">
             <button
               onClick={() => { onNavigate('map'); setMobileMenuOpen(false); }}
-              className="bg-emerald-900/60 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-900/60 text-white font-bold text-xs"
             >
               <Map className="w-4 h-4 text-[#FFD60A]" />
-              <span>Interactive Map</span>
+              <span>Rumor Map</span>
             </button>
+
+            <button
+              onClick={() => { onNavigate('stats'); setMobileMenuOpen(false); }}
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-900/60 text-[#FFD60A] font-bold text-xs"
+            >
+              <BarChart2 className="w-4 h-4 text-[#FFD60A]" />
+              <span>36-State Stats (D3)</span>
+            </button>
+
             <button
               onClick={() => { onNavigate('sabiers'); setMobileMenuOpen(false); }}
-              className="bg-emerald-900/60 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-900/60 text-white font-bold text-xs"
             >
-              <MessageSquare className="w-4 h-4 text-emerald-300" />
-              <span>Live Chat Room</span>
+              <MessageSquare className="w-4 h-4 text-[#FFD60A]" />
+              <span>Sabi Live Chat</span>
             </button>
-            <button
-              onClick={() => { onNavigate('about'); setMobileMenuOpen(false); }}
-              className="bg-emerald-900/60 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
-            >
-              <Info className="w-4 h-4 text-emerald-300" />
-              <span>Creator Profile</span>
-            </button>
+
             <button
               onClick={() => { onOpenTutorial(); setMobileMenuOpen(false); }}
-              className="bg-emerald-900/60 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2"
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-900/60 text-white font-bold text-xs"
             >
               <BookOpen className="w-4 h-4 text-[#FFD60A]" />
-              <span>How SABI Works</span>
+              <span>How It Works</span>
             </button>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-emerald-800 text-xs">
             <button
-              onClick={() => { onToggleDarkMode(); setMobileMenuOpen(false); }}
-              className="flex items-center gap-2 p-2"
+              onClick={onToggleDarkMode}
+              className="flex items-center gap-2 text-emerald-200 font-bold"
             >
               {isDarkMode ? <Sun className="w-4 h-4 text-[#FFD60A]" /> : <Moon className="w-4 h-4 text-emerald-300" />}
               <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
 
-            {isLoggedIn ? (
-              <button onClick={handleSignOut} className="text-red-300 font-bold flex items-center gap-1.5 p-2">
-                <LogOut className="w-4 h-4" />
+            <button
+              onClick={() => { onNavigate('about'); setMobileMenuOpen(false); }}
+              className="text-emerald-200 font-bold hover:underline"
+            >
+              About Creator
+            </button>
+          </div>
+
+          {isLoggedIn ? (
+            <div className="pt-2 border-t border-emerald-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img src={user.avatarUrl} alt={user.name} className="w-7 h-7 rounded-full object-cover" />
+                <span className="text-xs font-bold text-white">{user.name}</span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="text-xs text-red-300 font-bold flex items-center gap-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
               </button>
-            ) : (
-              <button onClick={() => { onOpenAuthModal('signin'); setMobileMenuOpen(false); }} className="bg-[#FFD60A] text-[#0A3D2E] font-black px-4 py-1.5 rounded-xl">
-                Sign In
-              </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => { onOpenAuthModal('signin'); setMobileMenuOpen(false); }}
+              className="w-full bg-[#FFD60A] text-[#0A3D2E] py-2 rounded-xl text-xs font-black text-center"
+            >
+              Sign In to Sabi
+            </button>
+          )}
         </div>
       )}
     </header>
