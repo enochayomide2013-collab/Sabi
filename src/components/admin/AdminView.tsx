@@ -21,10 +21,12 @@ import {
   ChevronRight,
   ExternalLink,
   Lock,
-  Zap
+  Zap,
+  Search,
+  UserCheck
 } from 'lucide-react';
-import { storageService } from '../../services/storageService';
-import { VerificationTask, TruthResult, UserAccount, SentEmailReport, ResultType, UserProfile } from '../../types';
+import { storageService, ADMIN_MASTER_PASSWORD } from '../../services/storageService';
+import { VerificationTask, TruthResult, UserAccount, SentEmailReport, ResultType, UserProfile, UserAuthLog } from '../../types';
 
 interface AdminViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -44,7 +46,15 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [truthResults, setTruthResults] = useState<TruthResult[]>(storageService.getTruthResults());
   const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>(storageService.getRegisteredUsers());
   const [sentEmails, setSentEmails] = useState<SentEmailReport[]>(storageService.getSentEmailReports());
-  const [activeAdminTab, setActiveAdminTab] = useState<'reports' | 'cheat_code' | 'email_dispatch' | 'users' | 'sent_logs'>('reports');
+  const [authLogs, setAuthLogs] = useState<UserAuthLog[]>(storageService.getAuthLogs());
+  const [authSearchQuery, setAuthSearchQuery] = useState<string>('');
+
+  const [activeAdminTab, setActiveAdminTab] = useState<'reports' | 'cheat_code' | 'email_dispatch' | 'users' | 'auth_logs' | 'sent_logs'>('auth_logs');
+
+  // Passkey Protection Gate
+  const [isPasskeyUnlocked, setIsPasskeyUnlocked] = useState<boolean>(currentUser.role === 'admin');
+  const [passkeyInput, setPasskeyInput] = useState<string>('');
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
 
   // Cheat code points generator state
   const [cheatPointsInput, setCheatPointsInput] = useState<string>('50000');
@@ -59,18 +69,109 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
   useEffect(() => {
     const unsubscribe = storageService.subscribe(() => {
-      setCurrentUser(storageService.getUser());
+      const u = storageService.getUser();
+      setCurrentUser(u);
       setIsLoggedIn(storageService.isUserLoggedIn());
       setTasks(storageService.getTasks());
       setTruthResults(storageService.getTruthResults());
       setRegisteredUsers(storageService.getRegisteredUsers());
       setSentEmails(storageService.getSentEmailReports());
+      setAuthLogs(storageService.getAuthLogs());
+      if (u.role === 'admin') {
+        setIsPasskeyUnlocked(true);
+      }
     });
     return unsubscribe;
   }, []);
 
+  const handleUnlockPasskey = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasskeyError(null);
+    if (passkeyInput.trim() === ADMIN_MASTER_PASSWORD) {
+      setIsPasskeyUnlocked(true);
+      onShowToast(50, 'Master Admin Passkey Verified! Admin Access Unlocked.');
+    } else {
+      setPasskeyError('Incorrect Admin Passkey. Please enter the valid administrator password.');
+    }
+  };
+
   // Filter tasks to only show active pending tasks in moderation queue
   const pendingTasks = tasks.filter(t => t.status !== 'completed');
+
+  const filteredAuthLogs = authLogs.filter(log => {
+    if (!authSearchQuery.trim()) return true;
+    const q = authSearchQuery.toLowerCase();
+    return (
+      log.userName.toLowerCase().includes(q) ||
+      log.userEmail.toLowerCase().includes(q) ||
+      log.eventType.toLowerCase().includes(q) ||
+      (log.state && log.state.toLowerCase().includes(q))
+    );
+  });
+
+  if (!isPasskeyUnlocked) {
+    return (
+      <div className="max-w-md mx-auto my-12 p-6 sm:p-8 bg-white rounded-3xl border border-amber-300 shadow-2xl space-y-6 text-center animate-scale-up" id="admin-passkey-gate">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-800 text-white flex items-center justify-center mx-auto shadow-lg">
+          <Lock className="w-8 h-8 text-amber-200" />
+        </div>
+
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-bold text-[10px] uppercase px-3 py-1 rounded-full border border-amber-200">
+            <KeyRound className="w-3 h-3 text-amber-700" />
+            <span>SABI Master Passkey Protection</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold font-display text-gray-900">
+            Admin Portal Locked
+          </h2>
+          <p className="text-xs text-gray-600 max-w-sm mx-auto">
+            Please enter the administrator master passkey to access moderation controls, user authentication logs, and system telemetries.
+          </p>
+        </div>
+
+        <form onSubmit={handleUnlockPasskey} className="space-y-4 text-left">
+          {passkeyError && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2 animate-fade-in" id="passkey-error-alert">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{passkeyError}</span>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+              Administrator Passkey
+            </label>
+            <div className="relative">
+              <KeyRound className="w-4 h-4 text-amber-600 absolute left-3.5 top-3.5" />
+              <input
+                id="admin-passkey-gate-input"
+                type="password"
+                required
+                autoFocus
+                placeholder="Enter Master Passkey"
+                value={passkeyInput}
+                onChange={(e) => setPasskeyInput(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-4 py-3 text-sm font-mono font-bold tracking-widest text-gray-900 focus:ring-2 focus:ring-amber-600 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <button
+            id="unlock-admin-gate-btn"
+            type="submit"
+            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer font-display"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Unlock Admin Portal</span>
+          </button>
+        </form>
+
+        <div className="text-[11px] text-gray-400 pt-2 border-t border-gray-100">
+          Tip: Enter password <code className="bg-gray-100 px-1.5 py-0.5 rounded text-amber-800 font-mono font-bold">2013</code> to authenticate master administrator privileges.
+        </div>
+      </div>
+    );
+  }
 
   // Handle Injecting Cheat Code Points
   const handleInjectPoints = (amountToInject: number) => {
@@ -279,6 +380,19 @@ export const AdminView: React.FC<AdminViewProps> = ({
         >
           <Users className="w-4 h-4" />
           <span>Users Directory ({registeredUsers.length})</span>
+        </button>
+
+        <button
+          id="admin-tab-auth-logs"
+          onClick={() => setActiveAdminTab('auth_logs')}
+          className={`flex-1 py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
+            activeAdminTab === 'auth_logs'
+              ? 'bg-[#0A3D2E] text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <KeyRound className="w-4 h-4 text-[#FFD60A]" />
+          <span>Auth & Credential Logs ({authLogs.length})</span>
         </button>
 
         <button
@@ -675,7 +789,122 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
       )}
 
-      {/* 5. SENT EMAIL LOGS TAB */}
+      {/* 5. USER AUTHENTICATION & CREDENTIAL LOGS TAB */}
+      {activeAdminTab === 'auth_logs' && (
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-5" id="admin-auth-logs-section">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 mb-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Live Auth Telemetry & Credential Verification</span>
+              </div>
+              <h3 className="font-extrabold text-lg text-gray-900 font-display">
+                User Sign-Up & Sign-In Audit Logs
+              </h3>
+              <p className="text-xs text-gray-500">
+                Live stream recording user registration and sign-in entries with name, email, credentials, and timestamps.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                id="clear-auth-logs-btn"
+                onClick={() => {
+                  storageService.clearAuthLogs();
+                  setAuthLogs([]);
+                  onShowToast(0, 'Auth audit logs cleared.');
+                }}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear Logs</span>
+              </button>
+            </div>
+          </div>
+
+          {/* SEARCH & FILTER BAR */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+            <input
+              id="auth-logs-search-input"
+              type="text"
+              placeholder="Filter logs by user name, email, or event type..."
+              value={authSearchQuery}
+              onChange={(e) => setAuthSearchQuery(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
+            />
+          </div>
+
+          {filteredAuthLogs.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 text-xs space-y-2 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <UserCheck className="w-8 h-8 mx-auto text-gray-300" />
+              <p>No authentication logs found matching your filter.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredAuthLogs.map((log) => {
+                const isSignUp = log.eventType === 'USER_SIGN_UP';
+                const isGoogle = log.eventType === 'GOOGLE_AUTH';
+                const isAdmin = log.eventType === 'ADMIN_ACCESS';
+
+                return (
+                  <div key={log.id} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 hover:border-gray-300 transition-all space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${
+                          isSignUp
+                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                            : isGoogle
+                            ? 'bg-blue-100 text-blue-900 border-blue-300'
+                            : isAdmin
+                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            : 'bg-indigo-100 text-indigo-900 border-indigo-300'
+                        }`}>
+                          {isSignUp ? '✓ USER SIGN UP' : isGoogle ? '🌐 GOOGLE AUTH' : isAdmin ? '★ ADMIN ACCESS' : '🔐 USER SIGN IN'}
+                        </span>
+                        <span className="font-extrabold text-sm text-gray-900 font-display">
+                          {log.userName}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{log.timestamp}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="bg-white p-2.5 rounded-xl border border-gray-200 space-y-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Email Address</span>
+                        <div className="font-bold text-gray-800 flex items-center gap-1.5 overflow-hidden text-ellipsis">
+                          <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="truncate">{log.userEmail}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-2.5 rounded-xl border border-gray-200 space-y-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Password / Credential</span>
+                        <div className="font-mono font-bold text-emerald-900 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200 inline-block text-[11px] max-w-full truncate">
+                          {log.passwordUsed}
+                        </div>
+                      </div>
+                    </div>
+
+                    {log.state && (
+                      <div className="flex items-center gap-1 text-[11px] text-gray-500 pt-1">
+                        <MapPin className="w-3 h-3 text-[#0A3D2E]" />
+                        <span>Region: {log.lga || 'Mainland'}, {log.state}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 6. SENT EMAIL LOGS TAB */}
       {activeAdminTab === 'sent_logs' && (
         <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4" id="admin-sent-logs-section">
           <div className="flex items-center justify-between">

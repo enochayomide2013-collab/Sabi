@@ -18,7 +18,8 @@ import {
   LogOut,
   Map,
   Activity,
-  BarChart2
+  BarChart2,
+  ShieldCheck
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { storageService, SelectedLocation } from '../../services/storageService';
@@ -216,6 +217,22 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </Tooltip>
 
+          {/* Admin Portal Navigation */}
+          <Tooltip content="SABI Administrator Control Center & Telemetry" position="bottom">
+            <button
+              id="header-admin-portal-btn"
+              onClick={() => onNavigate('admin')}
+              className={`text-xs px-2.5 py-1.5 rounded-xl font-bold border transition-colors flex items-center gap-1 ${
+                currentTab === 'admin'
+                  ? 'bg-amber-500 text-black border-amber-400'
+                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/40'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin</span>
+            </button>
+          </Tooltip>
+
           {/* Notifications Modal */}
           <Tooltip content="Breaking alert bulletins & verifications" position="bottom">
             <button
@@ -335,6 +352,14 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <BookOpen className="w-4 h-4 text-[#FFD60A]" />
               <span>How It Works</span>
+            </button>
+
+            <button
+              onClick={() => { onNavigate('admin'); setMobileMenuOpen(false); }}
+              className="col-span-2 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-xs shadow-sm"
+            >
+              <ShieldCheck className="w-4 h-4 text-black" />
+              <span>SABI Admin Portal (Direct Access)</span>
             </button>
           </div>
 

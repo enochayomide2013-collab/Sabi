@@ -23,9 +23,17 @@ import {
   UserCheck,
   Award,
   Crown,
-  Hand
+  Hand,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
+import { 
+  sendChatMessageToFirestore, 
+  subscribeToChatMessages, 
+  subscribeToPresenceList, 
+  updatePresenceInFirestore 
+} from '../../services/firestoreService';
 import { SabiersChatMessage, UserProfile, TrustLevel, OnlineSabier } from '../../types';
 
 interface SabiersChatViewProps {
@@ -63,21 +71,119 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
   const [showTagInput, setShowTagInput] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedOnlineState, setSelectedOnlineState] = useState<string>('all');
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevMessageIdsRef = useRef<Set<string>>(new Set());
+  const soundEnabledRef = useRef<boolean>(soundEnabled);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  const playChatNotificationSound = () => {
+    if (!soundEnabledRef.current) return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch {
+      // Audio context uninitialized
+    }
+  };
 
   const displayOnlineCount = typeof onlineCount === 'number' && onlineCount > 0
     ? onlineCount
     : onlineSabiers.filter(s => s.isOnline).length || 1;
 
   useEffect(() => {
-    const unsubscribe = storageService.subscribe(() => {
+    const currentUser = storageService.getUser();
+    
+    // Populate initial known message IDs
+    const initialMsgs = storageService.getSabiersMessages();
+    initialMsgs.forEach(m => prevMessageIdsRef.current.add(m.id));
+
+    // Local storage subscription
+    const unsubscribeLocal = storageService.subscribe(() => {
       setUser(storageService.getUser());
-      setMessages(storageService.getSabiersMessages());
+      const newLocalMsgs = storageService.getSabiersMessages();
+      setMessages(newLocalMsgs);
       setOnlineSabiers(storageService.getOnlineSabiers());
     });
-    return unsubscribe;
+
+    // Ping user presence immediately
+    updatePresenceInFirestore(currentUser.id, currentUser.name, currentUser);
+
+    // Real-time Firestore chat subscription
+    const unsubscribeChat = subscribeToChatMessages((firestoreMsgs) => {
+      if (firestoreMsgs && firestoreMsgs.length > 0) {
+        // Merge Firestore messages with local messages, avoiding duplicates
+        const localMsgs = storageService.getSabiersMessages();
+        const map = new Map<string, SabiersChatMessage>();
+        localMsgs.forEach(m => map.set(m.id, m));
+        firestoreMsgs.forEach(m => map.set(m.id, m));
+        const combined = Array.from(map.values());
+
+        // Check for new incoming messages from other users to play sound
+        let hasNewMessageFromOther = false;
+        combined.forEach(m => {
+          if (!prevMessageIdsRef.current.has(m.id)) {
+            if (m.senderId !== currentUser.id && m.senderName !== currentUser.name) {
+              hasNewMessageFromOther = true;
+            }
+            prevMessageIdsRef.current.add(m.id);
+          }
+        });
+
+        if (hasNewMessageFromOther && prevMessageIdsRef.current.size > 0) {
+          playChatNotificationSound();
+        }
+
+        setMessages(combined);
+      } else {
+        setMessages(storageService.getSabiersMessages());
+      }
+    });
+
+    // Real-time Firestore presence subscription
+    const unsubscribePresence = subscribeToPresenceList((onlineList) => {
+      if (onlineList && onlineList.length > 0) {
+        // Combine real presence with registered sabiers from local storage
+        const registered = storageService.getOnlineSabiers();
+        const map = new Map<string, OnlineSabier>();
+        registered.forEach(s => map.set(s.id, s));
+        onlineList.forEach(s => map.set(s.id, s));
+        setOnlineSabiers(Array.from(map.values()));
+      } else {
+        setOnlineSabiers(storageService.getOnlineSabiers());
+      }
+    });
+
+    return () => {
+      unsubscribeLocal();
+      if (unsubscribeChat) unsubscribeChat();
+      if (unsubscribePresence) unsubscribePresence();
+    };
   }, []);
 
   const filteredMessages = messages.filter(m => {
@@ -113,11 +219,41 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
       };
     }
 
-    storageService.addSabiersMessage({
-      message: messageInput.trim(),
+    const currentUser = storageService.getUser();
+    const messageContent = messageInput.trim();
+
+    // Publish to real-time Firestore collection for instant cross-user chat
+    sendChatMessageToFirestore({
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderAvatar: currentUser.avatarUrl,
+      senderTrustLevel: currentUser.trustLevel,
+      senderRole: currentUser.role,
+      senderTier: currentUser.userTier,
+      state: currentUser.state || 'Lagos',
+      lga: currentUser.lga || 'Ikeja',
+      channel: targetChannel,
+      message: messageContent,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      reactions: [],
+      attachedTag
+    });
+
+    // Store locally and update user points
+    const newLocalMsg = storageService.addSabiersMessage({
+      message: messageContent,
       channel: targetChannel,
       attachedTag
     });
+
+    // Update state immediately so message shows instantly in live chat
+    setMessages(prev => [newLocalMsg, ...prev.filter(m => m.id !== newLocalMsg.id)]);
+
+    // Re-ping presence with recent activity update
+    updatePresenceInFirestore(currentUser.id, currentUser.name, {
+      ...currentUser,
+      currentActivity: `Posted in #${targetChannel}: "${messageContent.slice(0, 30)}..."`
+    } as Partial<UserProfile>);
 
     setMessageInput('');
     setTagLabel('');
@@ -271,16 +407,40 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
           </button>
         </div>
 
-        {/* Global Chat / Sabiers Search */}
-        <div className="relative w-full sm:w-56 mt-1 sm:mt-0">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={activeChatTab === 'chat' ? "Search messages or @users..." : "Search online sabiers..."}
-            className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:ring-1 focus:ring-[#0A3D2E] focus:outline-none"
-          />
+        {/* Right controls: Sound Toggle & Search */}
+        <div className="flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0">
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+              soundEnabled
+                ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+            }`}
+            title={soundEnabled ? "Live Sound Notifications: ON" : "Live Sound Notifications: MUTED"}
+          >
+            {soundEnabled ? (
+              <>
+                <Volume2 className="w-4 h-4 text-emerald-700" />
+                <span className="hidden md:inline text-[11px] font-extrabold text-emerald-900">Sound ON</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-4 h-4 text-gray-500" />
+                <span className="hidden md:inline text-[11px] font-bold text-gray-500">Muted</span>
+              </>
+            )}
+          </button>
+
+          <div className="relative flex-1 sm:w-56">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={activeChatTab === 'chat' ? "Search messages or @users..." : "Search online sabiers..."}
+              className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:ring-1 focus:ring-[#0A3D2E] focus:outline-none"
+            />
+          </div>
         </div>
       </div>
 

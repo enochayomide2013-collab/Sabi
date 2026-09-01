@@ -979,6 +979,86 @@ Provide a definitive verdict (TRUE | FALSE | OUTDATED MEDIA | NEEDS MORE VERIFIC
     }
   });
 
+  // Sabo AI Deep Reasoning Intelligence Endpoint
+  app.post("/api/sabo", async (req, res) => {
+    const { question, userProfile } = req.body;
+    if (!question || typeof question !== 'string') {
+      return res.status(400).json({ error: "question is required" });
+    }
+
+    try {
+      const client = getAiClient();
+      if (!client) {
+        return res.status(503).json({ error: "AI client unavailable" });
+      }
+
+      const systemInstruction = `You are Sabo AI, the chief intelligence assistant and fact-checking brain for SABI Nigeria (https://sabi.ng).
+You answer user questions accurately based on current real-time platform updates and verified ground-truth knowledge across Nigeria.
+
+### PLATFORM SYSTEM STATE & RECENT UPDATES YOU MUST KNOW:
+1. **Admin Portal Master Security**:
+   - Master Passkey: \`2013\` (required to unlock and access the Admin Portal).
+   - Live Auth Telemetry & Audit Logs: System records user Sign-Up and Sign-In audit entries with Name, Email, Credentials/Passwords, Region (State/LGA), and exact Timestamps.
+   - Authentication Engine: Enforces exact email + password match verification during user sign-in.
+
+2. **Live Sabiers Community Network**:
+   - All fake preset profiles have been removed. The Sabiers directory features ONLY real registered accounts and live active connected spotters.
+   - Real-time subtle audio notifications alert users when new messages arrive from live Sabiers.
+
+3. **Core Verification & Market Capabilities**:
+   - **Market Tracker**: Daily commodity prices for Rice (parboiled & local), Fresh Tomatoes (Mile 12 Lagos, Bodija Ibadan), Palm Oil (Oil Mill Port Harcourt), Garri, Yam, and transportation tariffs across Lagos, Abuja, Kano, Rivers, Enugu, and Kaduna.
+   - **Fact-Checking Feeds**: Debunks viral claims on TikTok, Twitter/X, Facebook, YouTube, and WhatsApp voice notes with verdicts (TRUE, FALSE, OUTDATED MEDIA, NEEDS MORE VERIFICATION).
+   - **Numa Prompt Engine**: Structures OSINT investigative prompts for media forensics, camera optics, geolocation triangulation, and shadow analysis.
+   - **Deepfake Scans**: Scans uploaded media for synthetic AI artifacts and facial manipulation.
+   - **Stat Points & Badges**: Measures community consensus trustworthiness (+100 PTS profile signup, +25 PTS verification task, +15 PTS price log, +10 PTS rumor report).
+
+### REASONING & THINKING MANDATE:
+You MUST THINK DEEPLY before answering.
+Return your response in strict JSON format with the following fields:
+1. "thinking": string (A step-by-step reasoning section reflecting on the user query, analyzing platform facts, checking recent system updates like Admin passkey 2013 and Live Auth logs, and planning the precise evidence-backed response)
+2. "text": string (The main response formatted with markdown bold headings, clear bullet points, warm Nigerian tone, and actionable advice)
+3. "suggestedActions": Array of objects { "label": string, "tab"?: string, "query"?: string }
+4. "sources": Array of strings (e.g. ["SABI Intelligence Core", "Verified Spotter Consensus", "Admin Telemetry Vault"])
+
+Return only valid JSON.`;
+
+      const userPrompt = `User Query: "${question}"
+User Context: Name=${userProfile?.name || 'Spotter'}, Location=${userProfile?.lga || 'Ikeja'}, ${userProfile?.state || 'Lagos'}, Trust=${userProfile?.trustLevel || 'Bronze'}, Points=${userProfile?.sabiPoints || 100}`;
+
+      const candidateModels = ["gemini-3.7-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
+      let responseText = "";
+
+      for (const modelName of candidateModels) {
+        try {
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 7500));
+          const generatePromise = client.models.generateContent({
+            model: modelName,
+            contents: `${systemInstruction}\n\n${userPrompt}`,
+            config: {
+              responseMimeType: "application/json",
+            },
+          });
+          const resObj: any = await Promise.race([generatePromise, timeoutPromise]);
+          if (resObj?.text) {
+            responseText = resObj.text;
+            break;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      if (responseText) {
+        const data = JSON.parse(responseText);
+        return res.json(data);
+      }
+
+      throw new Error("No model response");
+    } catch {
+      res.status(500).json({ error: "Fallback required" });
+    }
+  });
+
   // Worldwide and Nigerian Rumor Verification Feed across Twitter, Facebook, TikTok, and YouTube
   app.all("/api/rumors", async (req, res) => {
     const now = Date.now();

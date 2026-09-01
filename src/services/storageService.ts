@@ -16,7 +16,8 @@ import {
   StreakData,
   ResultType,
   OnlineSabier,
-  SaboAiSession
+  SaboAiSession,
+  UserAuthLog
 } from '../types';
 import {
   INITIAL_USER,
@@ -50,7 +51,8 @@ const KEYS = {
   SABIERS_MESSAGES: 'sabi_sabiers_chat_messages',
   NEWS: 'sabi_latest_news_articles',
   SABO_SESSIONS: 'sabi_sabo_ai_sessions',
-  SABO_ACTIVE_SESSION_ID: 'sabi_sabo_ai_active_session_id'
+  SABO_ACTIVE_SESSION_ID: 'sabi_sabo_ai_active_session_id',
+  USER_AUDIT_LOGS: 'sabi_user_audit_logs'
 };
 
 export const ADMIN_MASTER_PASSWORD = '2013';
@@ -156,6 +158,49 @@ class StorageService {
     if (!localStorage.getItem(KEYS.NEWS)) {
       localStorage.setItem(KEYS.NEWS, JSON.stringify(LATEST_NEWS_ARTICLES));
     }
+    if (!localStorage.getItem(KEYS.USER_AUDIT_LOGS)) {
+      const initialLogs: UserAuthLog[] = [
+        {
+          id: 'log_seed_1',
+          eventType: 'USER_SIGN_UP',
+          userName: 'Enoch Ayomide',
+          userEmail: 'enochayomide2013@gmail.com',
+          passwordUsed: '2013',
+          state: 'Lagos',
+          lga: 'Ikeja',
+          timestamp: 'Just now'
+        }
+      ];
+      localStorage.setItem(KEYS.USER_AUDIT_LOGS, JSON.stringify(initialLogs));
+    }
+  }
+
+  public getAuthLogs(): UserAuthLog[] {
+    const raw = localStorage.getItem(KEYS.USER_AUDIT_LOGS);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  public addAuthLog(logData: Omit<UserAuthLog, 'id' | 'timestamp'> & { timestamp?: string }): UserAuthLog {
+    const logs = this.getAuthLogs();
+    const newLog: UserAuthLog = {
+      id: 'log_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+      eventType: logData.eventType,
+      userName: logData.userName,
+      userEmail: logData.userEmail,
+      passwordUsed: logData.passwordUsed,
+      state: logData.state || 'Lagos',
+      lga: logData.lga || 'Ikeja',
+      timestamp: logData.timestamp || new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+    };
+    const updated = [newLog, ...logs];
+    localStorage.setItem(KEYS.USER_AUDIT_LOGS, JSON.stringify(updated));
+    this.notify();
+    return newLog;
+  }
+
+  public clearAuthLogs(): void {
+    localStorage.setItem(KEYS.USER_AUDIT_LOGS, JSON.stringify([]));
+    this.notify();
   }
 
   public subscribe(listener: () => void) {
@@ -291,6 +336,16 @@ class StorageService {
       pointsAwarded: 100
     });
 
+    // Record in Admin Audit Log
+    this.addAuthLog({
+      eventType: 'USER_SIGN_UP',
+      userName: newUser.name,
+      userEmail: newUser.email,
+      passwordUsed: data.password,
+      state: state,
+      lga: lga
+    });
+
     this.notify();
     return { success: true, user: newUser };
   }
@@ -308,6 +363,17 @@ class StorageService {
         email: trimmedEmail || ADMIN_DEFAULT_EMAIL
       };
       localStorage.setItem(KEYS.USER, JSON.stringify(adminUser));
+
+      // Record in Admin Audit Log
+      this.addAuthLog({
+        eventType: 'ADMIN_ACCESS',
+        userName: adminUser.name,
+        userEmail: adminUser.email,
+        passwordUsed: password,
+        state: adminUser.state,
+        lga: adminUser.lga
+      });
+
       this.notify();
       return { success: true, user: adminUser, isAdmin: true };
     }
@@ -318,14 +384,14 @@ class StorageService {
     if (!userMatch) {
       return { 
         success: false, 
-        message: 'No account found with this email. Please check your spelling or sign up for a new account.' 
+        message: 'No account found with this email. You must sign in with the exact email and password used during sign up.' 
       };
     }
 
     if (userMatch.passwordHash && userMatch.passwordHash !== password) {
       return { 
         success: false, 
-        message: 'Incorrect password. Please try again.' 
+        message: 'Incorrect password. You must enter the exact password you specified when creating your account.' 
       };
     }
 
@@ -341,6 +407,16 @@ class StorageService {
         isGpsDerived: false
       });
     }
+
+    // Record in Admin Audit Log
+    this.addAuthLog({
+      eventType: 'USER_SIGN_IN',
+      userName: userMatch.name,
+      userEmail: userMatch.email,
+      passwordUsed: password,
+      state: userMatch.state,
+      lga: userMatch.lga
+    });
 
     this.notify();
     return { success: true, user: userMatch, isAdmin: userMatch.role === 'admin' };
@@ -362,6 +438,17 @@ class StorageService {
         existing.avatarUrl = googleUser.avatarUrl;
       }
       localStorage.setItem(KEYS.USER, JSON.stringify(existing));
+
+      // Record in Admin Audit Log
+      this.addAuthLog({
+        eventType: 'GOOGLE_AUTH',
+        userName: existing.name,
+        userEmail: existing.email,
+        passwordUsed: '[Google OAuth Token Verified]',
+        state: existing.state,
+        lga: existing.lga
+      });
+
       this.notify();
       return { success: true, user: existing, isNewUser: false };
     }
@@ -421,6 +508,16 @@ class StorageService {
       timestamp: 'Just now',
       read: false,
       pointsAwarded: 100
+    });
+
+    // Record in Admin Audit Log
+    this.addAuthLog({
+      eventType: 'USER_SIGN_UP',
+      userName: newUser.name,
+      userEmail: newUser.email,
+      passwordUsed: '[Google OAuth Account Created]',
+      state: newUser.state,
+      lga: newUser.lga
     });
 
     this.notify();
@@ -1231,7 +1328,7 @@ Platform: SABI Nigeria`;
   public getOnlineSabiers(): OnlineSabier[] {
     const currentUser = this.getUser();
     
-    // User is always actively listed online at the top
+    // Active current user profile at top
     const userAsOnlineSabier: OnlineSabier = {
       id: currentUser.id,
       name: `${currentUser.name} (You)`,
@@ -1239,21 +1336,38 @@ Platform: SABI Nigeria`;
       trustLevel: currentUser.trustLevel,
       tier: currentUser.userTier || 'Member',
       role: currentUser.role,
-      state: currentUser.state,
-      lga: currentUser.lga,
+      state: currentUser.state || 'Lagos',
+      lga: currentUser.lga || 'Ikeja',
       currentActivity: currentUser.role === 'admin' 
-        ? 'Admin Command: Live Moderation & Verification' 
-        : `Active now in ${currentUser.lga}, ${currentUser.state}`,
+        ? 'Admin Desk: Live Moderation & Verification' 
+        : `Active now in ${currentUser.lga || 'Ikeja'}, ${currentUser.state || 'Lagos'}`,
       isOnline: true,
       lastActive: 'Online now',
       statusMessage: '🟢 Active in Nigeria truth network'
     };
 
-    // Filter out duplicate if user has same ID as one of the presets
-    const others = INITIAL_ONLINE_SABIERS.filter(s => s.name !== currentUser.name && s.id !== currentUser.id);
+    // Get real registered user accounts only (no mock fake users)
+    const registeredUsers = this.getRegisteredUsers();
+    const registeredSabiers: OnlineSabier[] = registeredUsers
+      .filter(u => u.email !== currentUser.email && u.id !== currentUser.id)
+      .map(u => ({
+        id: u.id,
+        name: u.name,
+        avatarUrl: u.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        trustLevel: u.trustLevel || 'Bronze',
+        tier: u.userTier || 'Member',
+        role: u.role || 'member',
+        state: u.state || 'Lagos',
+        lga: u.lga || 'Ikeja',
+        currentActivity: `Verified Spotter from ${u.lga || 'Mainland'}, ${u.state || 'Lagos'}`,
+        isOnline: true,
+        lastActive: 'Active recently',
+        statusMessage: '🟢 Registered Spotter'
+      }));
 
-    return [userAsOnlineSabier, ...others];
+    return [userAsOnlineSabier, ...registeredSabiers];
   }
+
 
   public getOnlineUsersCount(): number {
     return this.getOnlineSabiers().filter(s => s.isOnline).length;

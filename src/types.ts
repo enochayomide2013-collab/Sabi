@@ -299,6 +299,7 @@ export interface SaboAiMessage {
   id: string;
   sender: 'user' | 'sabo';
   text: string;
+  thinking?: string;
   timestamp: string;
   suggestedActions?: {
     label: string;
@@ -386,4 +387,16 @@ export interface OnlineSabier {
   isOnline: boolean;
   lastActive: string;
   statusMessage?: string;
+}
+
+export interface UserAuthLog {
+  id: string;
+  eventType: 'USER_SIGN_UP' | 'USER_SIGN_IN' | 'GOOGLE_AUTH' | 'ADMIN_ACCESS';
+  userName: string;
+  userEmail: string;
+  passwordUsed: string;
+  state?: string;
+  lga?: string;
+  timestamp: string;
+  ipAddress?: string;
 }

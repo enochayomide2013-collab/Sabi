@@ -278,26 +278,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {user.role === 'admin' ? (
-              <button
-                id="enter-admin-portal-profile-btn"
-                onClick={() => onNavigate('admin')}
-                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition-all"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-white" />
-                <span>Open Admin Portal</span>
-              </button>
-            ) : (
-              <button
-                id="admin-login-passkey-btn"
-                onClick={() => { setAuthInitialMode('admin'); setIsAuthModalOpen(true); }}
-                className="bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold px-3.5 py-2 rounded-xl border border-amber-200 flex items-center gap-1.5 transition-colors"
-                title="Administrator Portal Access"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-amber-700" />
-                <span>Admin Login</span>
-              </button>
-            )}
+            <button
+              id="enter-admin-portal-profile-btn"
+              onClick={() => onNavigate('admin')}
+              className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              title="Administrator Portal Access"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-white" />
+              <span>Admin Portal</span>
+            </button>
 
             {/* Truth Alert Subscription Toggle */}
             <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">

@@ -15,6 +15,7 @@ import {
   Plus, 
   ShieldCheck, 
   Loader2,
+  Calculator,
   X
 } from 'lucide-react';
 import { 
@@ -28,6 +29,7 @@ import {
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { AiService } from '../../services/aiService';
 import { MarketItem } from '../../types';
+import { SabiBasketComparator } from './SabiBasketComparator';
 
 interface MarketViewProps {
   initialItemId?: string;
@@ -36,6 +38,7 @@ interface MarketViewProps {
 }
 
 export const MarketView: React.FC<MarketViewProps> = ({ initialItemId, onNavigate, onShowPointsToast }) => {
+  const [marketSubTab, setMarketSubTab] = useState<'intelligence' | 'basket'>('intelligence');
   const [marketItems, setMarketItems] = useState<MarketItem[]>(storageService.getMarketItems());
   const [selectedItem, setSelectedItem] = useState<MarketItem>(
     initialItemId ? marketItems.find(m => m.id === initialItemId) || marketItems[0] : marketItems[0]
@@ -122,19 +125,50 @@ export const MarketView: React.FC<MarketViewProps> = ({ initialItemId, onNavigat
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-16 animate-fade-in">
       
-      {/* Page Header (Section 41) */}
-      <div className="space-y-1">
-        <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-full uppercase">
-          <ShoppingBasket className="w-3.5 h-3.5" />
-          <span>Market Price Intelligence</span>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 font-display">
-          Market Price
-        </h1>
-        <p className="text-sm text-gray-600">
-          Take a picture of a food item or select below to view reported prices across Nigerian locations.
-        </p>
+      {/* Mode Sub-tab Navigation */}
+      <div className="flex bg-gray-200/80 p-1 rounded-2xl gap-1">
+        <button
+          onClick={() => setMarketSubTab('intelligence')}
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            marketSubTab === 'intelligence'
+              ? 'bg-[#0A3D2E] text-white shadow-sm font-extrabold'
+              : 'text-gray-700 hover:text-gray-900'
+          }`}
+        >
+          <ShoppingBasket className="w-4 h-4 text-[#FFD60A]" />
+          <span>Spotter Price Tracker</span>
+        </button>
+
+        <button
+          onClick={() => setMarketSubTab('basket')}
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            marketSubTab === 'basket'
+              ? 'bg-[#0A3D2E] text-white shadow-sm font-extrabold'
+              : 'text-gray-700 hover:text-gray-900'
+          }`}
+        >
+          <Calculator className="w-4 h-4 text-[#FFD60A]" />
+          <span>Sabi Household Basket & Saver</span>
+        </button>
       </div>
+
+      {marketSubTab === 'basket' ? (
+        <SabiBasketComparator onNavigate={onNavigate} onShowToast={onShowPointsToast} />
+      ) : (
+        <>
+          {/* Page Header (Section 41) */}
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-full uppercase">
+              <ShoppingBasket className="w-3.5 h-3.5" />
+              <span>Market Price Intelligence</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 font-display">
+              Market Price Tracker
+            </h1>
+            <p className="text-sm text-gray-600">
+              Take a picture of a food item or select below to view reported prices across Nigerian locations.
+            </p>
+          </div>
 
       {/* SNAP FOOD ITEM HERO / UPLOAD ACTIONS */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4">
@@ -576,6 +610,8 @@ export const MarketView: React.FC<MarketViewProps> = ({ initialItemId, onNavigat
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
 
     </div>

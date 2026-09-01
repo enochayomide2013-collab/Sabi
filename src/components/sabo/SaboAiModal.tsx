@@ -478,6 +478,20 @@ export const SaboAiModal: React.FC<SaboAiModalProps> = ({
                         : 'bg-white text-gray-900 border border-gray-200/90 rounded-tl-none shadow-sm'
                     }`}
                   >
+                    {/* Deep Thinking Process Block */}
+                    {!isUser && msg.thinking && (
+                      <details className="group mb-3 rounded-xl border border-emerald-900/15 bg-emerald-50/70 p-2.5 text-[11px] text-emerald-950 transition-all">
+                        <summary className="cursor-pointer font-bold flex items-center gap-1.5 text-emerald-900 list-none select-none">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-700 animate-pulse" />
+                          <span>Sabo AI Deep Thinking & Reasoning</span>
+                          <ChevronRight className="w-3 h-3 text-emerald-700 transition-transform group-open:rotate-90 ml-auto" />
+                        </summary>
+                        <div className="mt-2 pt-2 border-t border-emerald-900/15 whitespace-pre-line font-mono text-[10.5px] leading-relaxed text-emerald-900 bg-emerald-100/50 p-2.5 rounded-lg border border-emerald-200/60 shadow-2xs">
+                          {msg.thinking}
+                        </div>
+                      </details>
+                    )}
+
                     {/* Render message with line breaks and formatting */}
                     <div className="whitespace-pre-line space-y-1">
                       {msg.text.split('\n\n').map((paragraph, idx) => (

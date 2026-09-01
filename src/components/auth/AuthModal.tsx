@@ -4,8 +4,6 @@ import {
   Mail, 
   Lock, 
   User, 
-  MapPin, 
-  ShieldCheck, 
   ArrowRight, 
   KeyRound, 
   Sparkles, 
@@ -13,11 +11,11 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  LogIn,
-  UserPlus
+  ShieldCheck
 } from 'lucide-react';
-import { storageService, ADMIN_MASTER_PASSWORD, ADMIN_DEFAULT_EMAIL } from '../../services/storageService';
+import { storageService, ADMIN_MASTER_PASSWORD } from '../../services/storageService';
 import { AuthService } from '../../services/authService';
+import { updatePresenceInFirestore } from '../../services/firestoreService';
 import { NIGERIAN_STATES } from '../../data/nigerianLocations';
 import { UserProfile } from '../../types';
 
@@ -25,8 +23,10 @@ interface AuthModalProps {
   isOpen: boolean;
   initialMode?: 'signin' | 'signup' | 'admin';
   onClose: () => void;
-  onSuccess: (user: UserProfile, isAdmin?: boolean) => void;
-  onShowToast: (points: number, message: string) => void;
+  onSuccess?: (user: UserProfile, isAdmin?: boolean) => void;
+  onShowToast?: (points: number, message: string) => void;
+  onAuthSuccess?: (message: string) => void;
+  onAdminSuccess?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -34,7 +34,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = 'signin',
   onClose,
   onSuccess,
-  onShowToast
+  onShowToast,
+  onAuthSuccess,
+  onAdminSuccess
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'admin'>(initialMode);
   
@@ -73,32 +75,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       
       const res = storageService.signInWithGoogleUser({
         name: firebaseUser.displayName || 'Google Contributor',
-        email: firebaseUser.email || '',
+        email: firebaseUser.email || (firebaseUser.uid ? `${firebaseUser.uid}@gmail.com` : 'google.user@gmail.com'),
         avatarUrl: firebaseUser.photoURL || undefined,
         uid: firebaseUser.uid
       });
 
-      onSuccess(res.user, false);
-      onShowToast(
-        res.isNewUser ? 100 : 0, 
-        res.isNewUser 
-          ? `Welcome to SABI! You received +100 Google Sign-up Bonus Points.` 
-          : `Signed in as ${res.user.name}`
-      );
-      onClose();
+      updatePresenceInFirestore(res.user.id, res.user.name, res.user);
+
+      const msg = res.isNewUser 
+        ? `Welcome to SABI! You received +100 Google Sign-up Bonus Points.` 
+        : `Signed in as ${res.user.name}`;
+
+      if (onSuccess) onSuccess(res.user, false);
+      if (onAuthSuccess) onAuthSuccess(msg);
+      if (onShowToast) onShowToast(res.isNewUser ? 100 : 0, msg);
+      
+      onClose(); // Exit form immediately!
     } catch (err: any) {
-      console.warn('Firebase Google Auth popup closed or unconfigured, using instant mock Google SSO fallback:', err);
-      // Seamless mock Google fallback if popup is blocked or preview mode
+      console.warn('Google popup notice:', err);
+      // Fallback for iframe preview environment or closed popup
+      const googleUserEmail = email.trim() || 'enochayomide2013@gmail.com';
+      const googleUserName = name.trim() || (googleUserEmail.split('@')[0]) || 'Google User';
       const mockGoogle = {
-        name: name.trim() || 'Enoch Ayomide (Google User)',
-        email: email.trim() || 'enochayomide2013@gmail.com',
+        name: googleUserName,
+        email: googleUserEmail,
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
         uid: 'usr_goog_' + Date.now().toString(36)
       };
       const res = storageService.signInWithGoogleUser(mockGoogle);
-      onSuccess(res.user, false);
-      onShowToast(res.isNewUser ? 100 : 0, `Google Account connected successfully!`);
-      onClose();
+      updatePresenceInFirestore(res.user.id, res.user.name, res.user);
+
+      const msg = res.isNewUser 
+        ? `Signed up with Google account (${res.user.email})! +100 PTS` 
+        : `Signed in as ${res.user.name} (${res.user.email})`;
+
+      if (onSuccess) onSuccess(res.user, false);
+      if (onAuthSuccess) onAuthSuccess(msg);
+      if (onShowToast) onShowToast(res.isNewUser ? 100 : 0, msg);
+
+      onClose(); // Exit form immediately!
     } finally {
       setIsGoogleLoading(false);
     }
@@ -118,17 +133,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const res = storageService.signIn(email, password);
-      if (res.success && res.user) {
-        onSuccess(res.user, res.isAdmin);
-        onShowToast(0, res.isAdmin ? 'Welcome Admin! Directed to Admin Portal.' : `Welcome back, ${res.user.name}!`);
-        onClose();
-      } else {
-        setErrorMsg(res.message || 'Unable to sign in. Please check email and password.');
-      }
-    }, 300);
+    const res = storageService.signIn(email, password);
+    setIsSubmitting(false);
+
+    if (res.success && res.user) {
+      updatePresenceInFirestore(res.user.id, res.user.name, res.user);
+      const msg = res.isAdmin ? 'Welcome Admin! Directed to Admin Portal.' : `Welcome back, ${res.user.name}!`;
+
+      if (onSuccess) onSuccess(res.user, res.isAdmin);
+      if (onAuthSuccess) onAuthSuccess(msg);
+      if (onShowToast) onShowToast(0, msg);
+      if (res.isAdmin && onAdminSuccess) onAdminSuccess();
+
+      onClose(); // Exit form immediately!
+    } else {
+      setErrorMsg(res.message || 'Unable to sign in. Please check email and password.');
+    }
   };
 
   const handleSignUp = (e: React.FormEvent) => {
@@ -149,24 +169,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const res = storageService.signUp({
-        name,
-        email,
-        password,
-        state: selectedState,
-        lga: selectedLga
-      });
+    const res = storageService.signUp({
+      name,
+      email,
+      password,
+      state: selectedState,
+      lga: selectedLga
+    });
 
-      if (res.success && res.user) {
-        onSuccess(res.user, res.user.role === 'admin');
-        onShowToast(100, `Account created! You received +100 Welcome Points.`);
-        onClose();
-      } else {
-        setErrorMsg(res.message || 'Unable to create account.');
-      }
-    }, 400);
+    setIsSubmitting(false);
+
+    if (res.success && res.user) {
+      updatePresenceInFirestore(res.user.id, res.user.name, res.user);
+      const msg = `Signed up successfully! You received +100 Welcome Points.`;
+
+      if (onSuccess) onSuccess(res.user, res.user.role === 'admin');
+      if (onAuthSuccess) onAuthSuccess(msg);
+      if (onShowToast) onShowToast(100, msg);
+
+      onClose(); // Exit form immediately!
+    } else {
+      setErrorMsg(res.message || 'Unable to create account.');
+    }
   };
 
   const handleAdminAccess = (e: React.FormEvent) => {
@@ -179,20 +203,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const res = storageService.adminSignIn(adminPassword.trim());
-      if (res.success && res.user) {
-        onSuccess(res.user, true);
-        onShowToast(50, 'Master Admin authenticated! Opening Admin Portal.');
-        onClose();
-      } else {
-        setErrorMsg(res.message || 'Admin validation failed.');
-      }
-    }, 300);
+    const res = storageService.adminSignIn(adminPassword.trim());
+    setIsSubmitting(false);
+
+    if (res.success && res.user) {
+      updatePresenceInFirestore(res.user.id, res.user.name, res.user);
+      const msg = 'Master Admin authenticated! Opening Admin Portal.';
+
+      if (onSuccess) onSuccess(res.user, true);
+      if (onAuthSuccess) onAuthSuccess(msg);
+      if (onShowToast) onShowToast(50, msg);
+      if (onAdminSuccess) onAdminSuccess();
+
+      onClose(); // Exit form immediately!
+    } else {
+      setErrorMsg(res.message || 'Admin validation failed.');
+    }
   };
 
-  // If initialMode === 'admin', hide the sign in / sign up tabs entirely
   const isAdminOnlyMode = initialMode === 'admin' || mode === 'admin';
 
   return (
@@ -204,7 +232,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             id="close-auth-modal-btn"
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -241,7 +269,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               id="tab-signin-btn"
               type="button"
               onClick={() => { setMode('signin'); setErrorMsg(null); }}
-              className={`flex-1 py-3 text-center transition-all ${
+              className={`flex-1 py-3 text-center transition-all cursor-pointer ${
                 mode === 'signin'
                   ? 'bg-white text-[#0A3D2E] border-b-2 border-[#0A3D2E]'
                   : 'text-gray-500 hover:text-gray-800'
@@ -253,7 +281,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               id="tab-signup-btn"
               type="button"
               onClick={() => { setMode('signup'); setErrorMsg(null); }}
-              className={`flex-1 py-3 text-center transition-all ${
+              className={`flex-1 py-3 text-center transition-all cursor-pointer ${
                 mode === 'signup'
                   ? 'bg-white text-[#0A3D2E] border-b-2 border-[#0A3D2E]'
                   : 'text-gray-500 hover:text-gray-800'
@@ -274,14 +302,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* GOOGLE SIGN IN BUTTON (Only for normal users, not admin) */}
+          {/* GOOGLE SIGN IN BUTTON */}
           {!isAdminOnlyMode && (
             <div className="space-y-3 pb-3 border-b border-gray-100">
               <button
                 type="button"
                 onClick={handleGoogleAuth}
                 disabled={isGoogleLoading}
-                className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold text-xs py-3 px-4 rounded-xl shadow-xs flex items-center justify-center gap-2.5 transition-all active:scale-98"
+                className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold text-xs py-3 px-4 rounded-xl shadow-xs flex items-center justify-center gap-2.5 transition-all active:scale-98 cursor-pointer"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -340,7 +368,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -351,7 +379,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 id="submit-signin-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 bg-[#0A3D2E] hover:bg-[#0c4a37] text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                className="w-full mt-2 bg-[#0A3D2E] hover:bg-[#0c4a37] text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer disabled:opacity-50"
               >
                 <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -361,7 +389,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setMode('signup'); setErrorMsg(null); }}
-                  className="text-xs text-[#0A3D2E] font-bold hover:underline"
+                  className="text-xs text-[#0A3D2E] font-bold hover:underline cursor-pointer"
                 >
                   Don't have an account? Sign Up (+100 PTS)
                 </button>
@@ -426,7 +454,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -477,7 +505,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 id="submit-signup-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#0A3D2E] hover:bg-[#0c4a37] text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                className="w-full bg-[#0A3D2E] hover:bg-[#0c4a37] text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer disabled:opacity-50"
               >
                 <span>{isSubmitting ? 'Creating Account...' : 'Create Account & Sign In'}</span>
                 <CheckCircle2 className="w-4 h-4 text-[#FFD60A]" />
@@ -487,7 +515,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setMode('signin'); setErrorMsg(null); }}
-                  className="text-xs text-gray-600 hover:text-gray-900 font-medium"
+                  className="text-xs text-gray-600 hover:text-gray-900 font-medium cursor-pointer"
                 >
                   Already have an account? <span className="text-[#0A3D2E] font-bold underline">Sign In</span>
                 </button>
@@ -495,7 +523,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </form>
           )}
 
-          {/* ADMIN PASSKEY ACCESS - STANDALONE VIEW */}
+          {/* ADMIN PASSKEY ACCESS */}
           {mode === 'admin' && (
             <form onSubmit={handleAdminAccess} className="space-y-4" id="admin-passkey-form">
               <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-2xl space-y-1">
@@ -527,20 +555,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
-              <div className="text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                <p className="font-semibold text-gray-700">Master Admin Privileges:</p>
-                <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px]">
-                  <li>Review all pending rumors & dispatch truth verdicts</li>
-                  <li>View registered users and active verifiers</li>
-                  <li>Directly dispatch reports to <strong className="text-gray-900">enochayomide67@gmail.com</strong></li>
-                </ul>
-              </div>
-
               <button
                 id="submit-admin-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer disabled:opacity-50"
               >
                 <span>{isSubmitting ? 'Authenticating...' : 'Enter Admin Portal'}</span>
                 <ShieldCheck className="w-4 h-4 text-white" />
@@ -554,3 +573,5 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     </div>
   );
 };
+
+export default AuthModal;
