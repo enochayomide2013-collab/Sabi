@@ -31,6 +31,7 @@ import { storageService } from '../../services/storageService';
 import { AiService } from '../../services/aiService';
 import { RecipeItem } from '../../types';
 import { scaleIngredientQuantity, scaleEstimatedCost, scaleCalories } from '../../utils/recipeScaler';
+import { CookingModeModal } from './CookingModeModal';
 
 interface RecipeViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -76,6 +77,7 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
   const [newIngredientInput, setNewIngredientInput] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [videoMode, setVideoMode] = useState<'reel' | 'youtube'>('youtube');
+  const [isCookingModeOpen, setIsCookingModeOpen] = useState<boolean>(false);
 
   // 20-Second Recipe Video Timeline state
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
@@ -564,10 +566,45 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
           {/* 3 LARGE VISUAL STEP CARDS & PROCEDURES */}
           {selectedRecipe && selectedRecipe.steps && selectedRecipe.steps.length > 0 && (
             <div className="space-y-4">
-              <h3 className="font-bold text-base text-gray-900 font-display flex items-center gap-2">
-                <ListOrdered className="w-4 h-4 text-[#0A3D2E]" />
-                <span>Step-by-Step Cooking Procedures</span>
-              </h3>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <h3 className="font-bold text-base text-gray-900 font-display flex items-center gap-2">
+                  <ListOrdered className="w-4 h-4 text-[#0A3D2E]" />
+                  <span>Step-by-Step Cooking Procedures</span>
+                </h3>
+
+                <button
+                  onClick={() => setIsCookingModeOpen(true)}
+                  className="bg-[#0A3D2E] hover:bg-[#0c4b38] text-white font-extrabold text-xs px-4 py-2 rounded-xl font-display shadow-md flex items-center gap-2 transition-all active:scale-95"
+                >
+                  <ChefHat className="w-4 h-4 text-[#FFD60A]" />
+                  <span>Hands-Free Cooking Mode 🎙️👋</span>
+                </button>
+              </div>
+
+              {/* Hands-Free Banner Callout */}
+              <div className="bg-gradient-to-r from-[#0A3D2E] to-teal-900 text-white p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm border border-emerald-800">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#FFD60A] text-[#0A3D2E] text-[10px] font-black px-2 py-0.5 rounded-full uppercase font-display">
+                      Voice & Wave Sensors
+                    </span>
+                    <h4 className="font-extrabold text-sm font-display text-white">
+                      Cook Hands-Free Without Touching Screen
+                    </h4>
+                  </div>
+                  <p className="text-xs text-emerald-100">
+                    Voice Control ("Next", "Back", "Repeat") + Proximity Wave Sensor + Audio Text-To-Speech.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsCookingModeOpen(true)}
+                  className="w-full sm:w-auto bg-[#FFD60A] hover:bg-yellow-400 text-[#0A3D2E] font-black text-xs px-4 py-2.5 rounded-xl font-display shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 uppercase tracking-wider"
+                >
+                  <span>Launch Cooking Mode</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
 
               {selectedRecipe.steps.map((step) => (
                 <div
@@ -987,6 +1024,16 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
           )}
 
         </div>
+      )}
+
+      {/* HANDS-FREE COOKING MODE MODAL OVERLAY */}
+      {isCookingModeOpen && selectedRecipe && (
+        <CookingModeModal
+          recipe={selectedRecipe}
+          servings={currentServings}
+          onClose={() => setIsCookingModeOpen(false)}
+          onShowPointsToast={onShowPointsToast}
+        />
       )}
 
     </div>

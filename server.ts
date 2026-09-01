@@ -139,6 +139,36 @@ const FALLBACK_RUMORS = [
     "verifiedAt": "August 29, 2026",
     "factCheckUrl": "https://factcheck.afp.com",
     "sourceOrg": "AFP Fact Check"
+  },
+  {
+    "id": "mock-rumor-instagram-1",
+    "claim": "Viral Instagram Reel claiming synthetic plastic eggs are being sold across Lagos Island markets",
+    "state": "Lagos",
+    "area": "Balogun Market",
+    "country": "Nigeria",
+    "isWorldwide": false,
+    "platform": "Instagram",
+    "result": "FALSE",
+    "mediaThumbnailUrl": "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&auto=format&fit=crop&q=80",
+    "availableEvidenceQuote": "NAFDAC lab testing and SABI community spotters confirmed standard fresh farm eggs. The unnatural bouncing in the viral video resulted from over-freezing, not synthetic plastic.",
+    "verifiedAt": "September 1, 2026",
+    "factCheckUrl": "https://dubawa.org",
+    "sourceOrg": "NAFDAC & SABI Food Forensics"
+  },
+  {
+    "id": "mock-rumor-instagram-worldwide-2",
+    "claim": "Trending Instagram Reel alleging European Union banned all traditional palm oil imports permanently",
+    "state": "Brussels",
+    "area": "EU Trade Commission",
+    "country": "Global",
+    "isWorldwide": true,
+    "platform": "Instagram",
+    "result": "OUTDATED MEDIA",
+    "mediaThumbnailUrl": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=80",
+    "availableEvidenceQuote": "EU Deforestation Regulation (EUDR) mandates certified sustainable sourcing compliance rather than a total blanket embargo.",
+    "verifiedAt": "August 31, 2026",
+    "factCheckUrl": "https://africacheck.org",
+    "sourceOrg": "Africa Check & EU Trade Monitor"
   }
 ];
 
@@ -974,7 +1004,7 @@ Provide a definitive verdict (TRUE | FALSE | OUTDATED MEDIA | NEEDS MORE VERIFIC
         return res.json(rumorsCache.data);
       }
 
-      const prompt = `Identify the top circulating viral rumors, trending misinformation claims, deepfakes, and controversial social media posts right now across TikTok, Twitter (X), Facebook, and YouTube feeds worldwide and in Nigeria.
+      const prompt = `Identify the top circulating viral rumors, trending misinformation claims, deepfakes, and controversial social media posts right now across TikTok, YouTube, Twitter (X), Instagram, and Facebook feeds worldwide and in Nigeria.
       Check viral claims covering:
       1. Nigerian trending claims (fuel, foreign exchange, government announcements, interstate transit, relief disbursements, local security alerts).
       2. Worldwide global claims across US, UK, Europe, Ghana, Kenya, and Global web (visa/immigration policy claims, banking/crypto rumors, AI deepfake celebrity videos, international travel advisories, health claims).
@@ -987,7 +1017,7 @@ Provide a definitive verdict (TRUE | FALSE | OUTDATED MEDIA | NEEDS MORE VERIFIC
         "area": string,
         "country": string (e.g. "Nigeria", "United States", "United Kingdom", "Ghana", "Global"),
         "isWorldwide": boolean,
-        "platform": "TikTok" | "Twitter/X" | "Facebook" | "YouTube",
+        "platform": "TikTok" | "Twitter/X" | "Instagram" | "YouTube" | "Facebook",
         "result": "TRUE" | "FALSE" | "OUTDATED MEDIA" | "NEEDS MORE VERIFICATION",
         "mediaThumbnailUrl": string (high quality unsplash url),
         "availableEvidenceQuote": string,

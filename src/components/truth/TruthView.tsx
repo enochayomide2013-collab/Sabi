@@ -44,7 +44,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
   const [activeMainTab, setActiveMainTab] = useState<'rumors' | 'xray'>('rumors');
   const [truthResults, setTruthResults] = useState<TruthResult[]>(storageService.getTruthResults());
   const [regionFilter, setRegionFilter] = useState<'ALL' | 'NIGERIA' | 'WORLDWIDE'>('ALL');
-  const [platformFilter, setPlatformFilter] = useState<'ALL' | 'tiktok' | 'twitter' | 'facebook' | 'youtube'>('ALL');
+  const [platformFilter, setPlatformFilter] = useState<'ALL' | 'tiktok' | 'twitter' | 'facebook' | 'youtube' | 'instagram'>('ALL');
   const [isRefreshingRumors, setIsRefreshingRumors] = useState<boolean>(false);
 
   const filteredResults = truthResults.filter(tr => {
@@ -244,6 +244,14 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
       } else {
         targetUrl = `https://www.facebook.com/search/top?q=${encodeURIComponent(selectedResult.claim + ' fact check')}`;
       }
+    } else if (platformToUse === 'instagram') {
+      if (selectedResult.debunkVideoUrl && selectedResult.debunkVideoUrl.includes('instagram.com')) {
+        targetUrl = selectedResult.debunkVideoUrl;
+      } else if (selectedResult.socialMediaPostUrl && selectedResult.socialMediaPostUrl.includes('instagram.com')) {
+        targetUrl = selectedResult.socialMediaPostUrl;
+      } else {
+        targetUrl = `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(selectedResult.claim + ' fact check')}`;
+      }
     }
 
     if (!targetUrl) {
@@ -265,6 +273,12 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
         return (
           <span className="inline-flex items-center gap-1 bg-sky-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
             <span>𝕏</span> Twitter / X Broadcast
+          </span>
+        );
+      case 'instagram':
+        return (
+          <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
+            <span>📸</span> Instagram Reel / Story
           </span>
         );
       case 'facebook':
@@ -445,9 +459,10 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, onNavigate
                 {[
                   { key: 'ALL', label: 'All Platforms' },
                   { key: 'tiktok', label: '🎵 TikTok' },
+                  { key: 'youtube', label: '▶️ YouTube' },
                   { key: 'twitter', label: '𝕏 Twitter' },
-                  { key: 'facebook', label: '📘 Facebook' },
-                  { key: 'youtube', label: '▶️ YouTube' }
+                  { key: 'instagram', label: '📸 Instagram' },
+                  { key: 'facebook', label: '📘 Facebook' }
                 ].map(p => (
                   <button
                     key={p.key}

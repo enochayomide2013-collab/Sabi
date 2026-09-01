@@ -73,7 +73,7 @@ export interface TruthResult {
   area: string;
   country?: string; // 'Nigeria' | 'United States' | 'United Kingdom' | 'Ghana' | 'Kenya' | 'Global'
   isWorldwide?: boolean;
-  platform?: 'tiktok' | 'twitter' | 'facebook' | 'youtube' | 'whatsapp';
+  platform?: 'tiktok' | 'twitter' | 'facebook' | 'youtube' | 'whatsapp' | 'instagram';
   socialMediaHandle?: string;
   socialMediaPostUrl?: string;
   videoUrl?: string;
@@ -99,7 +99,7 @@ export interface TruthResult {
   debunkVideoUrl?: string;
   debunkVideoTitle?: string;
   debunkSourceOrg?: string;
-  debunkPlatform?: 'youtube' | 'tiktok' | 'twitter' | 'facebook';
+  debunkPlatform?: 'youtube' | 'tiktok' | 'twitter' | 'facebook' | 'instagram';
   debunkVideoThumbnail?: string;
 }
 
@@ -368,6 +368,9 @@ export interface NewsArticle {
   source?: string;
   tags?: string[];
   trendingScore?: number;
+  socialPlatform?: 'tiktok' | 'youtube' | 'twitter' | 'instagram' | 'facebook';
+  socialHandle?: string;
+  socialPostUrl?: string;
 }
 
 export interface OnlineSabier {
