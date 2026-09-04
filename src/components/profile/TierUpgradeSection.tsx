@@ -75,7 +75,7 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
     }
   };
 
-  const handleBuyTier = (tierKey: 'Bronze' | 'Golden' | 'Deluxe') => {
+  const handleBuyTier = (tierKey: 'Bronze' | 'Golden' | 'Deluxe' | 'Admin Super') => {
     setPurchasingTier(tierKey);
     setTimeout(() => {
       setPurchasingTier(null);
@@ -95,10 +95,10 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
 
         // Open Congratulatory Modal with full perks summary
         const config = TIER_DEFINITIONS[tierKey];
-        const multiplierText = tierKey === 'Deluxe' ? '2.5x' : tierKey === 'Golden' ? '1.75x' : '1.25x';
+        const multiplierText = tierKey === 'Admin Super' ? 'MASTER ADMIN' : tierKey === 'Deluxe' ? '2.5x' : tierKey === 'Golden' ? '1.75x' : '1.25x';
 
         setCongratModal({
-          tierKey,
+          tierKey: tierKey as any,
           title: config.title,
           badge: config.badge,
           bonusPoints: tierKey === 'Deluxe' ? config.instantBonusPoints : undefined,
@@ -112,7 +112,17 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
     }, 400);
   };
 
-  const tiers: ('Bronze' | 'Golden' | 'Deluxe')[] = ['Bronze', 'Golden', 'Deluxe'];
+  const tiers: ('Bronze' | 'Golden' | 'Deluxe' | 'Admin Super')[] = ['Bronze', 'Golden', 'Deluxe', 'Admin Super'];
+
+  // Tier hierarchy index map
+  const TIER_RANKS: Record<string, number> = {
+    'Member': 0,
+    'Bronze': 1,
+    'Golden': 2,
+    'Gold': 2,
+    'Deluxe': 3,
+    'Admin Super': 4
+  };
 
   return (
     <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-5" id="tier-upgrade-hub">
@@ -146,12 +156,14 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
         </div>
       )}
 
-      {/* The 3 Major Tiers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* The 4 Tiers Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {tiers.map((tierKey) => {
           const config = TIER_DEFINITIONS[tierKey];
           const isCurrentTier = user.userTier === tierKey;
-          const isPurchased = (user.unlockedTitles || []).includes(config.title) || isCurrentTier;
+          const userRank = TIER_RANKS[user.userTier || 'Member'] || 0;
+          const targetRank = TIER_RANKS[tierKey] || 0;
+          const isLowerTier = userRank > targetRank;
           const hasEnoughPoints = user.sabiPoints >= config.pointsCost;
 
           return (
@@ -160,6 +172,8 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
               className={`rounded-3xl p-5 border flex flex-col justify-between space-y-4 transition-all relative overflow-hidden ${
                 isCurrentTier
                   ? 'bg-gradient-to-b from-amber-500/10 to-transparent border-amber-400 shadow-md ring-2 ring-amber-400/40'
+                  : tierKey === 'Admin Super'
+                  ? 'bg-gradient-to-b from-rose-500/10 via-red-950/5 to-black border-red-500/40'
                   : tierKey === 'Deluxe'
                   ? 'bg-gradient-to-b from-purple-500/5 to-transparent border-purple-200'
                   : tierKey === 'Golden'
@@ -177,19 +191,21 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-extrabold ${
-                    tierKey === 'Deluxe' 
+                    tierKey === 'Admin Super'
+                      ? 'bg-red-100 text-red-800'
+                      : tierKey === 'Deluxe' 
                       ? 'bg-purple-100 text-purple-800' 
                       : tierKey === 'Golden'
                       ? 'bg-amber-100 text-amber-800'
                       : 'bg-orange-100 text-orange-800'
                   }`}>
-                    {tierKey === 'Deluxe' ? <Crown className="w-5 h-5" /> : <Award className="w-5 h-5" />}
+                    {tierKey === 'Admin Super' ? <Zap className="w-5 h-5 text-red-600" /> : tierKey === 'Deluxe' ? <Crown className="w-5 h-5" /> : <Award className="w-5 h-5" />}
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-base text-gray-900 font-display">
+                    <h4 className="font-extrabold text-sm sm:text-base text-gray-900 font-display">
                       {config.title}
                     </h4>
-                    <span className="text-[11px] font-bold text-gray-500">
+                    <span className="text-[11px] font-bold text-gray-500 block">
                       {config.badge}
                     </span>
                   </div>
@@ -198,13 +214,18 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
                 {/* Price Display */}
                 <div className="p-2.5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
                   <span className="text-[10px] font-bold text-gray-400 uppercase block">Upgrade Price</span>
-                  <div className="text-xl font-extrabold text-gray-900 font-display">
+                  <div className="text-lg sm:text-xl font-extrabold text-gray-900 font-display">
                     {config.pointsCost.toLocaleString()} <span className="text-xs font-bold text-[#0A3D2E]">SABI PTS</span>
                   </div>
                   {config.instantBonusPoints && (
                     <span className="text-[10px] font-extrabold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-md inline-block mt-0.5">
                       + includes {config.instantBonusPoints.toLocaleString()} PTS instant bonus!
                     </span>
+                  )}
+                  {config.adminPasswordReveal && (isCurrentTier || user.role === 'admin') && (
+                    <div className="mt-2 p-2 bg-red-950 text-red-200 rounded-xl border border-red-800 text-[11px] font-mono font-bold">
+                      🔑 Master Admin Password: <span className="text-amber-300 font-black">{config.adminPasswordReveal}</span>
+                    </div>
                   )}
                 </div>
 
@@ -213,7 +234,7 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
                   {(config.benefits || []).map((perk, pIdx) => (
                     <li key={pIdx} className="flex items-start gap-1.5">
                       <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${
-                        tierKey === 'Deluxe' ? 'text-purple-600' : tierKey === 'Golden' ? 'text-amber-600' : 'text-emerald-600'
+                        tierKey === 'Admin Super' ? 'text-red-600' : tierKey === 'Deluxe' ? 'text-purple-600' : tierKey === 'Golden' ? 'text-amber-600' : 'text-emerald-600'
                       }`} />
                       <span className="leading-tight">{perk}</span>
                     </li>
@@ -231,14 +252,24 @@ export const TierUpgradeSection: React.FC<TierUpgradeSectionProps> = ({ onShowTo
                     <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                     <span>Unlocked & Active</span>
                   </button>
+                ) : isLowerTier ? (
+                  <button
+                    disabled
+                    className="w-full bg-gray-100 text-gray-400 font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Previous Rank (Locked)</span>
+                  </button>
                 ) : (
                   <button
-                    id={`buy-tier-${tierKey.toLowerCase()}-btn`}
+                    id={`buy-tier-${tierKey.toLowerCase().replace(/\s+/g, '-')}-btn`}
                     onClick={() => handleBuyTier(tierKey)}
                     disabled={purchasingTier === tierKey || !hasEnoughPoints}
-                    className={`w-full font-bold text-xs py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 font-display ${
+                    className={`w-full font-bold text-xs py-3 px-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 font-display ${
                       hasEnoughPoints
-                        ? tierKey === 'Deluxe'
+                        ? tierKey === 'Admin Super'
+                          ? 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white active:scale-95'
+                          : tierKey === 'Deluxe'
                           ? 'bg-purple-900 hover:bg-purple-800 text-white active:scale-95'
                           : tierKey === 'Golden'
                           ? 'bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] active:scale-95'

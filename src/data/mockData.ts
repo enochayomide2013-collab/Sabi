@@ -1617,7 +1617,7 @@ export const INITIAL_STREAK_REWARDS = [
 ];
 
 export interface TierConfig {
-  tier: 'Bronze' | 'Golden' | 'Deluxe';
+  tier: 'Bronze' | 'Golden' | 'Deluxe' | 'Admin Super';
   title: string;
   pointsCost: number;
   badge: string;
@@ -1632,6 +1632,7 @@ export interface TierConfig {
   founderWhatsAppUrl?: string;
   secretAppDomain?: string;
   secretAppUrl?: string;
+  adminPasswordReveal?: string;
 }
 
 export const TIER_DEFINITIONS: Record<string, TierConfig> = {
@@ -1688,6 +1689,25 @@ export const TIER_DEFINITIONS: Record<string, TierConfig> = {
       'Instant extra +100,000 SABI Points bonus credited immediately to your balance',
       '1 Full Year of Priority 24/7 Concierge Customer Service & VIP advisory channel',
       '2.5x supreme points multiplier on all community verifications and price submissions'
+    ]
+  },
+  'Admin Super': {
+    tier: 'Admin Super',
+    title: 'Admin Super Supreme',
+    pointsCost: 20500000,
+    badge: '⚡ Admin Super Supreme',
+    color: 'from-red-600 via-rose-600 to-amber-500',
+    glowColor: 'red',
+    description: 'The absolute master key title: Unlocks official Master Admin Access, system override tools, and reveals the official SABI Admin Master Access Code.',
+    unlocksSabiation: true,
+    hasCustomerService: true,
+    adminPasswordReveal: 'SABI2026_MASTER_ADMIN_SECRET',
+    benefits: [
+      'Reveals Official Master Admin Access Password (SABI2026_MASTER_ADMIN_SECRET)',
+      'Full System Admin Command Privilege across all verification & market moderation dashboards',
+      'Exclusive Admin Super Supreme badge (⚡) & supreme aura across all global feeds',
+      'Infinite voting authority & immediate truth consensus override rights',
+      'Includes all Deluxe Sovereign VIP perks + Sabiation AI Suite access'
     ]
   }
 };

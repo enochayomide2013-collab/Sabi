@@ -24,6 +24,8 @@ import {
 import { UserProfile } from '../../types';
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { Tooltip } from './Tooltip';
+import { StatusTitleModal } from './StatusTitleModal';
+import { TrustLevelModal } from './TrustLevelModal';
 
 interface HeaderProps {
   currentTab: string;
@@ -54,6 +56,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isTrustModalOpen, setIsTrustModalOpen] = useState(false);
   
   const [user, setUser] = useState<UserProfile>(storageService.getUser());
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(storageService.isUserLoggedIn());
@@ -151,31 +155,31 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </Tooltip>
 
-            <Tooltip content="Quick Link: Browse Rumor Titles & News Feed" position="bottom">
+            <Tooltip content={`Quick Link: Status Rank Title (Current Status: ${user.userTier || 'Bronze'})`} position="bottom">
               <button
-                onClick={() => onNavigate('truth')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
-                  currentTab === 'truth'
+                onClick={() => setIsStatusModalOpen(true)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
+                  currentTab === 'profile'
                     ? 'bg-[#FFD60A] text-[#0A3D2E]'
                     : 'text-emerald-100 hover:bg-emerald-800/80 hover:text-white'
                 }`}
               >
                 <span>📰</span>
-                <span>Titles</span>
+                <span>Titles ({user.userTier || 'Bronze'})</span>
               </button>
             </Tooltip>
 
-            <Tooltip content="Quick Link: Verified Trust Title & Fact-Check Dossiers" position="bottom">
+            <Tooltip content={`Quick Link: Verified Trust Title (Level: ${user.trustLevel || 'Bronze'})`} position="bottom">
               <button
-                onClick={() => onNavigate('truth')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                onClick={() => setIsTrustModalOpen(true)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
                   currentTab === 'truth'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-emerald-200 hover:bg-emerald-800/80 hover:text-white'
                 }`}
               >
                 <span>🛡️</span>
-                <span>Trust Title</span>
+                <span>Trust Title ({user.trustLevel || 'Bronze'})</span>
               </button>
             </Tooltip>
           </div>
@@ -380,15 +384,15 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Deepfake</span>
               </button>
               <button
-                onClick={() => { onNavigate('truth'); setMobileMenuOpen(false); }}
-                className="py-2 px-1.5 rounded-xl bg-emerald-900/90 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 border border-emerald-700"
+                onClick={() => { setIsStatusModalOpen(true); setMobileMenuOpen(false); }}
+                className="py-2 px-1.5 rounded-xl bg-emerald-900/90 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 border border-emerald-700 cursor-pointer"
               >
                 <span>📰</span>
                 <span>Titles</span>
               </button>
               <button
-                onClick={() => { onNavigate('truth'); setMobileMenuOpen(false); }}
-                className="py-2 px-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
+                onClick={() => { setIsTrustModalOpen(true); setMobileMenuOpen(false); }}
+                className="py-2 px-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow-sm cursor-pointer"
               >
                 <span>🛡️</span>
                 <span>Trust Title</span>
@@ -479,6 +483,22 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       )}
+
+      {/* Quick Link Status Title Modal (Bronze, Gold, Deluxe status) */}
+      <StatusTitleModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        user={user}
+        onNavigate={onNavigate}
+      />
+
+      {/* Quick Link Trust Title Modal (Trust level & rating) */}
+      <TrustLevelModal
+        isOpen={isTrustModalOpen}
+        onClose={() => setIsTrustModalOpen(false)}
+        user={user}
+        onNavigate={onNavigate}
+      />
     </header>
   );
 };

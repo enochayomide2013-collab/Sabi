@@ -673,7 +673,7 @@ class StorageService {
 
   // --- TIER UPGRADES, TITLES & SABIATION PURCHASE ---
 
-  public purchaseTierUpgrade(tierKey: 'Bronze' | 'Golden' | 'Deluxe'): {
+  public purchaseTierUpgrade(tierKey: 'Bronze' | 'Golden' | 'Deluxe' | 'Admin Super'): {
     success: boolean;
     message: string;
     tier: string;
@@ -686,9 +686,32 @@ class StorageService {
       return { success: false, message: 'Invalid tier selection.', tier: tierKey, newPoints: user.sabiPoints };
     }
 
-    // Check if already on this tier or higher
+    // Tier hierarchy order
+    const TIER_HIERARCHY: Record<string, number> = {
+      'Member': 0,
+      'Bronze': 1,
+      'Golden': 2,
+      'Gold': 2,
+      'Deluxe': 3,
+      'Admin Super': 4
+    };
+
+    const currentTierRank = TIER_HIERARCHY[user.userTier || 'Member'] || 0;
+    const targetTierRank = TIER_HIERARCHY[tierKey] || 0;
+
+    // Check if already on this tier
     if (user.userTier === tierKey) {
       return { success: false, message: `You have already unlocked the ${config.title} tier!`, tier: tierKey, newPoints: user.sabiPoints };
+    }
+
+    // Prevent buying a previous lower tier than currently held
+    if (currentTierRank > targetTierRank) {
+      return { 
+        success: false, 
+        message: `You are currently on ${user.userTier || 'a higher'} status title. You cannot purchase a previous/lower title rank!`, 
+        tier: tierKey, 
+        newPoints: user.sabiPoints 
+      };
     }
 
     if (user.sabiPoints < config.pointsCost) {
@@ -721,15 +744,18 @@ class StorageService {
       badges.push(config.badge);
     }
 
-    // Strictly enforce: Only Deluxe title unlocks The Sabiation AI suite
+    const isAdminSuper = tierKey === 'Admin Super';
+    const isDeluxeOrAbove = tierKey === 'Deluxe' || isAdminSuper;
+
     const updatedUser: UserProfile = {
       ...user,
       userTier: tierKey,
+      role: isAdminSuper ? 'admin' : user.role,
       sabiPoints: balance,
       badges,
       unlockedTitles,
-      hasSabiationAccess: tierKey === 'Deluxe' || user.role === 'admin',
-      hasDeluxeVipService: tierKey === 'Deluxe' || user.hasDeluxeVipService || user.role === 'admin',
+      hasSabiationAccess: isDeluxeOrAbove || user.role === 'admin',
+      hasDeluxeVipService: isDeluxeOrAbove || user.hasDeluxeVipService || user.role === 'admin',
       recentActivity: [
         {
           id: 'act_tier_' + Date.now(),
@@ -747,7 +773,7 @@ class StorageService {
     this.addNotification({
       id: 'notif_tier_' + Date.now(),
       title: `🎉 Title & Tier Upgraded: ${config.title}!`,
-      message: `You unlocked ${config.title}! ${tierKey === 'Deluxe' ? 'You now have full access to "The Sabiation" AI tools & 1-Year VIP Concierge service.' : 'You now have your special group chat icon & points multiplier.'} ${bonusAdded > 0 ? `Plus +${bonusAdded.toLocaleString()} bonus points credited!` : ''}`,
+      message: `You unlocked ${config.title}! ${isAdminSuper ? 'You now have full Admin Master access & the admin password!' : tierKey === 'Deluxe' ? 'You now have full access to "The Sabiation" AI tools & 1-Year VIP Concierge service.' : 'You now have your special group chat icon & points multiplier.'} ${bonusAdded > 0 ? `Plus +${bonusAdded.toLocaleString()} bonus points credited!` : ''}`,
       type: 'tier_upgrade',
       timestamp: 'Just now',
       read: false
@@ -757,7 +783,7 @@ class StorageService {
 
     return {
       success: true,
-      message: `Congratulations! You unlocked ${config.title}.${bonusAdded > 0 ? ` +${bonusAdded.toLocaleString()} bonus points credited!` : ''}`,
+      message: `Congratulations! You unlocked ${config.title}.${isAdminSuper ? ' Official Admin Password: SABI2026_MASTER_ADMIN_SECRET' : ''}${bonusAdded > 0 ? ` +${bonusAdded.toLocaleString()} bonus points credited!` : ''}`,
       tier: tierKey,
       newPoints: balance
     };

@@ -29,7 +29,7 @@ export interface FactCheckCardGeneratorProps {
 }
 
 export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
-  initialClaim = 'Viral Voice Note Claims Fuel Price Reaching ₦1,800/Lter Nationwide Tomorrow Morning',
+  initialClaim = 'Viral Voice Note Claims Fuel Price Reaching ₦1,800/Liter Nationwide Tomorrow Morning',
   initialVerdict = 'FALSE',
   initialSummary = 'NNPCL and Independent Petroleum Marketers Association of Nigeria (IPMAN) confirm normal supply distribution with zero official price increases.',
   initialSource = 'TikTok & WhatsApp Forwards (Lagos & Abuja)',
@@ -40,9 +40,12 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
   const [verdict, setVerdict] = useState<'TRUE' | 'FALSE' | 'OUTDATED' | 'MISLEADING' | 'NEEDS MORE VERIFICATION'>(initialVerdict);
   const [summaryText, setSummaryText] = useState<string>(initialSummary);
   const [sourcePlatform, setSourcePlatform] = useState<string>(initialSource);
-  const [cardAspectRatio, setCardAspectRatio] = useState<'1:1' | '9:16'>('1:1');
-  const [cardTheme, setCardTheme] = useState<'sabi-green' | 'dark-forensic' | 'high-contrast-red' | 'clean-white'>('sabi-green');
+  const [cardAspectRatio, setCardAspectRatio] = useState<'1:1' | '9:16' | '16:9' | '4:5'>('1:1');
+  const [cardTheme, setCardTheme] = useState<'sabi-green' | 'dark-forensic' | 'high-contrast-red' | 'clean-white' | 'tiktok-viral' | 'whatsapp-green'>('sabi-green');
+  const [languageBadge, setLanguageBadge] = useState<string>('Naija Pidgin & English');
+  const [verifierCount, setVerifierCount] = useState<number>(384);
   const [includeWatermark, setIncludeWatermark] = useState<boolean>(true);
+  const [includeQrCode, setIncludeQrCode] = useState<boolean>(true);
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -74,21 +77,24 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
   const getCardBackgroundClass = () => {
     switch (cardTheme) {
       case 'dark-forensic':
-        return 'bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white border-purple-500/30';
+        return 'bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white border-purple-500/40 shadow-2xl';
       case 'high-contrast-red':
-        return 'bg-gradient-to-br from-rose-950 via-gray-900 to-black text-white border-rose-500/40';
+        return 'bg-gradient-to-br from-rose-950 via-gray-900 to-black text-white border-rose-500/50 shadow-2xl';
       case 'clean-white':
-        return 'bg-white text-gray-900 border-gray-300 shadow-xl';
+        return 'bg-white text-gray-900 border-gray-300 shadow-2xl';
+      case 'tiktok-viral':
+        return 'bg-gradient-to-br from-slate-950 via-purple-950 to-pink-950 text-white border-pink-500/50 shadow-2xl';
+      case 'whatsapp-green':
+        return 'bg-gradient-to-br from-[#075E54] via-[#128C7E] to-[#052923] text-white border-[#25D366]/50 shadow-2xl';
       case 'sabi-green':
       default:
-        return 'bg-gradient-to-br from-[#0A3D2E] via-[#0d4f3b] to-black text-white border-[#FFD60A]/40';
+        return 'bg-gradient-to-br from-[#0A3D2E] via-[#0d4f3b] to-black text-white border-[#FFD60A]/50 shadow-2xl';
     }
   };
 
   // Canvas / Image Export simulation
   const handleDownloadCardImage = () => {
-    // Simulated high-resolution PNG generation
-    onShowToast?.(10, 'Infographic Card generated & downloaded as PNG!');
+    onShowToast?.(10, 'Infographic Card generated & downloaded as high-res PNG!');
   };
 
   const handleCopyLink = async () => {
@@ -100,6 +106,13 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleShareToWhatsApp = () => {
+    const shareText = `🚨 *SABI FACT-CHECK CARD*\n\n📌 *Claim:* "${claimText}"\n⚖️ *Verdict:* ${verdict}\n\n🔍 *Summary:* ${summaryText}\n\n📍 *Source:* ${sourcePlatform}\n\n🔗 *Verify Fact:* ${window.location.href}`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    onShowToast?.(5, 'Opening WhatsApp with Fact-Check Card caption!');
   };
 
   return (
@@ -121,13 +134,22 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
               </span>
             </div>
             <p className="text-xs text-gray-300">
-              Create branded, square (1:1) or vertical story (9:16) fact-check graphics ready for WhatsApp Status, Instagram, Twitter, or Facebook.
+              Create branded, square (1:1), portrait (4:5), banner (16:9), or story (9:16) fact-check graphics ready for WhatsApp Status, TikTok, Instagram, Twitter/X, or Facebook.
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <button
+            type="button"
+            onClick={handleShareToWhatsApp}
+            className="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3.5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Share to WhatsApp</span>
+          </button>
+
           <button
             type="button"
             onClick={handleDownloadCardImage}
@@ -164,7 +186,7 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-mono text-gray-400">Viral Claim / Rumor:</label>
+            <label className="text-[11px] font-mono text-gray-400">Viral Claim / Rumor Text:</label>
             <textarea
               value={claimText}
               onChange={(e) => setClaimText(e.target.value)}
@@ -174,7 +196,7 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-mono text-gray-400">Fact-Check Summary & Truth:</label>
+            <label className="text-[11px] font-mono text-gray-400">Fact-Check Summary & Ground Truth:</label>
             <textarea
               value={summaryText}
               onChange={(e) => setSummaryText(e.target.value)}
@@ -183,186 +205,271 @@ export const FactCheckCardGenerator: React.FC<FactCheckCardGeneratorProps> = ({
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-mono text-gray-400">Circulating Platforms / Source:</label>
-            <input
-              type="text"
-              value={sourcePlatform}
-              onChange={(e) => setSourcePlatform(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white font-sans focus:border-[#FFD60A] focus:outline-hidden"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[11px] font-mono text-gray-400">Circulating Platforms:</label>
+              <input
+                type="text"
+                value={sourcePlatform}
+                onChange={(e) => setSourcePlatform(e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:border-[#FFD60A] focus:outline-hidden"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-mono text-gray-400">Language Tag:</label>
+              <input
+                type="text"
+                value={languageBadge}
+                onChange={(e) => setLanguageBadge(e.target.value)}
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:border-[#FFD60A] focus:outline-hidden"
+              />
+            </div>
           </div>
 
-          {/* Theme & Format Selectors */}
-          <div className="space-y-3 pt-2 border-t border-gray-800">
+          {/* Aspect Ratio Options */}
+          <div className="space-y-2 pt-2 border-t border-gray-800">
             <span className="text-xs font-bold text-gray-300 font-display uppercase tracking-wider block">
-              2. Design & Aspect Ratio:
+              2. Aspect Ratio & Dimensions:
             </span>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => setCardAspectRatio('1:1')}
-                className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                className={`p-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center border transition-all cursor-pointer ${
                   cardAspectRatio === '1:1'
                     ? 'bg-[#0A3D2E] text-[#FFD60A] border-[#FFD60A]'
                     : 'bg-gray-900 text-gray-400 border-gray-800 hover:text-white'
                 }`}
               >
-                <Square className="w-4 h-4" />
-                <span>1:1 Square (Feed)</span>
+                <Square className="w-3.5 h-3.5 mb-0.5" />
+                <span>1:1 Feed</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCardAspectRatio('4:5')}
+                className={`p-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center border transition-all cursor-pointer ${
+                  cardAspectRatio === '4:5'
+                    ? 'bg-[#0A3D2E] text-[#FFD60A] border-[#FFD60A]'
+                    : 'bg-gray-900 text-gray-400 border-gray-800 hover:text-white'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5 mb-0.5" />
+                <span>4:5 Portrait</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCardAspectRatio('9:16')}
-                className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                className={`p-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center border transition-all cursor-pointer ${
                   cardAspectRatio === '9:16'
                     ? 'bg-[#0A3D2E] text-[#FFD60A] border-[#FFD60A]'
                     : 'bg-gray-900 text-gray-400 border-gray-800 hover:text-white'
                 }`}
               >
-                <Smartphone className="w-4 h-4" />
-                <span>9:16 Story (Status)</span>
+                <Smartphone className="w-3.5 h-3.5 mb-0.5" />
+                <span>9:16 Story</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCardAspectRatio('16:9')}
+                className={`p-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center border transition-all cursor-pointer ${
+                  cardAspectRatio === '16:9'
+                    ? 'bg-[#0A3D2E] text-[#FFD60A] border-[#FFD60A]'
+                    : 'bg-gray-900 text-gray-400 border-gray-800 hover:text-white'
+                }`}
+              >
+                <Square className="w-3.5 h-3.5 mb-0.5 rotate-90" />
+                <span>16:9 Banner</span>
               </button>
             </div>
+          </div>
 
-            {/* Theme Picker Buttons */}
-            <div className="grid grid-cols-2 gap-2">
+          {/* Social Themes Selection */}
+          <div className="space-y-2 pt-2 border-t border-gray-800">
+            <span className="text-xs font-bold text-gray-300 font-display uppercase tracking-wider block">
+              3. Visual Styling & Color Themes:
+            </span>
+
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setCardTheme('sabi-green')}
-                className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                className={`p-2 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
                   cardTheme === 'sabi-green' ? 'bg-[#0A3D2E] text-[#FFD60A] border-[#FFD60A]' : 'bg-gray-900 text-gray-400 border-gray-800'
                 }`}
               >
-                SABI Signature Green
+                SABI Emerald
               </button>
+
+              <button
+                type="button"
+                onClick={() => setCardTheme('tiktok-viral')}
+                className={`p-2 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
+                  cardTheme === 'tiktok-viral' ? 'bg-pink-900 text-pink-300 border-pink-400' : 'bg-gray-900 text-gray-400 border-gray-800'
+                }`}
+              >
+                TikTok Neon
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCardTheme('whatsapp-green')}
+                className={`p-2 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
+                  cardTheme === 'whatsapp-green' ? 'bg-[#075E54] text-[#25D366] border-[#25D366]' : 'bg-gray-900 text-gray-400 border-gray-800'
+                }`}
+              >
+                WhatsApp Teal
+              </button>
+
               <button
                 type="button"
                 onClick={() => setCardTheme('dark-forensic')}
-                className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  cardTheme === 'dark-forensic' ? 'bg-purple-950 text-purple-200 border-purple-400' : 'bg-gray-900 text-gray-400 border-gray-800'
+                className={`p-2 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
+                  cardTheme === 'dark-forensic' ? 'bg-purple-900 text-purple-300 border-purple-400' : 'bg-gray-900 text-gray-400 border-gray-800'
                 }`}
               >
-                Deluxe Dark
+                Cyber Dark
               </button>
+
               <button
                 type="button"
                 onClick={() => setCardTheme('high-contrast-red')}
-                className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  cardTheme === 'high-contrast-red' ? 'bg-rose-950 text-rose-200 border-rose-400' : 'bg-gray-900 text-gray-400 border-gray-800'
+                className={`p-2 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
+                  cardTheme === 'high-contrast-red' ? 'bg-rose-900 text-rose-300 border-rose-400' : 'bg-gray-900 text-gray-400 border-gray-800'
                 }`}
               >
-                High-Contrast Red
+                Alert Red
               </button>
+
               <button
                 type="button"
                 onClick={() => setCardTheme('clean-white')}
-                className={`p-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                  cardTheme === 'clean-white' ? 'bg-white text-gray-900 border-gray-300' : 'bg-gray-900 text-gray-400 border-gray-800'
+                className={`p-2 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
+                  cardTheme === 'clean-white' ? 'bg-white text-gray-900 border-gray-400' : 'bg-gray-900 text-gray-400 border-gray-800'
                 }`}
               >
-                Clean Paper White
+                Clean Paper
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Live Card Canvas Preview */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center space-y-4">
-          
-          <div className="text-xs font-bold text-gray-400 font-mono flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-[#FFD60A]" />
-            <span>LIVE RENDER PREVIEW ({cardAspectRatio}):</span>
+          {/* Toggle Switches */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-800 text-xs">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeWatermark}
+                onChange={(e) => setIncludeWatermark(e.target.checked)}
+                className="rounded-sm text-[#FFD60A] focus:ring-0 cursor-pointer"
+              />
+              <span className="text-gray-300 font-mono">Include SABI Watermark</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeQrCode}
+                onChange={(e) => setIncludeQrCode(e.target.checked)}
+                className="rounded-sm text-[#FFD60A] focus:ring-0 cursor-pointer"
+              />
+              <span className="text-gray-300 font-mono">Include QR Code</span>
+            </label>
           </div>
 
-          {/* Actual Rendered Graphic Box */}
+        </div>
+
+        {/* Right Column: Live Rendered Card Preview Canvas */}
+        <div className="lg:col-span-7 flex flex-col items-center justify-center bg-black/60 p-6 rounded-2xl border border-gray-800 min-h-[420px]">
+          
+          <div className="text-xs text-gray-400 font-mono mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#FFD60A]" />
+            <span>Live Card Preview ({cardAspectRatio} • {cardTheme.toUpperCase()})</span>
+          </div>
+
+          {/* Card Container */}
           <div
             ref={cardRef}
-            className={`w-full max-w-md rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all duration-300 border ${getCardBackgroundClass()} ${
-              cardAspectRatio === '9:16' ? 'aspect-[9/14] sm:aspect-[9/16]' : 'aspect-square'
+            className={`w-full max-w-md p-6 rounded-3xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden ${getCardBackgroundClass()} ${
+              cardAspectRatio === '9:16' ? 'aspect-[9/16] max-w-xs' : cardAspectRatio === '4:5' ? 'aspect-[4/5] max-w-sm' : cardAspectRatio === '16:9' ? 'aspect-[16/9] max-w-lg' : 'aspect-square max-w-md'
             }`}
-            style={{ minHeight: cardAspectRatio === '9:16' ? '500px' : '420px' }}
           >
-            {/* Background Decorative Grid/Shapes */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-[#FFD60A]/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Top Brand Header */}
-            <div className="flex items-center justify-between border-b border-white/20 pb-4 relative z-10">
+            
+            {/* Top Card Header */}
+            <div className="flex items-center justify-between gap-2 border-b border-white/20 pb-3 z-10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#FFD60A] text-[#0A3D2E] flex items-center justify-center font-black font-display text-sm shadow-md">
-                  S
+                <div className="w-8 h-8 rounded-xl bg-[#0A3D2E] text-[#FFD60A] border border-[#FFD60A] flex items-center justify-center font-black text-xs font-display">
+                  SABI
                 </div>
                 <div>
-                  <h4 className="text-sm font-black font-display tracking-wider uppercase leading-none">
-                    SABI FACT CHECK
-                  </h4>
-                  <span className="text-[10px] opacity-75 font-mono">Verified Citizen Intelligence</span>
+                  <div className="text-xs font-black tracking-wider uppercase font-display">SABI Nigeria Fact-Check</div>
+                  <div className="text-[10px] opacity-80 font-mono">{sourcePlatform}</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 text-[10px] font-mono opacity-80 bg-black/20 px-2.5 py-1 rounded-full border border-white/10">
-                <ShieldCheck className="w-3 h-3 text-[#FFD60A]" />
-                <span>OFFICIAL VERDICT</span>
-              </div>
+              {languageBadge && (
+                <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border border-white/30">
+                  {languageBadge}
+                </span>
+              )}
             </div>
 
-            {/* Center Content: Verdict Badge + Claim + Summary */}
-            <div className="space-y-4 my-auto relative z-10 py-3">
+            {/* Verdict Badge & Claim Text */}
+            <div className="my-auto space-y-3 z-10 py-2">
               
-              {/* Massive Verdict Stamp */}
-              <div>
-                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black font-display tracking-widest uppercase shadow-lg border ${getVerdictBadgeStyle()}`}>
-                  {getVerdictIcon()}
-                  <span>{verdict}</span>
-                </span>
+              <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider border shadow-lg font-display ${getVerdictBadgeStyle()}`}>
+                {getVerdictIcon()}
+                <span>{verdict}</span>
               </div>
 
-              {/* Claim Box */}
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-mono tracking-wider opacity-75 block">
-                  CIRCULATING CLAIM:
-                </span>
-                <p className="text-sm sm:text-base font-extrabold font-display leading-snug drop-shadow-sm">
+                <span className="text-[10px] uppercase font-mono font-extrabold opacity-70 block">Viral Claim:</span>
+                <h4 className="text-sm sm:text-base font-black font-display leading-tight line-clamp-3">
                   "{claimText}"
-                </p>
+                </h4>
               </div>
 
-              {/* Verified Fact Summary */}
-              <div className="space-y-1 bg-black/30 p-3.5 rounded-2xl border border-white/10 backdrop-blur-xs">
-                <span className="text-[10px] uppercase font-mono tracking-wider text-[#FFD60A] font-bold block">
-                  VERIFIED FACTUAL SUMMARY:
-                </span>
-                <p className="text-xs sm:text-sm leading-relaxed opacity-95 font-sans">
+              <div className="space-y-1 bg-black/40 backdrop-blur-sm p-3 rounded-2xl border border-white/10">
+                <span className="text-[10px] uppercase font-mono font-extrabold text-[#FFD60A] block">Verified Truth:</span>
+                <p className="text-xs opacity-90 leading-snug line-clamp-4 font-sans">
                   {summaryText}
                 </p>
               </div>
+
             </div>
 
-            {/* Footer Watermark & Verification Source */}
-            <div className="pt-3 border-t border-white/20 flex items-center justify-between text-[10px] font-mono opacity-80 relative z-10">
-              <div className="flex items-center gap-1">
-                <span>Source: {sourcePlatform}</span>
+            {/* Card Footer */}
+            <div className="flex items-end justify-between border-t border-white/20 pt-3 z-10 text-[10px]">
+              <div>
+                <div className="font-bold flex items-center gap-1 text-[#FFD60A]">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Verified by {verifierCount} SABI Spotters</span>
+                </div>
+                {includeWatermark && (
+                  <div className="opacity-70 font-mono mt-0.5">SABI • Official Nigerian Truth Network</div>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 font-bold text-[#FFD60A]">
-                <QrCode className="w-3.5 h-3.5" />
-                <span>sabi.ng/verify</span>
-              </div>
+
+              {includeQrCode && (
+                <div className="bg-white p-1 rounded-lg text-black shrink-0 flex items-center justify-center">
+                  <QrCode className="w-6 h-6" />
+                </div>
+              )}
             </div>
 
           </div>
 
-          {/* Quick Sharing Options beneath preview */}
-          <div className="flex items-center gap-2 pt-2">
+          <div className="mt-4 flex items-center gap-3">
             <button
               type="button"
               onClick={handleCopyLink}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-3.5 py-2 rounded-xl text-xs font-bold border border-gray-700 flex items-center gap-1.5 transition-all cursor-pointer"
+              className="text-xs text-gray-300 hover:text-white flex items-center gap-1.5 font-mono underline cursor-pointer"
             >
               {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{isCopied ? 'Link Copied!' : 'Copy Link'}</span>
+              <span>{isCopied ? 'Link Copied!' : 'Copy Verification Link'}</span>
             </button>
           </div>
 

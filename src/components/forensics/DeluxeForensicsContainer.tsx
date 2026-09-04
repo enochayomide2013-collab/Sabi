@@ -13,8 +13,7 @@ import {
   Lock, 
   ArrowRight,
   ExternalLink,
-  Languages,
-  Split
+  Languages
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { ImageAuthenticityCheck } from './ImageAuthenticityCheck';
@@ -22,12 +21,11 @@ import { VideoAnalysisTool } from './VideoAnalysisTool';
 import { AudioForensicsTool } from './AudioForensicsTool';
 import { FactCheckCardGenerator } from './FactCheckCardGenerator';
 import { MultilingualVoiceDebunk } from './MultilingualVoiceDebunk';
-import { ForensicComparisonSlider } from './ForensicComparisonSlider';
 import { DeepfakeXRay } from '../truth/DeepfakeXRay';
 
 interface DeluxeForensicsContainerProps {
   user: UserProfile;
-  initialTool?: 'image' | 'video' | 'audio' | 'comparison' | 'multilingual' | 'card' | 'xray';
+  initialTool?: 'image' | 'video' | 'audio' | 'multilingual' | 'card' | 'xray';
   onNavigate: (tab: string, extraData?: any) => void;
   onShowToast?: (points: number, message: string) => void;
 }
@@ -38,8 +36,8 @@ export const DeluxeForensicsContainer: React.FC<DeluxeForensicsContainerProps> =
   onNavigate,
   onShowToast
 }) => {
-  const [activeTool, setActiveTool] = useState<'image' | 'video' | 'audio' | 'comparison' | 'multilingual' | 'card' | 'xray'>(initialTool);
-  const isDeluxe = user.userTier === 'Deluxe' || user.role === 'admin';
+  const [activeTool, setActiveTool] = useState<'image' | 'video' | 'audio' | 'multilingual' | 'card' | 'xray'>(initialTool as any);
+  const isDeluxe = user.userTier === 'Deluxe' || user.userTier === 'Admin Super' || user.role === 'admin';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24 animate-fade-in" id="deluxe-forensics-hub">
@@ -57,7 +55,7 @@ export const DeluxeForensicsContainer: React.FC<DeluxeForensicsContainerProps> =
           </h1>
 
           <p className="text-xs sm:text-sm text-purple-100/90 leading-relaxed">
-            Forensic suite for <strong>Deluxe</strong> members: Image & Video manipulation, <strong>WhatsApp Audio Voice Notes</strong>, <strong>Side-by-Side Comparison Slider</strong>, <strong>Multilingual Local Dialect Voice Debunker</strong>, and <strong>Social Infographic Cards</strong>.
+            Forensic suite for <strong>Deluxe</strong> members: Image & Video manipulation, <strong>WhatsApp Audio Voice Notes</strong>, <strong>Multilingual Local Dialect Voice Debunker</strong>, <strong>Deepfake X-Ray Scanner</strong>, and <strong>Social Infographic Cards</strong>.
           </p>
 
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -74,12 +72,12 @@ export const DeluxeForensicsContainer: React.FC<DeluxeForensicsContainerProps> =
               <span>Voice Notes</span>
             </span>
             <span className="bg-white/10 text-white px-3 py-1 rounded-full font-bold border border-white/20 flex items-center gap-1.5">
-              <Split className="w-3.5 h-3.5 text-[#FFD60A]" />
-              <span>Compare Slider</span>
-            </span>
-            <span className="bg-white/10 text-white px-3 py-1 rounded-full font-bold border border-white/20 flex items-center gap-1.5">
               <Languages className="w-3.5 h-3.5 text-[#FFD60A]" />
               <span>Multilingual</span>
+            </span>
+            <span className="bg-white/10 text-white px-3 py-1 rounded-full font-bold border border-white/20 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#FFD60A]" />
+              <span>Deepfake X-Ray</span>
             </span>
             <span className="bg-white/10 text-white px-3 py-1 rounded-full font-bold border border-white/20 flex items-center gap-1.5">
               <FileImage className="w-3.5 h-3.5 text-[#FFD60A]" />
@@ -128,19 +126,6 @@ export const DeluxeForensicsContainer: React.FC<DeluxeForensicsContainerProps> =
         >
           <Mic className="w-4 h-4 text-[#FFD60A]" />
           <span>Voice Notes</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTool('comparison')}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-extrabold font-display transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeTool === 'comparison'
-              ? 'bg-[#0A3D2E] text-white shadow-md'
-              : 'text-gray-700 hover:text-gray-900 hover:bg-white/60'
-          }`}
-        >
-          <Split className="w-4 h-4 text-[#FFD60A]" />
-          <span>Compare Slider</span>
         </button>
 
         <button
@@ -204,12 +189,6 @@ export const DeluxeForensicsContainer: React.FC<DeluxeForensicsContainerProps> =
         <AudioForensicsTool
           user={user}
           onNavigate={onNavigate}
-          onShowToast={onShowToast}
-        />
-      )}
-
-      {activeTool === 'comparison' && (
-        <ForensicComparisonSlider
           onShowToast={onShowToast}
         />
       )}

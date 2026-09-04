@@ -9,7 +9,7 @@ export type ReportStatus = 'pending' | 'checking' | 'verified' | 'disputed' | 'n
 
 export type TrustLevel = 'Bronze' | 'Silver' | 'Gold' | 'Trusted Contributor';
 
-export type UserTier = 'Member' | 'Bronze' | 'Golden' | 'Deluxe';
+export type UserTier = 'Member' | 'Bronze' | 'Golden' | 'Deluxe' | 'Admin Super';
 
 export type MediaType = 'image' | 'video' | 'audio' | 'screenshot';
 
