@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Heart
 } from 'lucide-react';
+import { DataSaverModeToggle } from './DataSaverModeToggle';
 
 interface AboutViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -208,6 +209,9 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate }) => {
           </button>
         </div>
       </div>
+
+      {/* LOW BANDWIDTH & DATA SAVER TOGGLE */}
+      <DataSaverModeToggle />
 
       {/* FOOTER NOTE */}
       <div className="text-center text-xs text-gray-500 space-y-3 pt-4 border-t border-gray-200">

@@ -101,6 +101,21 @@ export interface TruthResult {
   debunkSourceOrg?: string;
   debunkPlatform?: 'youtube' | 'tiktok' | 'twitter' | 'facebook' | 'instagram';
   debunkVideoThumbnail?: string;
+  rumorSummary?: string;
+  rumorClaimsList?: string[];
+  whatHappened?: string;
+  whatBroughtAboutIt?: string;
+  playableVideoUrl?: string;
+  liveForensicData?: {
+    opticalMotionScore: number;
+    jumpCutsDetected: number;
+    compressionArtifactScore: number;
+    deepfakeProbability: number;
+    audioVisualSyncStatus: 'synced' | 'desynced' | 'muted' | 'manipulated';
+    frameRateFps: number;
+    bitrateKbps: number;
+    detectedAnomalies: string[];
+  };
 }
 
 export interface MarketPricePoint {
@@ -130,6 +145,49 @@ export interface MarketItemLocationPrice {
   reportsCount: number;
   priceTrend: 'up' | 'down' | 'stable';
   trendPercent: number;
+}
+
+export interface SmartMarketDeal {
+  itemId: string;
+  itemName: string;
+  category: string;
+  unitName: string;
+  currentPrice: number;
+  averageRegionalPrice: number;
+  savingsPercent: number;
+  savingsAmount: number;
+  qualityGrade: 'Grade A+ Farm Direct' | 'Grade A Premium' | 'Standard Market Grade';
+  trend: 'down' | 'stable' | 'up';
+  trendPercent: number;
+  bestBuyingTime?: string;
+  bargainTip?: string;
+}
+
+export interface SmartMarket {
+  id: string;
+  name: string;
+  state: string;
+  lga: string;
+  area: string;
+  tagline: string;
+  description: string;
+  imageUrl: string;
+  rating: number;
+  spotterReportsCount: number;
+  distanceKm?: number;
+  marketType: 'Wholesale Farm Hub' | 'Bulk Grain Depot' | 'Modern Food Hub' | 'Neighborhood Retail';
+  specialties: string[];
+  averageSavingsVsRetail: number; // percentage, e.g. 24
+  qualityRatingScore: number; // e.g. 96 (%)
+  priceIndexScore: number; // e.g. 94 / 100
+  bestDaysToVisit: string;
+  openingHours: string;
+  bargainingPower: 'High Wholesale Discount' | 'Moderate' | 'Fixed Stalls';
+  topDeals: SmartMarketDeal[];
+  directionsGuide: string;
+  safetyAndLogisticsTip: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface MarketItem {
@@ -175,6 +233,7 @@ export interface RecipeItem {
   youtubeVideoUrl?: string;
   youtubeVideoId?: string;
   estimatedCost?: string;
+  costBreakdown?: { name: string; price: number; unit?: string; }[];
   caloriesApprox?: number;
   originRegion: string;
   isPinned?: boolean;
@@ -222,6 +281,7 @@ export interface UserProfile {
   streak?: StreakData;
   subscribedToAlerts?: boolean;
   hasSeenOnboarding?: boolean;
+  isOnline?: boolean;
   recentActivity: {
     id: string;
     type: 'verified_task' | 'submitted_report' | 'approved_price' | 'badge_earned' | 'tier_upgrade' | 'streak_reward';
@@ -354,6 +414,44 @@ export interface SabiationResource {
   isFree?: boolean;
 }
 
+export interface EvidenceDetails {
+  claim: string;
+  location: string;
+  videoUrl: string;
+  videoPlatform: 'TikTok' | 'Facebook' | 'Twitter (X)';
+  videoTitle?: string;
+  videoDuration?: string;
+  videoThumbnail?: string;
+  videoViews?: string;
+  videoLikes?: string;
+  captionsText?: string;
+  verifiedByCount: number;
+  capturedTime: string;
+  officialSource: string;
+  officialSourceUrl?: string;
+  aiMediaCheck: string;
+  verdict: 'VERIFIED' | 'FALSE' | 'OUTDATED MEDIA' | 'NEEDS MORE VERIFICATION';
+  verifierExplanation: string;
+  originPlatform: 'TikTok' | 'Twitter (X)' | 'Facebook' | 'YouTube' | 'Instagram' | 'SABI Community';
+  state?: string;
+  isWorldwide?: boolean;
+}
+
+export interface SocialTrend {
+  id: string;
+  topic: string;
+  hashtag?: string;
+  category: string;
+  platform: 'youtube' | 'tiktok' | 'twitter' | 'instagram';
+  volume: string;
+  viralityScore: number;
+  state?: string;
+  summary: string;
+  postCount?: string;
+  verifiedStatus?: 'VERIFIED' | 'FALSE' | 'RUMOR' | 'DEVELOPING';
+  url?: string;
+}
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -372,6 +470,12 @@ export interface NewsArticle {
   socialPlatform?: 'tiktok' | 'youtube' | 'twitter' | 'instagram' | 'facebook';
   socialHandle?: string;
   socialPostUrl?: string;
+  likesCount?: string;
+  viewsCount?: string;
+  sharesCount?: string;
+  state?: string;
+  isWorldwide?: boolean;
+  evidence?: EvidenceDetails;
 }
 
 export interface OnlineSabier {
@@ -400,3 +504,87 @@ export interface UserAuthLog {
   timestamp: string;
   ipAddress?: string;
 }
+
+export type ImageAuthenticityVerdict = 'Likely Authentic' | 'Potentially Manipulated' | 'Inconclusive';
+
+export interface ForensicTechnicalIndicator {
+  name: string;
+  category: 'metadata' | 'compression' | 'lighting_shadow' | 'ai_synthesis' | 'edge_splicing' | 'temporal' | 'audio_sync' | 'general';
+  observation: string;
+  explanation: string;
+  risk: 'low' | 'medium' | 'high' | 'info';
+}
+
+export interface ImageAuthenticityResult {
+  verdict: ImageAuthenticityVerdict;
+  confidence: 'High' | 'Moderate' | 'Low';
+  confidenceScore: number;
+  summary: string;
+  technicalIndicators: ForensicTechnicalIndicator[];
+  metadataFindings: {
+    hasExif: boolean;
+    dimensions?: { width: number; height: number; aspectRatio: string; megapixels: string };
+    fileFormat?: string;
+    fileSizeBytes?: number;
+    colorDepth?: string;
+    cameraMake?: string;
+    cameraModel?: string;
+    softwareUsed?: string;
+    dateTimeOriginal?: string;
+    compressionEstimate?: string;
+    socialMediaStrippedWarning?: boolean;
+    entropyScore?: number;
+  };
+  forensicTests: {
+    noiseConsistency: { score: number; status: string; detail: string };
+    compressionArtifacts: { score: number; status: string; detail: string };
+    edgeSplicing: { score: number; status: string; detail: string };
+    aiGenerationArtifacts: { detected: boolean; patterns: string[]; detail: string };
+  };
+  guidanceForFactCheckers: string;
+  disclaimer: string;
+}
+
+export type VideoAnalysisVerdict = 'No Major Issues Detected' | 'Potential Manipulation Detected' | 'Inconclusive';
+
+export interface VideoKeyframeFinding {
+  index: number;
+  timestampSec: number;
+  timestampFormatted: string;
+  thumbnailUrl?: string;
+  colorDifference: number; // 0 - 100
+  isAnomaly: boolean;
+  note?: string;
+}
+
+export interface VideoAnalysisResult {
+  verdict: VideoAnalysisVerdict;
+  confidence: 'High' | 'Moderate' | 'Low';
+  confidenceScore: number;
+  summary: string;
+  technicalIndicators: ForensicTechnicalIndicator[];
+  videoProperties: {
+    durationSeconds: number;
+    formattedDuration: string;
+    resolution: { width: number; height: number; quality: string };
+    frameRateEstimate?: number;
+    fileSizeBytes?: number;
+    containerFormat?: string;
+    hasAudioTrack: boolean;
+    extractedKeyframesCount: number;
+    jumpCutsDetected: number;
+  };
+  frameFindings: VideoKeyframeFinding[];
+  temporalContinuity: {
+    score: number;
+    status: string;
+    detail: string;
+  };
+  audioVisualAlignment: {
+    status: string;
+    detail: string;
+  };
+  guidanceForFactCheckers: string;
+  disclaimer: string;
+}
+

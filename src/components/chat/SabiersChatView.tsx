@@ -64,6 +64,7 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
   const [messages, setMessages] = useState<SabiersChatMessage[]>(storageService.getSabiersMessages());
   const [onlineSabiers, setOnlineSabiers] = useState<OnlineSabier[]>(storageService.getOnlineSabiers());
   const [activeChatTab, setActiveChatTab] = useState<'chat' | 'online_sabiers'>('chat');
+  const [onlineSubTab, setOnlineSubTab] = useState<'live' | 'community'>('live');
   const [messageInput, setMessageInput] = useState<string>('');
   const [targetChannel, setTargetChannel] = useState<SabiersChatMessage['channel']>('general');
   const [tagType, setTagType] = useState<'none' | 'market_price' | 'rumor_alert' | 'truth_verified'>('none');
@@ -167,16 +168,27 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
 
     // Real-time Firestore presence subscription
     const unsubscribePresence = subscribeToPresenceList((onlineList) => {
+      const registered = storageService.getOnlineSabiers();
+      const map = new Map<string, OnlineSabier>();
+      
+      // Set registered sabiers as offline by default unless they exist in the live presence list
+      registered.forEach(s => {
+        const isMe = s.id === currentUser.id || s.name.includes('(You)');
+        map.set(s.id, {
+          ...s,
+          isOnline: isMe,
+          lastActive: isMe ? 'Online now' : 'Offline',
+          currentActivity: isMe ? s.currentActivity : 'Offline'
+        });
+      });
+
       if (onlineList && onlineList.length > 0) {
-        // Combine real presence with registered sabiers from local storage
-        const registered = storageService.getOnlineSabiers();
-        const map = new Map<string, OnlineSabier>();
-        registered.forEach(s => map.set(s.id, s));
-        onlineList.forEach(s => map.set(s.id, s));
-        setOnlineSabiers(Array.from(map.values()));
-      } else {
-        setOnlineSabiers(storageService.getOnlineSabiers());
+        onlineList.forEach(s => {
+          map.set(s.id, s);
+        });
       }
+      
+      setOnlineSabiers(Array.from(map.values()));
     });
 
     return () => {
@@ -196,6 +208,10 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
   });
 
   const filteredOnlineSabiers = onlineSabiers.filter(s => {
+    // STRICT RULE: Never show offline users, only show users who are currently online
+    if (!s.isOnline) {
+      return false;
+    }
     if (selectedOnlineState !== 'all' && s.state.toLowerCase() !== selectedOnlineState.toLowerCase()) {
       return false;
     }
@@ -306,6 +322,55 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
       default:
         return 'bg-emerald-50 text-emerald-800 border-emerald-200';
     }
+  };
+
+  // Special title flair icons for titleholders
+  const renderTitleSpecialIcon = (tier?: string, role?: string) => {
+    if (role === 'admin') {
+      return (
+        <span 
+          className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-purple-950 text-amber-300 border border-amber-400 px-2 py-0.5 rounded-full shadow-xs"
+          title="Master Admin Special Icon"
+        >
+          <Crown className="w-3 h-3 text-amber-300 fill-amber-300" />
+          <span>👑 Admin</span>
+        </span>
+      );
+    }
+    if (tier === 'Deluxe') {
+      return (
+        <span 
+          className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-950 text-amber-300 border border-purple-400 px-2 py-0.5 rounded-full shadow-sm"
+          title="Deluxe Sovereign VIP Special Icon"
+        >
+          <Crown className="w-3 h-3 text-amber-300 fill-amber-300 animate-pulse" />
+          <span>👑 DELUXE VIP</span>
+        </span>
+      );
+    }
+    if (tier === 'Golden') {
+      return (
+        <span 
+          className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 border border-yellow-600 px-2 py-0.5 rounded-full shadow-xs font-bold"
+          title="Golden Sovereign Special Icon"
+        >
+          <Award className="w-3 h-3 text-amber-950 fill-amber-900" />
+          <span>🥇 GOLDEN</span>
+        </span>
+      );
+    }
+    if (tier === 'Bronze') {
+      return (
+        <span 
+          className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-950 border border-amber-300 px-2 py-0.5 rounded-full shadow-xs font-bold"
+          title="Bronze Sentinel Special Icon"
+        >
+          <ShieldCheck className="w-3 h-3 text-amber-800" />
+          <span>🥉 BRONZE</span>
+        </span>
+      );
+    }
+    return null;
   };
 
   return (
@@ -480,6 +545,26 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
             </button>
           </div>
 
+          {/* Sub-tab Filter: Live Now vs Community Directory */}
+          <div className="flex items-center gap-2" id="online-presence-subtabs">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 py-1.5 px-3.5 rounded-xl text-xs font-bold text-emerald-900 shadow-xs">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span>Only Online Spotters Shown ({filteredOnlineSabiers.length} Active)</span>
+            </div>
+          </div>
+
+          {filteredOnlineSabiers.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+              <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-xs font-medium text-gray-500">
+                No other spotters are currently online. Only actively connected users are displayed here.
+              </p>
+            </div>
+          ) : null}
+
           {/* Online Sabiers Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5" id="online-sabiers-grid">
             {filteredOnlineSabiers.map((sabier) => {
@@ -491,7 +576,9 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
                   className={`bg-white rounded-2xl p-4 border transition-all hover:shadow-md flex flex-col justify-between gap-3 ${
                     isCurrentUser 
                       ? 'border-emerald-400 ring-2 ring-emerald-300/40 bg-emerald-50/40' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      : sabier.isOnline
+                        ? 'border-emerald-200 bg-emerald-50/10 hover:border-emerald-300'
+                        : 'border-gray-200 opacity-70 hover:opacity-90'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -528,7 +615,11 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
                       </div>
 
                       {/* Status Snippet */}
-                      <p className="text-xs text-emerald-900 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 font-medium leading-tight">
+                      <p className={`text-xs px-2 py-1 rounded-lg border font-medium leading-tight ${
+                        sabier.isOnline 
+                          ? 'text-emerald-900 bg-emerald-50 border-emerald-100' 
+                          : 'text-gray-500 bg-gray-50 border-gray-200/60'
+                      }`}>
                         {sabier.currentActivity}
                       </p>
                     </div>
@@ -613,29 +704,58 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
               ) : (
                 filteredMessages.map((msg) => {
                   const isCurrentUser = msg.senderId === user.id || msg.senderName === user.name;
+                  const effectiveTier = isCurrentUser ? user.userTier : msg.senderTier;
+                  const effectiveRole = isCurrentUser ? user.role : msg.senderRole;
 
                   return (
                     <div
                       key={msg.id}
                       className={`p-4 rounded-2xl border transition-all ${
                         isCurrentUser 
-                          ? 'bg-emerald-50/60 border-emerald-200 ml-4 sm:ml-12' 
-                          : 'bg-gray-50/80 border-gray-200/90 mr-4 sm:mr-12 hover:bg-gray-50'
+                          ? effectiveTier === 'Deluxe'
+                            ? 'bg-gradient-to-r from-emerald-50/90 to-purple-50/70 border-purple-300 ml-4 sm:ml-12 shadow-xs'
+                            : effectiveTier === 'Golden'
+                            ? 'bg-gradient-to-r from-emerald-50/90 to-amber-50/70 border-amber-300 ml-4 sm:ml-12 shadow-xs'
+                            : 'bg-emerald-50/60 border-emerald-200 ml-4 sm:ml-12' 
+                          : effectiveTier === 'Deluxe'
+                            ? 'bg-gradient-to-r from-purple-50/40 to-white border-purple-200/90 mr-4 sm:mr-12 hover:bg-purple-50/20 shadow-xs'
+                            : effectiveTier === 'Golden'
+                            ? 'bg-gradient-to-r from-amber-50/40 to-white border-amber-200 mr-4 sm:mr-12 hover:bg-amber-50/20 shadow-xs'
+                            : 'bg-gray-50/80 border-gray-200/90 mr-4 sm:mr-12 hover:bg-gray-50'
                       }`}
                     >
                       {/* Sender Header */}
                       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                         <div className="flex items-center gap-2.5">
-                          <img
-                            src={msg.senderAvatar}
-                            alt={msg.senderName}
-                            className="w-8 h-8 rounded-xl object-cover border border-gray-300 shrink-0"
-                          />
+                          <div className="relative shrink-0">
+                            <img
+                              src={msg.senderAvatar}
+                              alt={msg.senderName}
+                              className={`w-8 h-8 rounded-xl object-cover shrink-0 transition-all ${
+                                effectiveRole === 'admin'
+                                  ? 'border-2 border-purple-500 ring-2 ring-amber-400 shadow-xs'
+                                  : effectiveTier === 'Deluxe'
+                                  ? 'border-2 border-purple-600 ring-2 ring-purple-400 shadow-xs'
+                                  : effectiveTier === 'Golden'
+                                  ? 'border-2 border-amber-500 ring-2 ring-yellow-400 shadow-xs'
+                                  : effectiveTier === 'Bronze'
+                                  ? 'border-2 border-amber-700 ring-1 ring-amber-500/50 shadow-xs'
+                                  : 'border border-gray-300'
+                              }`}
+                            />
+                            {effectiveTier === 'Deluxe' && (
+                              <span className="absolute -top-1.5 -right-1.5 bg-[#FFD60A] text-[#0A3D2E] rounded-full p-0.5 shadow-xs">
+                                <Crown className="w-2.5 h-2.5 fill-amber-500 text-amber-950" />
+                              </span>
+                            )}
+                          </div>
+
                           <div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <h4 className="font-extrabold text-xs text-gray-900 font-display">
                                 {msg.senderName} {isCurrentUser && '(You)'}
                               </h4>
+                              {renderTitleSpecialIcon(effectiveTier, effectiveRole)}
                               <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full border ${getTrustBadgeClass(msg.senderTrustLevel)}`}>
                                 {msg.senderRole === 'admin' ? 'Master Admin' : msg.senderTrustLevel}
                               </span>
@@ -791,6 +911,24 @@ export const SabiersChatView: React.FC<SabiersChatViewProps> = ({
                     <Tag className="w-3 h-3 text-[#0A3D2E]" />
                     <span>{tagType !== 'none' ? 'Tag Attached' : '+ Add Price/Rumor Tag'}</span>
                   </button>
+
+                  {/* Active Title Indicator */}
+                  {user.userTier === 'Deluxe' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black bg-purple-900 text-amber-300 border border-purple-400 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      <Crown className="w-3 h-3 text-amber-300 fill-amber-300" />
+                      <span>Posting with Deluxe VIP Crown Icon</span>
+                    </span>
+                  ) : user.userTier === 'Golden' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      <Award className="w-3 h-3 text-amber-700 fill-amber-500" />
+                      <span>Posting with Golden Sovereign Icon</span>
+                    </span>
+                  ) : user.userTier === 'Bronze' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black bg-orange-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      <ShieldCheck className="w-3 h-3 text-amber-800" />
+                      <span>Posting with Bronze Sentinel Icon</span>
+                    </span>
+                  ) : null}
 
                   <span className="text-[11px] text-emerald-800 font-bold ml-auto hidden sm:inline">
                     +5 SABI PTS per post

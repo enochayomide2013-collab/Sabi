@@ -204,6 +204,23 @@ export class AiService {
    * Generates a realistic Nigerian 3-step recipe from detected ingredients
    */
   public static async generateRecipeFromIngredients(ingredients: string[]): Promise<RecipeItem> {
+    try {
+      const response = await fetch('/api/generate-recipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients })
+      });
+
+      if (response.ok) {
+        const recipe = await response.json();
+        if (recipe && recipe.id && recipe.title) {
+          return recipe;
+        }
+      }
+    } catch (e) {
+      console.warn("Recipe generator live API notice, using fallback:", e);
+    }
+
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const ingString = ingredients.join(' ').toLowerCase();
@@ -221,6 +238,13 @@ export class AiService {
         caloriesApprox: 430,
         videoDurationSec: 20,
         videoThumbnail: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
+        estimatedCost: '₦2,800 - ₦3,500',
+        costBreakdown: [
+          { name: 'Fresh Yam Tuber', price: 1500, unit: '1/2 medium tuber' },
+          { name: 'Eggs', price: 600, unit: '4 pieces' },
+          { name: 'Fresh Tomatoes & Peppers', price: 500, unit: '1 bunch/cup' },
+          { name: 'Vegetable Oil & Seasoning', price: 400, unit: '150ml' }
+        ],
         ingredients: ingredients.length > 0 ? ingredients : ['Yam (3-4 round slices)', 'Eggs (3)', 'Tomatoes (3)', 'Onions', 'Pepper', 'Oil'],
         steps: [
           {
@@ -264,6 +288,13 @@ export class AiService {
         caloriesApprox: 480,
         videoDurationSec: 20,
         videoThumbnail: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80',
+        estimatedCost: '₦3,600 - ₦4,500',
+        costBreakdown: [
+          { name: 'Local Parboiled Rice', price: 1800, unit: '3 cups (approx 750g)' },
+          { name: 'Fresh Tomatoes, Tatashe & Peppers', price: 800, unit: '1 medium bowl' },
+          { name: 'Onions', price: 300, unit: '2 large pieces' },
+          { name: 'Vegetable Oil & Spices', price: 700, unit: '200ml' }
+        ],
         ingredients: ingredients,
         steps: [
           {
@@ -304,6 +335,13 @@ export class AiService {
       caloriesApprox: 260,
       videoDurationSec: 20,
       videoThumbnail: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop&q=80',
+      estimatedCost: '₦1,800 - ₦2,400',
+      costBreakdown: [
+        { name: 'Fresh Vegetables/Spinach', price: 600, unit: '2 bunches' },
+        { name: 'Fresh Tomatoes & Peppers', price: 500, unit: '1 cup' },
+        { name: 'Onions', price: 300, unit: '2 medium' },
+        { name: 'Vegetable Oil & Seasoning', price: 400, unit: '100ml' }
+      ],
       ingredients: ingredients,
       steps: [
         {

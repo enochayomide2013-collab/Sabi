@@ -47,7 +47,78 @@ export class SaboAiService {
 
     const q = userQuestion.toLowerCase().trim();
 
-    // 2. Local Deep Thinking & Fallback Responses
+    // NAVIGATION INTENT DETECTION & DIRECT QUESTION COMBINATION
+    const isNavRequest = q.includes('take me') || q.includes('go to') || q.includes('open') || q.includes('navigate') || q.includes('show me') || q.includes('switch to') || q.includes('take user');
+    
+    if (isNavRequest || q === 'forensics' || q === 'market' || q === 'map' || q === 'sabiation' || q === 'truth' || q === 'recipe' || q === 'profile' || q === 'admin' || q === 'report' || q === 'verify' || q === 'deepfake' || q === 'titles' || q === 'trust title') {
+      let targetTab = 'truth';
+      let targetName = 'Truth & Fact-Checking Hub';
+
+      if (q.includes('forensic') || q.includes('deepfake') || q.includes('xray') || q.includes('voice note') || q.includes('audio') || q.includes('image auth')) {
+        targetTab = 'forensics';
+        targetName = 'Deluxe Forensic & Media Suite (Deepfake Scanner)';
+      } else if (q.includes('market') || q.includes('price') || q.includes('commodity') || q.includes('food cost')) {
+        targetTab = 'market';
+        targetName = 'Market Price Tracker';
+      } else if (q.includes('map') || q.includes('radar') || q.includes('heatmap') || q.includes('location')) {
+        targetTab = 'map';
+        targetName = 'Rumor Map & Geolocation Radar';
+      } else if (q.includes('sabiation') || q.includes('generator') || q.includes('essay') || q.includes('quiz') || q.includes('vip')) {
+        targetTab = 'sabiation';
+        targetName = 'The Sabiation VIP Suite';
+      } else if (q.includes('truth') || q.includes('fact check') || q.includes('rumor') || q.includes('feed') || q.includes('title') || q.includes('trust')) {
+        targetTab = 'truth';
+        targetName = 'Truth & Fact-Checking Hub';
+      } else if (q.includes('report') || q.includes('submit') || q.includes('flag')) {
+        targetTab = 'report';
+        targetName = 'Submit Rumor / Price Report';
+      } else if (q.includes('verify') || q.includes('task') || q.includes('ground')) {
+        targetTab = 'verify';
+        targetName = 'On-Ground Verification Tasks';
+      } else if (q.includes('chat') || q.includes('sabier') || q.includes('group')) {
+        targetTab = 'sabiers';
+        targetName = 'The Sabiers Live Chat';
+      } else if (q.includes('recipe') || q.includes('cook') || q.includes('meal')) {
+        targetTab = 'recipe';
+        targetName = 'Recipe & Culinary Costs Generator';
+      } else if (q.includes('profile') || q.includes('point') || q.includes('badge') || q.includes('account')) {
+        targetTab = 'profile';
+        targetName = 'User Profile & Badges';
+      } else if (q.includes('admin') || q.includes('passkey')) {
+        targetTab = 'admin';
+        targetName = 'Admin Portal (Passkey: 2013)';
+      } else if (q.includes('about') || q.includes('data saver') || q.includes('mode')) {
+        targetTab = 'about';
+        targetName = 'Platform Overview & Low Bandwidth Mode';
+      }
+
+      // Check if user also asked a specific question alongside navigation
+      let combinedAnswer = '';
+      if (q.includes('price') || q.includes('rice') || q.includes('tomato')) {
+        combinedAnswer = `\n\n📊 **Price Intelligence Answer:**\n- 🍚 **Foreign Rice (50kg Bag):** ₦104,000–₦107,000 at Dei-Dei Abuja & Mile 12 Lagos.\n- 🍅 **Tomatoes (Large Basket):** ₦52,000 at Mile 12 Lagos | ₦28,000 at Bodija Ibadan.\n- 🌾 **Local Rice:** ₦88,000–₦92,000 at Dawanau Kano.`;
+      } else if (q.includes('deepfake') || q.includes('fake') || q.includes('voice')) {
+        combinedAnswer = `\n\n🔬 **Deepfake Scanner Answer:**\nOur AI Deepfake X-Ray inspects audio waveforms, facial land-marking, and optical flow jumps to flag synthesized voice notes and edited video footage in real-time.`;
+      } else if (q.includes('trust') || q.includes('title')) {
+        combinedAnswer = `\n\n🛡️ **Trust & Verified Titles Answer:**\nAll verified rumor dossiers receive a **Trust Badge** (TRUE, FALSE, or OUTDATED MEDIA) backed by on-ground spotter consensus across all 36 states.`;
+      }
+
+      return {
+        id: `sabo_nav_${Date.now()}`,
+        sender: 'sabo',
+        thinking: `🧠 DEEP THINKING & NAVIGATION ENGINE:
+1. Detected user navigation intent: "${userQuestion}".
+2. Target route identified: "${targetName}" (${targetTab}).
+3. Synthesized direct answer to user question and initiated automated navigation transition.`,
+        text: `**Navigating to ${targetName}...**\n\nI am redirecting you directly to the **${targetName}** section right now! Click below or wait a moment for auto-transfer.${combinedAnswer}`,
+        timestamp: 'Just now',
+        suggestedActions: [
+          { label: `Open ${targetName} Now`, tab: targetTab },
+          { label: 'Explore Verified Rumor Titles', tab: 'truth' },
+          { label: 'Open Deepfake Scanner', tab: 'forensics' }
+        ],
+        sources: ['SABI Router Engine', 'Live Navigation Controller']
+      };
+    }
 
     // Admin / Passkey / Authentication questions
     if (q.includes('admin') || q.includes('passkey') || q.includes('password') || q.includes('login') || q.includes('signup') || q.includes('credential') || q.includes('audit')) {
@@ -129,22 +200,41 @@ export class SaboAiService {
       };
     }
 
+    // Recipe / Cooking Tips / General questions outside SABI
+    if (q.includes('cook') || q.includes('recipe') || q.includes('prepare') || q.includes('ingredient') || q.includes('food') || q.includes('how to') || q.includes('tip') || q.includes('delicious')) {
+      return {
+        id: `sabo_${Date.now()}`,
+        sender: 'sabo',
+        thinking: `🧠 DEEP THINKING & REASONING PROCESS:
+1. Identified query intent: General cooking tips, recipes, or preparation procedures.
+2. Verified permissions: Sabo AI has sole authorization to answer general, culinary, and general market cost questions.
+3. Formulated response: Provide highly useful, authentic culinary recommendations, seasoning tips, and estimated preparation rates for local Nigerian meals.`,
+        text: `**Sabo AI Culinary & Prep Guide:**\n\nI am fully authorized to guide you on any Nigerian recipes, cooking procedures, and food preparation costs!\n\n🍳 **Top 3 Cooking Tips for Nigerian Dishes:**\n1. **Slow-Simmered Stew Base:** When preparing Jollof Rice or Tomato Stew, fry your tomato-pepper-onion blend slowly until the sourness completely evaporates and oil starts to separate. This is the secret to rich flavor.\n2. **Boiling Yam Properly:** Always slice yams into uniform sizes. Adding a tiny pinch of salt (and optionally half a teaspoon of sugar) to the boiling water enhances natural sweetness.\n3. **Preserving Green Vegetables:** For soups like Efo Riro or Edikang Ikong, stir in your washed vegetables at the very end of cooking, cover the pot, and turn off the heat immediately to retain texture, color, and nutrients.\n\n💡 *Looking for customized instructions? Open the **Recipe Generator** to add your own ingredients and get dynamic price analyses and step-by-step videos!*`,
+        timestamp: 'Just now',
+        suggestedActions: [
+          { label: 'Open Recipe Generator', tab: 'recipe' },
+          { label: 'Check Tomato Prices', query: 'What are current tomato prices?' }
+        ],
+        sources: ['SABI Gourmet Intelligence', 'Nigerian Kitchen Traditions']
+      };
+    }
+
     // Default intelligent conversational response with deep thinking process
     return {
       id: `sabo_${Date.now()}`,
       sender: 'sabo',
       thinking: `🧠 DEEP THINKING & REASONING PROCESS:
 1. Analyzed query: "${userQuestion}"
-2. Cross-referenced SABI platform capabilities: Admin passkey security (2013), live spotter chat notifications, market commodity indices, deepfake media forensics, and Numa prompt engine.
-3. Synthesized evidence-based guidance to help the user navigate SABI features effectively.`,
-      text: `**Sabo AI Analysis for: "${userQuestion}"**\n\nAt SABI Nigeria, our core mandate is ensuring every citizen accesses **verified truth** regarding local food prices, public developments, and viral rumors across all 36 states and the FCT.\n\n- 🛍️ **To check verified market rates:** Visit the **Market** tab for live commodity updates.\n- 🔍 **To report or fact-check claims:** Click **Snap Rumor / Report** for deepfake AI analysis.\n- 💬 **To connect with live verifiers:** Join **The Sabiers** group chat (with real-time sound notifications).\n- 🔐 **Admin Access:** Enter passkey **\`2013\`** in the Admin Portal.`,
+2. Cross-referenced SABI platform capabilities and general query permissions.
+3. Formulated a direct, customized answer. Since Sabo AI is permitted to answer any question (inside or outside of SABI), I will address general topics with a warm, helpful tone.`,
+      text: `**Sabo AI Chief Assistant Response:**\n\nI am here to answer any questions you have—whether they are about the SABI truth-tracking network or general inquiries like cooking tips, food preparation costs, or recipes.\n\n- 🍽️ **For Food and Recipes:** Tell me what ingredients you have, or ask me for tips on how to prepare any specific Nigerian dish.\n- 📊 **For Commodity Rates:** I can provide the exact price ranges at Mile 12, Bodija, and Dei-Dei markets.\n- 🔍 **For Platform Actions:** Visit the **Market** tab to track prices, or join **The Sabiers** chat to discuss with live online verifiers.\n\nLet me know exactly what you'd like to cook, or any other questions you have!`,
       timestamp: 'Just now',
       suggestedActions: [
         { label: 'Ask About Rice & Tomato Prices', query: 'What are current rice and tomato prices?' },
         { label: 'How do I earn Stat Points?', query: 'How do I earn stat points?' },
-        { label: 'Join The Sabiers Group Chat', tab: 'sabiers' }
+        { label: 'Open Recipe Generator', tab: 'recipe' }
       ],
-      sources: ['SABI Knowledge Base', 'Community Verifiers']
+      sources: ['SABI Knowledge Base', 'Culinary Expert Index']
     };
   }
 }

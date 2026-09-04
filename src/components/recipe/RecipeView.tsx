@@ -32,6 +32,7 @@ import { AiService } from '../../services/aiService';
 import { RecipeItem } from '../../types';
 import { scaleIngredientQuantity, scaleEstimatedCost, scaleCalories } from '../../utils/recipeScaler';
 import { CookingModeModal } from './CookingModeModal';
+import { RecipeCostSummaryCard } from './RecipeCostSummaryCard';
 
 interface RecipeViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -293,6 +294,7 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
             {/* Add ingredient input */}
             <form onSubmit={handleAddIngredient} className="flex gap-2">
               <input
+                id="recipe-ingredient-input"
                 type="text"
                 placeholder="Type ingredient (e.g. Palm Oil, Smoked Fish, Crayfish, Plantain)..."
                 value={newIngredientInput}
@@ -300,8 +302,9 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
                 className="flex-grow px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
               />
               <button
+                id="add-ingredient-btn"
                 type="submit"
-                className="bg-[#0A3D2E] text-white px-4 py-2.5 rounded-xl text-xs font-bold font-display hover:bg-[#0c4b38] flex items-center gap-1 shrink-0"
+                className="bg-[#0A3D2E] text-white px-4 py-2.5 rounded-xl text-xs font-bold font-display hover:bg-[#0c4b38] flex items-center gap-1 shrink-0 cursor-pointer active:scale-95 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add</span>
@@ -311,9 +314,10 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
             {/* Generate Button */}
             <div className="pt-2">
               <button
+                id="generate-recipe-btn"
                 onClick={handleGenerateRecipe}
                 disabled={isGenerating || ingredientTags.length === 0}
-                className="w-full bg-[#0A3D2E] hover:bg-[#0c4b38] disabled:bg-gray-300 text-white font-extrabold text-sm py-3.5 px-6 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 font-display uppercase tracking-wider"
+                className="w-full bg-[#0A3D2E] hover:bg-[#0c4b38] disabled:bg-gray-300 text-white font-extrabold text-sm py-3.5 px-6 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 font-display uppercase tracking-wider cursor-pointer"
               >
                 {isGenerating ? (
                   <>
@@ -530,6 +534,15 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
                 </div>
               </div>
 
+              {/* DEDICATED RECIPE COST ESTIMATION SUMMARY CARD WITH BUDGET/PREMIUM BADGE */}
+              <RecipeCostSummaryCard
+                recipe={selectedRecipe}
+                scaledCost={scaledCost}
+                currentServings={currentServings}
+                scaleFactor={scaleFactor}
+                scaledIngredients={scaledIngredients}
+              />
+
               {/* Recalculated Ingredients List */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 space-y-2">
                 <div className="flex items-center justify-between">
@@ -557,6 +570,83 @@ export const RecipeView: React.FC<RecipeViewProps> = ({ onNavigate, onShowPoints
                       {ing}
                     </span>
                   ))}
+                </div>
+              </div>
+
+              {/* Dynamic Cost Breakdown & Local Market Price Analysis */}
+              <div className="bg-[#0A3D2E]/5 border border-emerald-200 rounded-2xl p-5 space-y-3" id="recipe-cost-breakdown-section">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#0A3D2E] text-white flex items-center justify-center shrink-0">
+                      <DollarSign className="w-4 h-4 text-[#FFD60A]" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xs sm:text-sm text-gray-900 font-display uppercase tracking-wide">
+                        Preparation Cost Breakdown
+                      </h4>
+                      <p className="text-[10px] text-gray-600">
+                        Based on current local Nigerian retail rates (Mile 12, Dei-Dei, etc.)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-gray-500 block">Scaled Prep Price</span>
+                    <strong className="text-sm sm:text-base text-[#0A3D2E] font-display">
+                      {scaledCost}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="divide-y divide-emerald-100 bg-white rounded-xl border border-emerald-100 overflow-hidden shadow-xs">
+                  {selectedRecipe.costBreakdown && selectedRecipe.costBreakdown.length > 0 ? (
+                    selectedRecipe.costBreakdown.map((item, idx) => {
+                      const scaledPrice = Math.round(item.price * scaleFactor);
+                      return (
+                        <div key={idx} className="flex items-center justify-between px-4 py-2.5 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span className="font-bold text-gray-800">{item.name}</span>
+                            {item.unit && <span className="text-[10px] text-gray-500 font-medium">({item.unit})</span>}
+                          </div>
+                          <span className="font-display font-extrabold text-[#0A3D2E]">
+                            ₦{scaledPrice.toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    selectedRecipe.ingredients.map((ingName, idx) => {
+                      const baseCosts: Record<string, number> = {
+                        'yam': 1500,
+                        'egg': 600,
+                        'tomato': 500,
+                        'pepper': 300,
+                        'onion': 300,
+                        'oil': 400,
+                        'rice': 1800,
+                        'gizzard': 2500,
+                        'plantain': 1800,
+                        'fish': 2200,
+                        'chicken': 3500,
+                        'spinach': 600,
+                        'vegetable': 500
+                      };
+                      const foundKey = Object.keys(baseCosts).find(k => ingName.toLowerCase().includes(k));
+                      const basePrice = foundKey ? baseCosts[foundKey] : 800;
+                      const scaledPrice = Math.round(basePrice * scaleFactor);
+                      return (
+                        <div key={idx} className="flex items-center justify-between px-4 py-2.5 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            <span className="font-bold text-gray-800">{ingName}</span>
+                          </div>
+                          <span className="font-display font-extrabold text-[#0A3D2E]">
+                            ₦{scaledPrice.toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 

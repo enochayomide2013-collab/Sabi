@@ -5,6 +5,8 @@ import {
   VerificationTask,
   TruthResult,
   MarketItem,
+  SmartMarket,
+  SmartMarketDeal,
   RecipeItem,
   AppNotification,
   VerifierResponse,
@@ -24,6 +26,7 @@ import {
   INITIAL_TASKS,
   INITIAL_TRUTH_RESULTS,
   INITIAL_MARKET_ITEMS,
+  INITIAL_SMART_MARKETS,
   INITIAL_RECIPES,
   INITIAL_NOTIFICATIONS,
   INITIAL_LEADERBOARD,
@@ -42,6 +45,8 @@ const KEYS = {
   TASKS: 'sabi_verification_tasks',
   TRUTH_RESULTS: 'sabi_truth_results',
   MARKET_ITEMS: 'sabi_market_items',
+  SMART_MARKETS: 'sabi_smart_markets',
+  FAVORITE_MARKETS: 'sabi_favorite_markets',
   RECIPES: 'sabi_recipes',
   SAVED_RECIPES: 'sabi_saved_recipes',
   NOTIFICATIONS: 'sabi_notifications',
@@ -92,13 +97,16 @@ export interface SelectedLocation {
   state: string;
   lga: string;
   area: string;
+  country?: string;
   isGpsDerived?: boolean;
+  rawAddress?: string;
 }
 
 const DEFAULT_LOCATION: SelectedLocation = {
   state: 'Lagos',
   lga: 'Lagos Mainland',
   area: 'Yaba',
+  country: 'Nigeria',
   isGpsDerived: false
 };
 
@@ -696,7 +704,7 @@ class StorageService {
     // Deduct cost
     let balance = user.sabiPoints - config.pointsCost;
 
-    // If Deluxe: user receives an immediate extra +60,000 SABI Points bonus!
+    // If Deluxe: user receives an immediate extra +100,000 SABI Points bonus!
     let bonusAdded = 0;
     if (tierKey === 'Deluxe' && config.instantBonusPoints) {
       balance += config.instantBonusPoints;
@@ -713,14 +721,15 @@ class StorageService {
       badges.push(config.badge);
     }
 
+    // Strictly enforce: Only Deluxe title unlocks The Sabiation AI suite
     const updatedUser: UserProfile = {
       ...user,
       userTier: tierKey,
       sabiPoints: balance,
       badges,
       unlockedTitles,
-      hasSabiationAccess: tierKey === 'Golden' || tierKey === 'Deluxe' || user.hasSabiationAccess,
-      hasDeluxeVipService: tierKey === 'Deluxe' || user.hasDeluxeVipService,
+      hasSabiationAccess: tierKey === 'Deluxe' || user.role === 'admin',
+      hasDeluxeVipService: tierKey === 'Deluxe' || user.hasDeluxeVipService || user.role === 'admin',
       recentActivity: [
         {
           id: 'act_tier_' + Date.now(),
@@ -738,7 +747,7 @@ class StorageService {
     this.addNotification({
       id: 'notif_tier_' + Date.now(),
       title: `🎉 Title & Tier Upgraded: ${config.title}!`,
-      message: `You unlocked ${config.title}! ${config.unlocksSabiation ? 'You now have full access to "The Sabiation" AI tools.' : ''} ${bonusAdded > 0 ? `Plus +${bonusAdded.toLocaleString()} bonus points credited!` : ''}`,
+      message: `You unlocked ${config.title}! ${tierKey === 'Deluxe' ? 'You now have full access to "The Sabiation" AI tools & 1-Year VIP Concierge service.' : 'You now have your special group chat icon & points multiplier.'} ${bonusAdded > 0 ? `Plus +${bonusAdded.toLocaleString()} bonus points credited!` : ''}`,
       type: 'tier_upgrade',
       timestamp: 'Just now',
       read: false
@@ -1214,6 +1223,111 @@ Platform: SABI Nigeria`;
     this.notify();
   }
 
+  // --- SMART MARKET FINDER ---
+
+  public getSmartMarkets(): SmartMarket[] {
+    const raw = localStorage.getItem(KEYS.SMART_MARKETS);
+    return raw ? JSON.parse(raw) : INITIAL_SMART_MARKETS;
+  }
+
+  public getSmartMarketById(id: string): SmartMarket | undefined {
+    const markets = this.getSmartMarkets();
+    return markets.find(m => m.id === id);
+  }
+
+  public getFavoriteMarkets(): string[] {
+    const raw = localStorage.getItem(KEYS.FAVORITE_MARKETS);
+    return raw ? JSON.parse(raw) : ['mkt_smart_mile12', 'mkt_smart_bodija'];
+  }
+
+  public isMarketFavorite(marketId: string): boolean {
+    const favorites = this.getFavoriteMarkets();
+    return favorites.includes(marketId);
+  }
+
+  public toggleFavoriteMarket(marketId: string): boolean {
+    const favorites = this.getFavoriteMarkets();
+    let updated: string[];
+    let isNowFav = false;
+    if (favorites.includes(marketId)) {
+      updated = favorites.filter(id => id !== marketId);
+      isNowFav = false;
+    } else {
+      updated = [...favorites, marketId];
+      isNowFav = true;
+    }
+    localStorage.setItem(KEYS.FAVORITE_MARKETS, JSON.stringify(updated));
+    this.notify();
+    return isNowFav;
+  }
+
+  public getRecommendedMarkets(
+    userState?: string,
+    categoryFilter?: string,
+    priority: 'savings' | 'quality' | 'distance' | 'rating' = 'savings'
+  ): SmartMarket[] {
+    const markets = this.getSmartMarkets();
+    const targetState = (userState || this.getLocation().state || 'Lagos').toLowerCase();
+
+    // Score & Sort markets based on location and criteria
+    return [...markets].sort((a, b) => {
+      const aIsLocal = a.state.toLowerCase() === targetState;
+      const bIsLocal = b.state.toLowerCase() === targetState;
+
+      if (aIsLocal && !bIsLocal) return -1;
+      if (!aIsLocal && bIsLocal) return 1;
+
+      if (priority === 'savings') {
+        return b.averageSavingsVsRetail - a.averageSavingsVsRetail;
+      }
+      if (priority === 'quality') {
+        return b.qualityRatingScore - a.qualityRatingScore;
+      }
+      if (priority === 'distance') {
+        return (a.distanceKm || 99) - (b.distanceKm || 99);
+      }
+      return b.rating - a.rating;
+    });
+  }
+
+  public findBestMarketsForItem(foodSearchQuery: string, userState?: string): {
+    bestBudget: SmartMarket | null;
+    bestQuality: SmartMarket | null;
+    allMatches: { market: SmartMarket; deal: SmartMarketDeal }[];
+  } {
+    const markets = this.getSmartMarkets();
+    const query = foodSearchQuery.toLowerCase().trim();
+    const targetState = (userState || this.getLocation().state || 'Lagos').toLowerCase();
+
+    const matches: { market: SmartMarket; deal: SmartMarketDeal }[] = [];
+
+    markets.forEach(m => {
+      m.topDeals.forEach(deal => {
+        if (
+          deal.itemName.toLowerCase().includes(query) ||
+          deal.category.toLowerCase().includes(query) ||
+          m.specialties.some(s => s.toLowerCase().includes(query))
+        ) {
+          matches.push({ market: m, deal });
+        }
+      });
+    });
+
+    if (matches.length === 0) {
+      return { bestBudget: null, bestQuality: null, allMatches: [] };
+    }
+
+    // Sort all matches by price / savings
+    const sortedBySavings = [...matches].sort((a, b) => b.deal.savingsPercent - a.deal.savingsPercent);
+    const sortedByQuality = [...matches].sort((a, b) => b.market.qualityRatingScore - a.market.qualityRatingScore);
+
+    return {
+      bestBudget: sortedBySavings[0]?.market || null,
+      bestQuality: sortedByQuality[0]?.market || null,
+      allMatches: sortedBySavings
+    };
+  }
+
   // --- RECIPES ---
 
   public getRecipes(): RecipeItem[] {
@@ -1346,10 +1460,10 @@ Platform: SABI Nigeria`;
       statusMessage: '🟢 Active in Nigeria truth network'
     };
 
-    // Get real registered user accounts only (no mock fake users)
+    // Only return users who are actually online (STRICT RULE: Never show offline users)
     const registeredUsers = this.getRegisteredUsers();
-    const registeredSabiers: OnlineSabier[] = registeredUsers
-      .filter(u => u.email !== currentUser.email && u.id !== currentUser.id)
+    const liveRegisteredSabiers: OnlineSabier[] = registeredUsers
+      .filter(u => u.email !== currentUser.email && u.id !== currentUser.id && u.isOnline)
       .map(u => ({
         id: u.id,
         name: u.name,
@@ -1359,13 +1473,13 @@ Platform: SABI Nigeria`;
         role: u.role || 'member',
         state: u.state || 'Lagos',
         lga: u.lga || 'Ikeja',
-        currentActivity: `Verified Spotter from ${u.lga || 'Mainland'}, ${u.state || 'Lagos'}`,
+        currentActivity: `Live spotter in ${u.lga || 'Ikeja'}, ${u.state || 'Lagos'}`,
         isOnline: true,
-        lastActive: 'Active recently',
-        statusMessage: '🟢 Registered Spotter'
+        lastActive: 'Active now',
+        statusMessage: '🟢 Live Community Spotter'
       }));
 
-    return [userAsOnlineSabier, ...registeredSabiers];
+    return [userAsOnlineSabier, ...liveRegisteredSabiers];
   }
 
 
@@ -1451,7 +1565,54 @@ Platform: SABI Nigeria`;
 
   public getNewsArticles(): NewsArticle[] {
     const raw = localStorage.getItem(KEYS.NEWS);
-    return raw ? JSON.parse(raw) : LATEST_NEWS_ARTICLES;
+    if (!raw) {
+      localStorage.setItem(KEYS.NEWS, JSON.stringify(LATEST_NEWS_ARTICLES));
+      return LATEST_NEWS_ARTICLES;
+    }
+    try {
+      const parsed: NewsArticle[] = JSON.parse(raw);
+      // If parsed articles lack evidence on news_001 or have outdated video reference, refresh baseline news items
+      const hasLatestStructure = parsed.some(p => p.id === 'news_001_ph_bridge' && p.evidence?.videoUrl === '/videos/ph_bridge_verification.mp4');
+      if (!hasLatestStructure) {
+        const customUserArticles = parsed.filter(p => !p.id.startsWith('news_00'));
+        const merged = [...LATEST_NEWS_ARTICLES, ...customUserArticles];
+        localStorage.setItem(KEYS.NEWS, JSON.stringify(merged));
+        return merged;
+      }
+      return parsed;
+    } catch {
+      return LATEST_NEWS_ARTICLES;
+    }
+  }
+
+  public async fetchSocialMediaNews(stateFilter?: string, platformFilter?: string): Promise<NewsArticle[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (stateFilter && stateFilter !== 'all') queryParams.append('state', stateFilter);
+      if (platformFilter && platformFilter !== 'all') queryParams.append('platform', platformFilter);
+
+      const url = `/api/social-media-news?${queryParams.toString()}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const current = this.getNewsArticles();
+          // Merge by id
+          const existingIds = new Set(current.map(c => c.id));
+          const newItems = data.filter((item: NewsArticle) => !existingIds.has(item.id));
+          if (newItems.length > 0) {
+            const combined = [...newItems, ...current];
+            localStorage.setItem(KEYS.NEWS, JSON.stringify(combined));
+            this.notify();
+            return combined;
+          }
+          return current;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch remote social media news, using local repository:", e);
+    }
+    return this.getNewsArticles();
   }
 
   public addNewsArticle(article: NewsArticle) {

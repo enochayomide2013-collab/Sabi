@@ -16,6 +16,8 @@ import {
   ShieldCheck, 
   Loader2,
   Calculator,
+  Store,
+  Compass,
   X
 } from 'lucide-react';
 import { 
@@ -30,6 +32,7 @@ import { storageService, SelectedLocation } from '../../services/storageService'
 import { AiService } from '../../services/aiService';
 import { MarketItem } from '../../types';
 import { SabiBasketComparator } from './SabiBasketComparator';
+import { SmartMarketFinder } from './SmartMarketFinder';
 
 interface MarketViewProps {
   initialItemId?: string;
@@ -38,7 +41,7 @@ interface MarketViewProps {
 }
 
 export const MarketView: React.FC<MarketViewProps> = ({ initialItemId, onNavigate, onShowPointsToast }) => {
-  const [marketSubTab, setMarketSubTab] = useState<'intelligence' | 'basket'>('intelligence');
+  const [marketSubTab, setMarketSubTab] = useState<'smart-finder' | 'intelligence' | 'basket'>('smart-finder');
   const [marketItems, setMarketItems] = useState<MarketItem[]>(storageService.getMarketItems());
   const [selectedItem, setSelectedItem] = useState<MarketItem>(
     initialItemId ? marketItems.find(m => m.id === initialItemId) || marketItems[0] : marketItems[0]
@@ -123,16 +126,30 @@ export const MarketView: React.FC<MarketViewProps> = ({ initialItemId, onNavigat
   const chartData = selectedItem.history[historyFilter];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-16 animate-fade-in">
+    <div className={`${marketSubTab === 'smart-finder' ? 'max-w-6xl' : 'max-w-2xl'} mx-auto space-y-6 pb-16 animate-fade-in`}>
       
       {/* Mode Sub-tab Navigation */}
-      <div className="flex bg-gray-200/80 p-1 rounded-2xl gap-1">
+      <div className="flex bg-gray-200/80 p-1.5 rounded-2xl gap-1.5 shadow-inner">
         <button
+          type="button"
+          onClick={() => setMarketSubTab('smart-finder')}
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            marketSubTab === 'smart-finder'
+              ? 'bg-[#0A3D2E] text-white shadow-sm font-extrabold'
+              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200/60'
+          }`}
+        >
+          <Store className="w-4 h-4 text-[#FFD60A]" />
+          <span>Smart Market Finder</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setMarketSubTab('intelligence')}
           className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
             marketSubTab === 'intelligence'
               ? 'bg-[#0A3D2E] text-white shadow-sm font-extrabold'
-              : 'text-gray-700 hover:text-gray-900'
+              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200/60'
           }`}
         >
           <ShoppingBasket className="w-4 h-4 text-[#FFD60A]" />
@@ -140,19 +157,31 @@ export const MarketView: React.FC<MarketViewProps> = ({ initialItemId, onNavigat
         </button>
 
         <button
+          type="button"
           onClick={() => setMarketSubTab('basket')}
           className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
             marketSubTab === 'basket'
               ? 'bg-[#0A3D2E] text-white shadow-sm font-extrabold'
-              : 'text-gray-700 hover:text-gray-900'
+              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200/60'
           }`}
         >
           <Calculator className="w-4 h-4 text-[#FFD60A]" />
-          <span>Sabi Household Basket & Saver</span>
+          <span>Household Basket</span>
         </button>
       </div>
 
-      {marketSubTab === 'basket' ? (
+      {marketSubTab === 'smart-finder' ? (
+        <SmartMarketFinder
+          onSelectItemForSpotter={(itemId) => {
+            const match = marketItems.find(i => i.id === itemId);
+            if (match) {
+              setSelectedItem(match);
+              setMarketSubTab('intelligence');
+            }
+          }}
+          onOpenBasketComparator={() => setMarketSubTab('basket')}
+        />
+      ) : marketSubTab === 'basket' ? (
         <SabiBasketComparator onNavigate={onNavigate} onShowToast={onShowPointsToast} />
       ) : (
         <>

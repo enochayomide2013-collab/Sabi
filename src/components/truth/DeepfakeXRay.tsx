@@ -19,6 +19,7 @@ import {
   Share2,
   Info
 } from 'lucide-react';
+import { ForensicReportShare } from '../forensics/ForensicReportShare';
 
 export interface ForensicResult {
   isManipulated: boolean;
@@ -653,6 +654,30 @@ export const DeepfakeXRay: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* DELUXE FORENSIC REPORT SHARE COMPONENT */}
+          <ForensicReportShare
+            reportType="deepfake"
+            fileName={selectedFile?.name || (activePresetId ? SAMPLE_PRESETS.find(p => p.id === activePresetId)?.name : 'Deepfake_Scan_Evidence')}
+            thumbnailUrl={previewUrl || undefined}
+            verdict={forensicResult.verdictCategory === 'AUTHENTIC' ? 'Likely Authentic' : forensicResult.verdictCategory === 'MANIPULATED' ? 'Deepfake Manipulation Flagged' : 'Suspicious Artifacts Detected'}
+            verdictRiskLevel={forensicResult.verdictCategory === 'AUTHENTIC' ? 'safe' : forensicResult.verdictCategory === 'MANIPULATED' ? 'danger' : 'warning'}
+            confidence={forensicResult.confidence}
+            confidenceScore={forensicResult.authenticityScore}
+            summary={forensicResult.analysis}
+            keyIndicators={forensicResult.detectedAnomalies.map(a => ({
+              name: a.area,
+              observation: a.reason,
+              risk: a.severity.toLowerCase()
+            }))}
+            guidanceText="Verify suspicious facial boundaries and specular reflections against trusted broadcast archives."
+            technicalDetails={[
+              { label: 'Lighting Coherence', value: `${forensicResult.vectors.lightingCoherence}%` },
+              { label: 'Biometric Symmetry', value: `${forensicResult.vectors.biometricSymmetry}%` },
+              { label: 'Spectral Noise Map', value: `${forensicResult.vectors.spectralNoiseConsistency}%` },
+              { label: 'Metadata Integrity', value: `${forensicResult.vectors.metadataIntegrity}%` }
+            ]}
+          />
         </div>
       )}
 

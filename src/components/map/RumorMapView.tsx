@@ -21,6 +21,7 @@ import {
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { TruthResult } from '../../types';
 import { ALL_36_NIGERIAN_STATES } from '../../data/nigerianStatesData';
+import { ViralRadarHeatmap } from './ViralRadarHeatmap';
 
 interface RumorMapViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -339,6 +340,9 @@ export const RumorMapView: React.FC<RumorMapViewProps> = ({ onNavigate }) => {
         </div>
 
       </div>
+
+      {/* VIRAL MISINFORMATION EARLY WARNING HEATMAP */}
+      <ViralRadarHeatmap />
 
     </div>
   );

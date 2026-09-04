@@ -166,6 +166,15 @@ export const SaboAiModal: React.FC<SaboAiModalProps> = ({
       };
       storageService.saveSaboSession(finalSession);
       setSessions(storageService.getSaboSessions());
+
+      // If response is a navigation intent or has a primary action tab, auto-navigate after brief display
+      const autoTab = saboResponse.suggestedActions?.find(a => a.tab)?.tab;
+      if (saboResponse.id.startsWith('sabo_nav_') && autoTab) {
+        setTimeout(() => {
+          onClose();
+          onNavigate(autoTab);
+        }, 800);
+      }
     } catch {
       const errorMsg: SaboAiMessage = {
         id: `sabo_err_${Date.now()}`,
@@ -549,13 +558,57 @@ export const SaboAiModal: React.FC<SaboAiModalProps> = ({
           })}
 
           {isLoading && (
-            <div className="flex items-center gap-3 animate-pulse">
-              <div className="w-8 h-8 rounded-xl bg-[#0A3D2E] text-[#FFD60A] flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 animate-spin" />
+            <div className="flex gap-3 justify-start animate-fade-in w-full">
+              <div className="w-8 h-8 rounded-xl bg-[#0A3D2E]/10 flex items-center justify-center shrink-0 mt-1">
+                <Bot className="w-4 h-4 text-[#0A3D2E]/40 animate-pulse" />
               </div>
-              <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none text-xs text-gray-500 font-medium flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-[#0A3D2E] animate-ping" />
-                <span>Sabo AI is researching verified community facts...</span>
+              
+              <div className="flex-1 max-w-[85%] sm:max-w-[78%] space-y-3">
+                {/* Main skeleton bubble container */}
+                <div className="bg-white border border-gray-200/95 p-4 sm:p-5 rounded-2xl rounded-tl-none shadow-2xs space-y-4">
+                  {/* Research status banner with ping animation */}
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50/70 border border-emerald-100 px-3 py-1.5 rounded-xl w-fit">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                    </span>
+                    <span className="animate-pulse">Sabo AI is researching verified community facts...</span>
+                  </div>
+
+                  {/* Thinking Section Skeleton */}
+                  <div className="rounded-xl border border-dashed border-emerald-900/10 bg-emerald-50/20 p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600/40 animate-pulse" />
+                      <div className="h-3 w-32 bg-emerald-900/10 rounded-full animate-pulse" />
+                    </div>
+                    <div className="space-y-1.5 pt-1">
+                      <div className="h-2 w-full bg-emerald-900/5 rounded-full animate-pulse" />
+                      <div className="h-2 w-[92%] bg-emerald-900/5 rounded-full animate-pulse" />
+                      <div className="h-2 w-[85%] bg-emerald-900/5 rounded-full animate-pulse" />
+                    </div>
+                  </div>
+
+                  {/* Response Text Lines Skeletons */}
+                  <div className="space-y-2.5 pt-1">
+                    <div className="h-3.5 w-[90%] bg-gray-100 rounded-full animate-pulse" />
+                    <div className="h-3.5 w-full bg-gray-100 rounded-full animate-pulse" />
+                    <div className="h-3.5 w-[95%] bg-gray-100 rounded-full animate-pulse" />
+                    <div className="h-3.5 w-[75%] bg-gray-100 rounded-full animate-pulse" />
+                  </div>
+
+                  {/* Sources Badge Skeleton */}
+                  <div className="pt-3 border-t border-gray-100 flex items-center gap-2">
+                    <div className="h-2.5 w-16 bg-gray-200 rounded-full animate-pulse" />
+                    <div className="h-5 w-24 bg-emerald-500/10 rounded-lg animate-pulse" />
+                    <div className="h-5 w-28 bg-emerald-500/10 rounded-lg animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Suggested Action Buttons Skeletons */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="h-8 w-32 bg-white border border-gray-200 rounded-xl animate-pulse" />
+                  <div className="h-8 w-40 bg-white border border-gray-200 rounded-xl animate-pulse" />
+                </div>
               </div>
             </div>
           )}

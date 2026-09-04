@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { storageService, SelectedLocation } from './services/storageService';
+import { UserProfile } from './types';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { LocationModal } from './components/common/LocationModal';
@@ -26,6 +27,7 @@ import { SaboAiModal } from './components/sabo/SaboAiModal';
 import { AboutView } from './components/common/AboutView';
 import { RumorMapView } from './components/map/RumorMapView';
 import { RumorStatsDashboard } from './components/stats/RumorStatsDashboard';
+import { DeluxeForensicsContainer } from './components/forensics/DeluxeForensicsContainer';
 import { Sparkles, Bot } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -52,6 +54,7 @@ export const App: React.FC = () => {
   const [pointsMessage, setPointsMessage] = useState<string>('');
 
   const [onlineCount, setOnlineCount] = useState<number>(0);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(storageService.getUser());
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('sabi_dark_mode') === 'true';
@@ -69,6 +72,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsubscribe = storageService.subscribe(() => {
       setLocation(storageService.getLocation());
+      setCurrentUser(storageService.getUser());
     });
     
     // Check onboarding & show interactive tutorial when user lands
@@ -107,9 +111,12 @@ export const App: React.FC = () => {
     const interval = setInterval(pingPresence, 20 * 1000);
     
     // Subscribe to presence in Firestore
-    const unsubscribePresence = subscribeToPresenceList((activeIds) => {
-      if (activeIds && activeIds.length > 0) {
-        setOnlineCount(activeIds.length);
+    const unsubscribePresence = subscribeToPresenceList((list) => {
+      if (list && list.length > 0) {
+        const liveCount = list.filter(s => s.isOnline).length;
+        setOnlineCount(Math.max(liveCount, 1));
+      } else {
+        setOnlineCount(1);
       }
     });
     
@@ -251,6 +258,40 @@ export const App: React.FC = () => {
           <TruthView 
             initialTruthId={extraViewData?.truthId}
             onNavigate={handleNavigate}
+          />
+        )}
+
+        {(activeTab === 'deepfake' || activeTab === 'xray') && (
+          <TruthView 
+            initialTab="xray"
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {(activeTab === 'image-authenticity' || activeTab === 'deluxe-image') && (
+          <DeluxeForensicsContainer
+            user={currentUser}
+            initialTool="image"
+            onNavigate={handleNavigate}
+            onShowToast={handleShowPointsToast}
+          />
+        )}
+
+        {(activeTab === 'video-analysis' || activeTab === 'deluxe-video') && (
+          <DeluxeForensicsContainer
+            user={currentUser}
+            initialTool="video"
+            onNavigate={handleNavigate}
+            onShowToast={handleShowPointsToast}
+          />
+        )}
+
+        {(activeTab === 'deluxe-forensics' || activeTab === 'forensics') && (
+          <DeluxeForensicsContainer
+            user={currentUser}
+            initialTool="image"
+            onNavigate={handleNavigate}
+            onShowToast={handleShowPointsToast}
           />
         )}
 

@@ -47,7 +47,7 @@ export const SabiationView: React.FC<SabiationViewProps> = ({ onNavigate, onShow
     return unsubscribe;
   }, []);
 
-  const isUnlocked = user.hasSabiationAccess || user.userTier === 'Golden' || user.userTier === 'Deluxe' || user.role === 'admin';
+  const isDeluxeUnlocked = user.userTier === 'Deluxe' || user.role === 'admin';
 
   const categories = ['All', 'Image Generation', 'Creative Prompts', 'Video AI', 'Audio & Speech', 'Documents & OCR', 'Coding Sandbox'];
 
@@ -55,23 +55,121 @@ export const SabiationView: React.FC<SabiationViewProps> = ({ onNavigate, onShow
     ? FREE_SABIATION_RESOURCES 
     : FREE_SABIATION_RESOURCES.filter(r => r.category === activeCategory);
 
+  // STRICT ACCESS CONTROL: Only Deluxe Sovereign VIP members can enter The Sabiation
+  if (!isDeluxeUnlocked) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6 pb-24 animate-fade-in" id="sabiation-locked-view">
+        {/* VIP Lock Hero Banner */}
+        <div className="bg-gradient-to-br from-purple-950 via-indigo-950 to-[#0A3D2E] text-white rounded-3xl p-6 sm:p-10 shadow-2xl border-2 border-purple-500/40 relative overflow-hidden text-center space-y-5">
+          <div className="w-20 h-20 rounded-3xl bg-purple-900/60 border border-purple-400/40 text-amber-300 flex items-center justify-center mx-auto shadow-xl">
+            <Lock className="w-10 h-10 text-[#FFD60A]" />
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 bg-[#FFD60A] text-[#0A3D2E] text-xs font-mono font-extrabold px-3.5 py-1 rounded-full shadow-sm font-display uppercase tracking-wider">
+            <Crown className="w-3.5 h-3.5 text-[#0A3D2E]" />
+            <span>Deluxe Sovereign VIP Exclusive Suite</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl font-black font-display text-white tracking-tight">
+            The Sabiation Access Locked
+          </h1>
+
+          <p className="text-xs sm:text-sm text-purple-100/90 leading-relaxed max-w-xl mx-auto">
+            The Sabiation is SABI's elite intelligence and generative creative suite. Access is strictly reserved for <strong>Deluxe Sovereign VIP</strong> titleholders.
+          </p>
+
+          <div className="p-4 bg-white/10 rounded-2xl border border-white/15 max-w-md mx-auto flex items-center justify-between text-xs">
+            <div className="text-left">
+              <span className="text-[10px] uppercase text-purple-200 block font-bold">Your Current Title</span>
+              <span className="font-extrabold text-white text-sm">{user.userTier || 'Member'}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] uppercase text-amber-300 block font-bold">Required Title</span>
+              <span className="font-extrabold text-[#FFD60A] text-sm">👑 Deluxe VIP (300,000 PTS)</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => onNavigate('profile')}
+              className="w-full sm:w-auto bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-sm px-8 py-3.5 rounded-2xl shadow-xl transition-all active:scale-95 font-display flex items-center justify-center gap-2"
+            >
+              <Crown className="w-4 h-4" />
+              <span>Upgrade to Deluxe Title in Store</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Feature Preview Card */}
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 text-gray-900 font-display font-extrabold text-base">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            <span>What Deluxe Sovereign VIP Unlocks in The Sabiation:</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+            <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-100 space-y-1">
+              <div className="font-extrabold text-purple-950 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span>1. AI Image Generator (720p · 1080p · 4K)</span>
+              </div>
+              <p className="text-gray-600 text-[11px] leading-relaxed">
+                Generate high-resolution photorealistic imagery, diagrams, and artwork with downloadable outputs.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-1">
+              <div className="font-extrabold text-indigo-950 flex items-center gap-1.5">
+                <BrainCircuit className="w-4 h-4 text-indigo-600" />
+                <span>2. Quization Exam & Folders Engine</span>
+              </div>
+              <p className="text-gray-600 text-[11px] leading-relaxed">
+                Create structured exams from text or uploaded documents with instant grading and organized folders.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-1">
+              <div className="font-extrabold text-amber-950 flex items-center gap-1.5">
+                <Cpu className="w-4 h-4 text-amber-600" />
+                <span>3. Numa Prompt Architect</span>
+              </div>
+              <p className="text-gray-600 text-[11px] leading-relaxed">
+                Structure complex deep-investigation OSINT prompts with camera optics and lighting triangulation.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-1">
+              <div className="font-extrabold text-emerald-950 flex items-center gap-1.5">
+                <PenTool className="w-4 h-4 text-emerald-600" />
+                <span>4. Avid Essay & avidayo.created.app</span>
+              </div>
+              <p className="text-gray-600 text-[11px] leading-relaxed">
+                Full access to the Avid academic essay generator and the secret avidayo.created.app generative web portal.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24 animate-fade-in" id="sabiation-portal-view">
       
       {/* HERO BANNER */}
-      <div className="bg-gradient-to-r from-amber-700 via-amber-900 to-[#0A3D2E] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-amber-500/40 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-950 to-[#0A3D2E] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-400/40 relative overflow-hidden">
         <div className="relative z-10 space-y-3 max-w-2xl">
           <div className="inline-flex items-center gap-1.5 bg-[#FFD60A] text-[#0A3D2E] text-xs font-mono font-extrabold px-3 py-1 rounded-full shadow-sm font-display">
             <Crown className="w-3.5 h-3.5 text-[#0A3D2E]" />
-            <span>THE SABIATION · 4 MAIN AI CAPABILITIES</span>
+            <span>THE SABIATION · DELUXE VIP UNLOCKED</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-extrabold font-display text-white tracking-tight">
-            The Sabiation
+            The Sabiation VIP Suite
           </h1>
 
-          <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed">
-            The comprehensive creative & analytical AI suite: <strong>1. AI Image Generation (720p - 4K)</strong>, <strong>2. Quization (Interactive exams & files/folders)</strong>, <strong>3. Numa (Prompt structurer)</strong>, and <strong>4. Avid (Essay writer at avidayo.created.app/essay)</strong>.
+          <p className="text-xs sm:text-sm text-purple-100/90 leading-relaxed">
+            Welcome to the comprehensive creative & analytical AI suite: <strong>1. AI Image Generation (720p - 4K)</strong>, <strong>2. Quization (Interactive exams & files/folders)</strong>, <strong>3. Numa (Prompt structurer)</strong>, and <strong>4. Avid (Essay writer at avidayo.created.app/essay)</strong>.
           </p>
 
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -107,7 +205,7 @@ export const SabiationView: React.FC<SabiationViewProps> = ({ onNavigate, onShow
           }`}
         >
           <Grid className="w-4 h-4" />
-          <span>All 4 Capabilities</span>
+          <span>All Capabilities</span>
         </button>
 
         <button
@@ -163,72 +261,48 @@ export const SabiationView: React.FC<SabiationViewProps> = ({ onNavigate, onShow
         </button>
       </div>
 
-      {/* ACCESS STATUS & GOLDEN LINK SECTION */}
-      {isUnlocked ? (
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 text-gray-950 rounded-3xl p-5 sm:p-6 shadow-lg border border-amber-300 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-black text-[#FFD60A] flex items-center justify-center shrink-0 shadow-sm">
-                <Crown className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-black text-[#FFD60A] px-2.5 py-0.5 rounded-full">
-                    Golden Sovereign Exclusive Link
-                  </span>
-                  <span className="text-xs font-black text-amber-950">
-                    Unlocked ✓
-                  </span>
-                </div>
-                <h3 className="font-extrabold text-lg sm:text-xl text-black font-display">
-                  Official Golden Web: <span className="font-mono bg-white/60 px-2 py-0.5 rounded-lg border border-black/10">avidayo.created.app</span>
-                </h3>
-                <p className="text-xs text-amber-950/90 font-medium">
-                  Direct access to the secret full generative AI web creator & media suite.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="https://avidayo.created.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  storageService.addPoints(10, 'Opened Golden Sovereign VIP Portal avidayo.created.app');
-                  onShowToast(10, 'Launched Golden Secret Web Portal (+10 PTS)!');
-                }}
-                className="bg-[#0A3D2E] hover:bg-[#06291e] text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-md flex items-center gap-2 transition-all active:scale-95 font-display"
-              >
-                <span>Launch avidayo.created.app</span>
-                <ExternalLink className="w-4 h-4 text-[#FFD60A]" />
-              </a>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-amber-50 border border-amber-300 rounded-3xl p-5 shadow-sm space-y-3">
+      {/* ACCESS STATUS & DELUXE VIP PORTAL LINK */}
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-[#0A3D2E] text-white rounded-3xl p-5 sm:p-6 shadow-lg border border-purple-400/40 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FFD60A] text-[#0A3D2E] flex items-center justify-center shrink-0 shadow-sm font-black">
+              <Crown className="w-6 h-6" />
             </div>
-            <div className="space-y-1 flex-grow">
-              <h3 className="font-bold text-base text-gray-900 font-display">
-                You are currently in Free Community Mode
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-[#FFD60A] text-[#0A3D2E] px-2.5 py-0.5 rounded-full">
+                  Deluxe Sovereign VIP Exclusive Link
+                </span>
+                <span className="text-xs font-black text-emerald-300">
+                  Unlocked ✓
+                </span>
+              </div>
+              <h3 className="font-extrabold text-lg sm:text-xl text-white font-display">
+                Official VIP Portal: <span className="font-mono bg-white/15 px-2 py-0.5 rounded-lg border border-white/20">avidayo.created.app</span>
               </h3>
-              <p className="text-xs text-gray-600">
-                Unlock the secret Golden web link and full VIP perks by purchasing the <strong>Golden Sovereign Tier (28,000 PTS)</strong> or <strong>Deluxe VIP (100,000 PTS)</strong> in your Profile Title Store.
+              <p className="text-xs text-purple-200 font-medium">
+                Direct access to the secret full generative AI web creator, essay suite, & media forensic tools.
               </p>
             </div>
-            <button
-              onClick={() => onNavigate('profile')}
-              className="bg-[#0A3D2E] hover:bg-[#0c4b38] text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all active:scale-95 shrink-0 font-display"
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href="https://avidayo.created.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                storageService.addPoints(10, 'Opened Deluxe Sovereign VIP Portal avidayo.created.app');
+                onShowToast(10, 'Launched Deluxe Secret Web Portal (+10 PTS)!');
+              }}
+              className="bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-extrabold text-xs px-5 py-3 rounded-2xl shadow-md flex items-center gap-2 transition-all active:scale-95 font-display"
             >
-              Upgrade Tier
-            </button>
+              <span>Launch avidayo.created.app</span>
+              <ExternalLink className="w-4 h-4 text-[#0A3D2E]" />
+            </a>
           </div>
         </div>
-      )}
+      </div>
 
       {/* 1. IMAGE GENERATOR (720p · 1080p · 4K Engine) */}
       {(activeCapability === 'all' || activeCapability === 'image') && (

@@ -71,7 +71,7 @@ export const subscribeToPresenceList = (callback: (onlineSabiers: OnlineSabier[]
       list.sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
 
       const onlineCount = list.filter(s => s.isOnline).length;
-      callback(list, Math.max(onlineCount, 1)); // Minimum 1 for current user
+      callback(list, onlineCount);
     }, (error) => {
       console.warn("Firestore presence subscription notice:", error?.message || error);
     });

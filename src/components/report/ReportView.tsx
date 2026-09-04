@@ -27,6 +27,7 @@ import { NIGERIAN_STATES } from '../../data/nigerianLocations';
 import { storageService, ADMIN_DEFAULT_EMAIL } from '../../services/storageService';
 import { AiService, ClaimExtractionResult } from '../../services/aiService';
 import { EvidenceItem, VerificationTask } from '../../types';
+import { EmailNotificationService } from '../../services/emailNotificationService';
 
 interface ReportViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -336,6 +337,15 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
       storageService.addTask(newTask);
       storageService.addPoints(10, 'Submitted new verification report to community');
       onShowPointsToast(10, 'Your report has been dispatched to 3 nearby verifiers!');
+
+      // Send confirmation email to the user upon report submission
+      const currentUser = storageService.getUser();
+      if (currentUser && currentUser.email) {
+        EmailNotificationService.sendReportSubmissionNotification(
+          { email: currentUser.email, name: currentUser.name },
+          { claim: newTask.claim, location: `${newTask.area || newTask.lga}, ${newTask.state}`, reportId: newTask.id }
+        );
+      }
     }, 2600);
   };
 

@@ -135,6 +135,51 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls for Desktop */}
         <div className="hidden md:flex items-center gap-2">
+          {/* Quick Links: Deepfake, Titles, Trust Title */}
+          <div className="flex items-center gap-1 bg-emerald-950/80 p-1 rounded-xl border border-emerald-800 shrink-0">
+            <Tooltip content="Quick Link: Deepfake Scanner & Audio/Video Forensics" position="bottom">
+              <button
+                onClick={() => onNavigate('forensics')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                  currentTab === 'forensics'
+                    ? 'bg-[#FFD60A] text-[#0A3D2E]'
+                    : 'text-emerald-100 hover:bg-emerald-800/80 hover:text-white'
+                }`}
+              >
+                <span>🔬</span>
+                <span>Deepfake</span>
+              </button>
+            </Tooltip>
+
+            <Tooltip content="Quick Link: Browse Rumor Titles & News Feed" position="bottom">
+              <button
+                onClick={() => onNavigate('truth')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                  currentTab === 'truth'
+                    ? 'bg-[#FFD60A] text-[#0A3D2E]'
+                    : 'text-emerald-100 hover:bg-emerald-800/80 hover:text-white'
+                }`}
+              >
+                <span>📰</span>
+                <span>Titles</span>
+              </button>
+            </Tooltip>
+
+            <Tooltip content="Quick Link: Verified Trust Title & Fact-Check Dossiers" position="bottom">
+              <button
+                onClick={() => onNavigate('truth')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${
+                  currentTab === 'truth'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-emerald-200 hover:bg-emerald-800/80 hover:text-white'
+                }`}
+              >
+                <span>🛡️</span>
+                <span>Trust Title</span>
+              </button>
+            </Tooltip>
+          </div>
+
           {/* Map navigation */}
           <Tooltip content="Live Community Radar Map with active rumor pins" position="bottom">
             <button
@@ -321,6 +366,36 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#0A3D2E] border-t border-emerald-800 px-4 py-4 space-y-3 animate-fade-in shadow-2xl">
+          {/* Quick Links Section */}
+          <div className="bg-emerald-950/80 p-2 rounded-2xl border border-emerald-800 space-y-1.5">
+            <span className="text-[10px] font-black uppercase text-emerald-300 tracking-wider block px-1 font-display">
+              ⚡ Quick Links
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              <button
+                onClick={() => { onNavigate('forensics'); setMobileMenuOpen(false); }}
+                className="py-2 px-1.5 rounded-xl bg-emerald-900/90 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 border border-emerald-700"
+              >
+                <span>🔬</span>
+                <span>Deepfake</span>
+              </button>
+              <button
+                onClick={() => { onNavigate('truth'); setMobileMenuOpen(false); }}
+                className="py-2 px-1.5 rounded-xl bg-emerald-900/90 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 border border-emerald-700"
+              >
+                <span>📰</span>
+                <span>Titles</span>
+              </button>
+              <button
+                onClick={() => { onNavigate('truth'); setMobileMenuOpen(false); }}
+                className="py-2 px-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
+              >
+                <span>🛡️</span>
+                <span>Trust Title</span>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-2 pb-2">
             <button
               onClick={() => { onNavigate('map'); setMobileMenuOpen(false); }}

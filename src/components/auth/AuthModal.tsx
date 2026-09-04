@@ -18,6 +18,7 @@ import { AuthService } from '../../services/authService';
 import { updatePresenceInFirestore } from '../../services/firestoreService';
 import { NIGERIAN_STATES } from '../../data/nigerianLocations';
 import { UserProfile } from '../../types';
+import { EmailNotificationService } from '../../services/emailNotificationService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -53,6 +54,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
+  const [successUser, setSuccessUser] = useState<UserProfile | null>(null);
+  const [isNewUserSignUp, setIsNewUserSignUp] = useState<boolean>(false);
+  const [connectedAccountToast, setConnectedAccountToast] = useState<{ email: string; name: string } | null>(null);
 
   if (!isOpen) return null;
 
@@ -82,15 +86,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       updatePresenceInFirestore(res.user.id, res.user.name, res.user);
 
-      const msg = res.isNewUser 
-        ? `Welcome to SABI! You received +100 Google Sign-up Bonus Points.` 
-        : `Signed in as ${res.user.name}`;
+      // Show prominent visual "Connected" confirmation toast
+      setConnectedAccountToast({ email: res.user.email, name: res.user.name });
+      const connectedMsg = `Connected! Google account ${res.user.email} successfully linked & authenticated.`;
+
+      // Trigger automatic welcome/verification email to registered email
+      if (res.isNewUser && res.user.email) {
+        EmailNotificationService.sendSignupNotification({
+          email: res.user.email,
+          name: res.user.name,
+          state: res.user.state,
+          lga: res.user.lga
+        });
+      }
 
       if (onSuccess) onSuccess(res.user, false);
-      if (onAuthSuccess) onAuthSuccess(msg);
-      if (onShowToast) onShowToast(res.isNewUser ? 100 : 0, msg);
+      if (onAuthSuccess) onAuthSuccess(connectedMsg);
+      if (onShowToast) onShowToast(res.isNewUser ? 100 : 0, connectedMsg);
       
-      onClose(); // Exit form immediately!
+      setIsNewUserSignUp(res.isNewUser);
+      setSuccessUser(res.user);
     } catch (err: any) {
       console.warn('Google popup notice:', err);
       // Fallback for iframe preview environment or closed popup
@@ -105,15 +120,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const res = storageService.signInWithGoogleUser(mockGoogle);
       updatePresenceInFirestore(res.user.id, res.user.name, res.user);
 
-      const msg = res.isNewUser 
-        ? `Signed up with Google account (${res.user.email})! +100 PTS` 
-        : `Signed in as ${res.user.name} (${res.user.email})`;
+      // Show prominent visual "Connected" confirmation toast
+      setConnectedAccountToast({ email: res.user.email, name: res.user.name });
+      const connectedMsg = `Connected! Google account ${res.user.email} successfully linked & authenticated.`;
+
+      // Trigger automatic welcome/verification email to registered email
+      if (res.isNewUser && res.user.email) {
+        EmailNotificationService.sendSignupNotification({
+          email: res.user.email,
+          name: res.user.name,
+          state: res.user.state,
+          lga: res.user.lga
+        });
+      }
 
       if (onSuccess) onSuccess(res.user, false);
-      if (onAuthSuccess) onAuthSuccess(msg);
-      if (onShowToast) onShowToast(res.isNewUser ? 100 : 0, msg);
+      if (onAuthSuccess) onAuthSuccess(connectedMsg);
+      if (onShowToast) onShowToast(res.isNewUser ? 100 : 0, connectedMsg);
 
-      onClose(); // Exit form immediately!
+      setIsNewUserSignUp(res.isNewUser);
+      setSuccessUser(res.user);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -145,7 +171,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (onShowToast) onShowToast(0, msg);
       if (res.isAdmin && onAdminSuccess) onAdminSuccess();
 
-      onClose(); // Exit form immediately!
+      setIsNewUserSignUp(false);
+      setSuccessUser(res.user);
     } else {
       setErrorMsg(res.message || 'Unable to sign in. Please check email and password.');
     }
@@ -183,11 +210,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       updatePresenceInFirestore(res.user.id, res.user.name, res.user);
       const msg = `Signed up successfully! You received +100 Welcome Points.`;
 
+      // Dispatch welcome confirmation email to registered user
+      if (res.user.email) {
+        EmailNotificationService.sendSignupNotification({
+          email: res.user.email,
+          name: res.user.name,
+          state: res.user.state,
+          lga: res.user.lga
+        });
+      }
+
       if (onSuccess) onSuccess(res.user, res.user.role === 'admin');
       if (onAuthSuccess) onAuthSuccess(msg);
       if (onShowToast) onShowToast(100, msg);
 
-      onClose(); // Exit form immediately!
+      setIsNewUserSignUp(true);
+      setSuccessUser(res.user);
     } else {
       setErrorMsg(res.message || 'Unable to create account.');
     }
@@ -215,13 +253,153 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (onShowToast) onShowToast(50, msg);
       if (onAdminSuccess) onAdminSuccess();
 
-      onClose(); // Exit form immediately!
+      setIsNewUserSignUp(false);
+      setSuccessUser(res.user);
     } else {
       setErrorMsg(res.message || 'Admin validation failed.');
     }
   };
 
   const isAdminOnlyMode = initialMode === 'admin' || mode === 'admin';
+
+  if (successUser) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" id="auth-success-modal">
+        <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-gray-200 animate-scale-up">
+          
+          {/* Header */}
+          <div className="p-5 text-white bg-gradient-to-r from-[#0A3D2E] to-[#0e4f3c] text-center relative">
+            <button
+              onClick={() => { onClose(); setSuccessUser(null); }}
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="w-16 h-16 rounded-full bg-[#FFD60A] text-[#0A3D2E] flex items-center justify-center mx-auto mb-3 shadow-lg border-2 border-white scale-110 animate-pulse">
+              <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
+            </div>
+            <h2 className="text-xl font-extrabold font-display">
+              {isNewUserSignUp ? 'Verification Account Created!' : 'Successfully Signed In!'}
+            </h2>
+            <p className="text-xs text-emerald-100/90 mt-1">
+              Your secure decentralized SABI Nigeria identity has been verified.
+            </p>
+          </div>
+
+          {/* Profile Details (SHOW ALL THEIR INFORMATION) */}
+          <div className="p-6 space-y-4 max-h-[50vh] overflow-y-auto bg-gray-50/50">
+            {connectedAccountToast && (
+              <div className="bg-emerald-600 text-white p-3.5 rounded-2xl shadow-md flex items-center gap-3 animate-fade-in border border-emerald-400/40" id="google-connected-toast-card">
+                <div className="w-8 h-8 rounded-full bg-white text-emerald-700 flex items-center justify-center shrink-0 font-black text-sm">
+                  ✓
+                </div>
+                <div className="min-w-0 flex-1 text-left">
+                  <span className="font-extrabold text-[10px] uppercase tracking-wider block text-emerald-100">Google Account Linked</span>
+                  <span className="text-xs font-bold block text-white truncate">
+                    {connectedAccountToast.email} linked & authenticated
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+              <div className="flex items-center gap-3 pb-3 border-b border-gray-150">
+                <img 
+                  src={successUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'} 
+                  alt={successUser.name} 
+                  className="w-12 h-12 rounded-xl object-cover border-2 border-emerald-600 shadow-sm"
+                />
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-extrabold text-sm text-gray-900 font-display truncate">{successUser.name}</h3>
+                  <p className="text-xs text-gray-500 font-mono truncate">{successUser.email}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider block">SABI SPOTTER ID</span>
+                  <span className="font-mono text-gray-700 font-bold bg-gray-100 px-1.5 py-0.5 rounded text-[10px]">{successUser.id}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider block">TRUST LEVEL</span>
+                  <span className="text-emerald-700 font-black flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" /> {successUser.trustLevel || 'Bronze'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider block">STATE OF INFLUENCE</span>
+                  <span className="text-gray-800 font-extrabold">{successUser.state || 'Lagos'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider block">LOCAL LGA</span>
+                  <span className="text-gray-800 font-extrabold">{successUser.lga || 'Ikeja'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider block">MEMBER TIER</span>
+                  <span className="text-[#0A3D2E] font-black">{successUser.userTier || 'Member'} Tier</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 font-bold uppercase text-[9px] tracking-wider block">SABI POINTS BALANCE</span>
+                  <span className="text-amber-600 font-black bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full inline-block">
+                    ★ {successUser.sabiPoints} PTS
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Statistics */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-2.5">
+              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Network Performance Metrics</h4>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="bg-emerald-50/50 p-2 rounded-xl border border-emerald-100">
+                  <span className="font-extrabold text-emerald-800 text-sm block">{successUser.completedVerificationsCount || 0}</span>
+                  <span className="text-[9px] text-gray-500 font-medium">Verifications</span>
+                </div>
+                <div className="bg-blue-50/50 p-2 rounded-xl border border-blue-100">
+                  <span className="font-extrabold text-blue-800 text-sm block">{successUser.submittedReportsCount || 0}</span>
+                  <span className="text-[9px] text-gray-500 font-medium">Reports</span>
+                </div>
+                <div className="bg-amber-50/50 p-2 rounded-xl border border-amber-100">
+                  <span className="font-extrabold text-amber-800 text-sm block">{successUser.accuracyRate || 100}%</span>
+                  <span className="text-[9px] text-gray-500 font-medium">Accuracy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Badges Earned */}
+            {successUser.badges && successUser.badges.length > 0 && (
+              <div className="space-y-1.5">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Unlocked Badges</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {successUser.badges.map((badge, idx) => (
+                    <span key={idx} className="bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold text-[10px] px-2 py-0.5 rounded-full">
+                      🛡 {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="text-gray-400 text-[10px] text-center pt-1">
+              Registered on: <strong className="text-gray-600">{successUser.joinedDate || 'September 2026'}</strong>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="p-5 border-t border-gray-200 bg-white">
+            <button
+              onClick={() => { onClose(); setSuccessUser(null); }}
+              className="w-full bg-[#0A3D2E] hover:bg-[#0c4a37] text-white font-bold text-sm py-3.5 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer font-display"
+            >
+              <span>Proceed & Enter SABI Live Network</span>
+              <ArrowRight className="w-4 h-4 text-[#FFD60A]" />
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" id="auth-modal">
