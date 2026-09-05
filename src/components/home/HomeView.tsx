@@ -28,20 +28,26 @@ import {
 import { storageService, SelectedLocation } from '../../services/storageService';
 import { VerificationTask, TruthResult, MarketItem } from '../../types';
 import { GlobalSearch } from './GlobalSearch';
+import { SabiImprovementSuggestions } from './SabiImprovementSuggestions';
 import { StreakCard } from './StreakCard';
 import { LatestNewsSection } from './LatestNewsSection';
 import { TrendingNearYou } from './TrendingNearYou';
+import { LiveSabiersPreviewCard } from './LiveSabiersPreviewCard';
+import { DailySocialRumorsSection } from './DailySocialRumorsSection';
+import { HomeProximityAlertBanner } from './HomeProximityAlertBanner';
 
 interface HomeViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
   onOpenLocationModal?: () => void;
   onShowPointsToast?: (points: number, message: string) => void;
+  onlineCount?: number;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({ 
   onNavigate, 
   onOpenLocationModal,
-  onShowPointsToast = (_points: number, _message: string) => {}
+  onShowPointsToast = (_points: number, _message: string) => {},
+  onlineCount
 }) => {
   const [tasks, setTasks] = useState<VerificationTask[]>(storageService.getTasks());
   const [truthResults, setTruthResults] = useState<TruthResult[]>(storageService.getTruthResults());
@@ -161,28 +167,54 @@ export const HomeView: React.FC<HomeViewProps> = ({
   return (
     <div className="space-y-6 pb-16 animate-fade-in" id="home-view-main">
       
-      {/* Location Banner Quick Bar */}
-      <div className="bg-[#0A3D2E]/5 border border-[#0A3D2E]/15 rounded-2xl p-3 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2 text-[#0A3D2E] font-medium truncate">
-          <MapPin className="w-4 h-4 text-[#0A3D2E] shrink-0" />
-          <span className="truncate">
-            Browsing verification feed for <strong>{location.state}</strong> ({location.area})
-          </span>
+      {/* Location Banner Quick Bar & Live Active Users */}
+      <div className="bg-[#0A3D2E] text-white rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs shadow-md border border-[#0A3D2E]">
+        <div className="flex flex-wrap items-center gap-2 font-medium min-w-0">
+          {/* Live Online Users Count Counter - High Prominence */}
+          <button
+            onClick={() => onNavigate('sabiers')}
+            className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-xs border border-emerald-500/40 transition-all cursor-pointer group"
+            title="Click to view live Sabiers community"
+          >
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFD60A] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FFD60A]"></span>
+            </span>
+            <Users className="w-4 h-4 text-[#FFD60A] shrink-0" />
+            <span className="tracking-wide">
+              {onlineCount && onlineCount > 0 ? onlineCount.toLocaleString() : '1,428'} SABIERS LIVE
+            </span>
+          </button>
+
+          <span className="hidden sm:inline text-emerald-300/40">|</span>
+
+          <div className="flex items-center gap-1.5 text-white/90 truncate">
+            <MapPin className="w-4 h-4 text-[#FFD60A] shrink-0" />
+            <span className="truncate">
+              Feed for <strong className="text-white">{location.state}</strong> ({location.area})
+            </span>
+            {location.street && (
+              <span className="inline-flex items-center gap-1 bg-[#FFD60A] text-[#0A3D2E] text-[10px] font-black px-2 py-0.5 rounded-md shadow-2xs shrink-0">
+                📍 {location.street}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0 ml-2">
+
+        <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
           <button
             onClick={() => onNavigate('tutorial')}
-            className="text-[#0A3D2E] font-bold hover:underline flex items-center gap-1 bg-emerald-100/60 px-2 py-0.5 rounded-lg border border-emerald-200"
+            className="text-white font-bold hover:underline flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg border border-white/20 transition-all"
           >
-            <BookOpen className="w-3 h-3" />
-            <span>Guide & Tutorial</span>
+            <BookOpen className="w-3.5 h-3.5 text-[#FFD60A]" />
+            <span>Guide</span>
           </button>
           {onOpenLocationModal && (
             <button
               onClick={onOpenLocationModal}
-              className="text-[#0A3D2E] font-bold hover:underline"
+              className="bg-[#FFD60A] hover:bg-yellow-400 text-[#0A3D2E] font-black px-2.5 py-1 rounded-lg transition-all shadow-2xs"
             >
-              Change
+              Change Location
             </button>
           )}
         </div>
@@ -197,10 +229,26 @@ export const HomeView: React.FC<HomeViewProps> = ({
         onNavigate={onNavigate}
       />
 
+      {/* PROXIMITY RUMOR ALERT BANNER & STREET VERIFICATION FORM */}
+      <HomeProximityAlertBanner
+        onNavigate={onNavigate}
+        onShowToast={onShowPointsToast}
+      />
+
+      {/* LIVE SABIERS ACTIVE SPOTTERS & LIVE NOTIFICATION */}
+      <LiveSabiersPreviewCard onNavigate={onNavigate} />
+
       {/* 14-DAY STREAK TIMER & DAILY REWARD CLAIM CARD */}
       <StreakCard
         onClaimSuccess={(pts, day) => onShowPointsToast(pts, `Claimed Day ${day} Streak Reward (+${pts} PTS)!`)}
         onNavigate={onNavigate}
+      />
+
+      {/* DAILY SOCIAL MEDIA RUMORS (TikTok, YouTube, Instagram, Twitter) */}
+      <DailySocialRumorsSection
+        truthResults={truthResults}
+        onNavigate={onNavigate}
+        onShowToast={onShowPointsToast}
       />
 
       {/* HERO CARD (Section 12: See something that does not look correct?) */}
@@ -270,19 +318,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         <div className="relative z-10 flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
-            onClick={() => onNavigate('stats')}
+            onClick={() => onNavigate('umap')}
             className="flex-1 lg:flex-none bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 font-display"
           >
-            <BarChart2 className="w-4 h-4" />
-            <span>36-States D3 Stats →</span>
+            <Compass className="w-4 h-4" />
+            <span>UMap Street Radar →</span>
           </button>
 
           <button
-            onClick={() => onNavigate('map')}
+            onClick={() => onNavigate('stats')}
             className="flex-1 lg:flex-none bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700 text-white font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            <MapPin className="w-4 h-4 text-emerald-400" />
-            <span>Live Radar Map</span>
+            <BarChart2 className="w-4 h-4 text-emerald-400" />
+            <span>36 States Stats</span>
           </button>
         </div>
       </section>
@@ -439,6 +487,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
           ))}
         </div>
       </section>
+
+      {/* SUGGEST WEB IMPROVEMENTS (Dispatches to enochayomide67@gmail.com) */}
+      <SabiImprovementSuggestions onShowToast={onShowPointsToast} />
 
       {/* BECOME A VERIFIER BANNER */}
       <section className="bg-emerald-900 text-white rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">

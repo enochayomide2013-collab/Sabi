@@ -19,7 +19,8 @@ import {
   ResultType,
   OnlineSabier,
   SaboAiSession,
-  UserAuthLog
+  UserAuthLog,
+  SabiSuggestion
 } from '../types';
 import {
   INITIAL_USER,
@@ -57,7 +58,10 @@ const KEYS = {
   NEWS: 'sabi_latest_news_articles',
   SABO_SESSIONS: 'sabi_sabo_ai_sessions',
   SABO_ACTIVE_SESSION_ID: 'sabi_sabo_ai_active_session_id',
-  USER_AUDIT_LOGS: 'sabi_user_audit_logs'
+  USER_AUDIT_LOGS: 'sabi_user_audit_logs',
+  SUGGESTIONS: 'sabi_user_web_suggestions',
+  TRACING_ENABLED: 'sabi_umap_tracing_enabled',
+  DISMISSED_PROXIMITY_ALERTS: 'sabi_dismissed_proximity_alerts'
 };
 
 export const ADMIN_MASTER_PASSWORD = '2013';
@@ -97,17 +101,32 @@ export interface SelectedLocation {
   state: string;
   lga: string;
   area: string;
+  street?: string;
+  exactAddress?: string;
   country?: string;
   isGpsDerived?: boolean;
   rawAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  accuracy?: number;
+  timestamp?: number;
+  trackedAt?: string;
 }
 
 const DEFAULT_LOCATION: SelectedLocation = {
   state: 'Lagos',
-  lga: 'Lagos Mainland',
-  area: 'Yaba',
+  lga: 'Ikeja',
+  area: 'Alausa / Ikeja Central',
+  street: 'Obafemi Awolowo Way',
+  exactAddress: '14 Obafemi Awolowo Way, Ikeja, Lagos State, Nigeria',
   country: 'Nigeria',
-  isGpsDerived: false
+  isGpsDerived: false,
+  latitude: 6.6018,
+  longitude: 3.3515,
+  accuracyMeters: 10,
+  accuracy: 10,
+  trackedAt: 'Default Preset'
 };
 
 class StorageService {
@@ -261,6 +280,9 @@ class StorageService {
     name: string;
     email: string;
     password: string;
+    phoneNumber?: string;
+    wantSabiFor?: string;
+    heardSabiFrom?: string;
     state?: string;
     lga?: string;
   }): { success: boolean; user?: UserProfile; message?: string } {
@@ -284,6 +306,10 @@ class StorageService {
       role: data.password === ADMIN_MASTER_PASSWORD ? 'admin' : 'member',
       trustLevel: data.password === ADMIN_MASTER_PASSWORD ? 'Trusted Contributor' : 'Bronze',
       userTier: 'Member',
+      phoneNumber: data.phoneNumber || '',
+      wantSabiFor: data.wantSabiFor || 'General Community Truth & Food Price Verification',
+      heardSabiFrom: data.heardSabiFrom || 'Web Discovery',
+      isAuthenticated: true,
       sabiPoints: 100, // 100 welcome points!
       completedVerificationsCount: 0,
       submittedReportsCount: 0,
@@ -324,6 +350,7 @@ class StorageService {
 
     // Set as active user
     localStorage.setItem(KEYS.USER, JSON.stringify(newUser));
+    localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
 
     // Update location to user's location
     this.setLocation({
@@ -368,9 +395,11 @@ class StorageService {
     if (password === ADMIN_MASTER_PASSWORD) {
       const adminUser: UserProfile = {
         ...DEFAULT_ADMIN_USER,
-        email: trimmedEmail || ADMIN_DEFAULT_EMAIL
+        email: trimmedEmail || ADMIN_DEFAULT_EMAIL,
+        isAuthenticated: true
       };
       localStorage.setItem(KEYS.USER, JSON.stringify(adminUser));
+      localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
 
       // Record in Admin Audit Log
       this.addAuthLog({
@@ -403,8 +432,10 @@ class StorageService {
       };
     }
 
-    // Set as current active user
+    // Set as current active user and mark authenticated
+    userMatch.isAuthenticated = true;
     localStorage.setItem(KEYS.USER, JSON.stringify(userMatch));
+    localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
     
     // Sync location if set
     if (userMatch.state && userMatch.lga) {
@@ -435,6 +466,9 @@ class StorageService {
     email: string;
     avatarUrl?: string;
     uid?: string;
+    phoneNumber?: string;
+    wantSabiFor?: string;
+    heardSabiFrom?: string;
   }): { success: boolean; user: UserProfile; isNewUser: boolean } {
     const trimmedEmail = googleUser.email.trim().toLowerCase();
     const users = this.getRegisteredUsers();
@@ -445,7 +479,18 @@ class StorageService {
       if (googleUser.avatarUrl && !existing.avatarUrl) {
         existing.avatarUrl = googleUser.avatarUrl;
       }
+      if (googleUser.phoneNumber && !existing.phoneNumber) {
+        existing.phoneNumber = googleUser.phoneNumber;
+      }
+      if (googleUser.wantSabiFor && !existing.wantSabiFor) {
+        existing.wantSabiFor = googleUser.wantSabiFor;
+      }
+      if (googleUser.heardSabiFrom && !existing.heardSabiFrom) {
+        existing.heardSabiFrom = googleUser.heardSabiFrom;
+      }
+      existing.isAuthenticated = true;
       localStorage.setItem(KEYS.USER, JSON.stringify(existing));
+      localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
 
       // Record in Admin Audit Log
       this.addAuthLog({
@@ -470,6 +515,10 @@ class StorageService {
       role: 'member',
       trustLevel: 'Bronze',
       userTier: 'Member',
+      phoneNumber: googleUser.phoneNumber || '',
+      wantSabiFor: googleUser.wantSabiFor || 'General Truth Verification & Price Checking',
+      heardSabiFrom: googleUser.heardSabiFrom || 'Google Onboarding',
+      isAuthenticated: true,
       sabiPoints: 100, // 100 welcome points!
       completedVerificationsCount: 0,
       submittedReportsCount: 0,
@@ -507,6 +556,7 @@ class StorageService {
     const updatedList = [...users, newUser];
     localStorage.setItem(KEYS.REGISTERED_USERS, JSON.stringify(updatedList));
     localStorage.setItem(KEYS.USER, JSON.stringify(newUser));
+    localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
 
     this.addNotification({
       id: 'notif_welcome_' + Date.now(),
@@ -534,17 +584,46 @@ class StorageService {
 
   public adminSignIn(password: string): { success: boolean; user?: UserProfile; message?: string } {
     if (password === ADMIN_MASTER_PASSWORD) {
-      localStorage.setItem(KEYS.USER, JSON.stringify(DEFAULT_ADMIN_USER));
+      const adminUser: UserProfile = {
+        ...DEFAULT_ADMIN_USER,
+        isAuthenticated: true
+      };
+      localStorage.setItem(KEYS.USER, JSON.stringify(adminUser));
+      localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
       this.notify();
-      return { success: true, user: DEFAULT_ADMIN_USER };
+      return { success: true, user: adminUser };
     }
     return { success: false, message: 'Invalid Admin Password. Access Denied.' };
   }
 
   public isUserLoggedIn(): boolean {
-    const user = this.getUser();
-    // User is logged in if they have signed in or signed up with valid email/admin, or registered
-    return Boolean(user && user.id && user.id !== 'usr_guest' && user.email && user.email.includes('@'));
+    return this.isAuthenticated();
+  }
+
+  public isAuthenticated(): boolean {
+    return localStorage.getItem(KEYS.AUTH_SESSION) === 'authenticated';
+  }
+
+  public setAuthenticated(isAuth: boolean) {
+    if (isAuth) {
+      localStorage.setItem(KEYS.AUTH_SESSION, 'authenticated');
+    } else {
+      localStorage.removeItem(KEYS.AUTH_SESSION);
+    }
+    this.notify();
+  }
+
+  public addSuggestion(suggestion: SabiSuggestion): void {
+    const list = this.getSuggestions();
+    list.unshift(suggestion);
+    localStorage.setItem(KEYS.SUGGESTIONS, JSON.stringify(list));
+    this.addPoints(25, 'Submitted SABI Web Improvement suggestion to enochayomide67@gmail.com');
+    this.notify();
+  }
+
+  public getSuggestions(): SabiSuggestion[] {
+    const raw = localStorage.getItem(KEYS.SUGGESTIONS);
+    return raw ? JSON.parse(raw) : [];
   }
 
   public updateUserAvatar(newAvatarUrl: string): UserProfile {
@@ -569,8 +648,12 @@ class StorageService {
   }
 
   public signOut() {
-    // Reset to default guest/starter profile
-    localStorage.setItem(KEYS.USER, JSON.stringify(INITIAL_USER));
+    localStorage.removeItem(KEYS.AUTH_SESSION);
+    const user = this.getUser();
+    if (user) {
+      user.isAuthenticated = false;
+      localStorage.setItem(KEYS.USER, JSON.stringify(user));
+    }
     this.notify();
   }
 
@@ -1043,6 +1126,46 @@ Platform: SABI Nigeria`;
     this.notify();
   }
 
+  // --- REAL-TIME GEOLOCATION TRACING & PROXIMITY SAFETY ALERT TOGGLE ---
+
+  public isTracingEnabled(): boolean {
+    const raw = localStorage.getItem(KEYS.TRACING_ENABLED);
+    return raw !== 'false'; // Enabled by default for community safety
+  }
+
+  public setTracingEnabled(enabled: boolean) {
+    localStorage.setItem(KEYS.TRACING_ENABLED, enabled ? 'true' : 'false');
+    this.notify();
+  }
+
+  public getDismissedProximityAlerts(): string[] {
+    try {
+      const raw = localStorage.getItem(KEYS.DISMISSED_PROXIMITY_ALERTS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  public isProximityAlertDismissed(incidentId: string): boolean {
+    const list = this.getDismissedProximityAlerts();
+    return list.includes(incidentId);
+  }
+
+  public dismissProximityAlert(incidentId: string) {
+    const list = this.getDismissedProximityAlerts();
+    if (!list.includes(incidentId)) {
+      list.push(incidentId);
+      localStorage.setItem(KEYS.DISMISSED_PROXIMITY_ALERTS, JSON.stringify(list));
+      this.notify();
+    }
+  }
+
+  public resetDismissedProximityAlerts() {
+    localStorage.removeItem(KEYS.DISMISSED_PROXIMITY_ALERTS);
+    this.notify();
+  }
+
   // --- TASKS & ADMIN ACTIONS ---
 
   public getTasks(): VerificationTask[] {
@@ -1219,7 +1342,23 @@ Platform: SABI Nigeria`;
 
   public getMarketItems(): MarketItem[] {
     const raw = localStorage.getItem(KEYS.MARKET_ITEMS);
-    return raw ? JSON.parse(raw) : INITIAL_MARKET_ITEMS;
+    if (!raw) {
+      localStorage.setItem(KEYS.MARKET_ITEMS, JSON.stringify(INITIAL_MARKET_ITEMS));
+      return INITIAL_MARKET_ITEMS;
+    }
+    try {
+      const parsed: MarketItem[] = JSON.parse(raw);
+      const existingIds = new Set(parsed.map(item => item.id));
+      const missing = INITIAL_MARKET_ITEMS.filter(item => !existingIds.has(item.id));
+      if (missing.length > 0) {
+        const merged = [...parsed, ...missing];
+        localStorage.setItem(KEYS.MARKET_ITEMS, JSON.stringify(merged));
+        return merged;
+      }
+      return parsed;
+    } catch {
+      return INITIAL_MARKET_ITEMS;
+    }
   }
 
   public addMarketPriceReport(itemId: string, state: string, area: string, price: number, unitName: string) {
@@ -1557,6 +1696,21 @@ Platform: SABI Nigeria`;
     this.recordContribution('chat');
     this.notify();
     return newMsg;
+  }
+
+  public syncSabiersMessages(remoteMessages: SabiersChatMessage[]): SabiersChatMessage[] {
+    if (!remoteMessages || remoteMessages.length === 0) return this.getSabiersMessages();
+    const existing = this.getSabiersMessages();
+    const map = new Map<string, SabiersChatMessage>();
+    
+    // Remote messages take precedence
+    existing.forEach(m => map.set(m.id, m));
+    remoteMessages.forEach(m => map.set(m.id, m));
+
+    const merged = Array.from(map.values());
+    localStorage.setItem(KEYS.SABIERS_MESSAGES, JSON.stringify(merged));
+    this.notify();
+    return merged;
   }
 
   public toggleSabiersReaction(messageId: string, emoji: string) {

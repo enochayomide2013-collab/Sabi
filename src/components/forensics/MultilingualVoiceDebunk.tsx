@@ -21,6 +21,7 @@ import {
   Edit3,
   Wand2
 } from 'lucide-react';
+import { voiceAudioService } from '../../services/voiceAudioService';
 
 export type LocalLanguage = 'pidgin' | 'yoruba' | 'hausa' | 'igbo' | 'english';
 
@@ -96,53 +97,40 @@ export const MultilingualVoiceDebunk: React.FC<MultilingualVoiceDebunkProps> = (
 
   const currentLangDetails = getLanguageDetails(selectedLang);
 
-  // Web Speech Synthesis Audio Player
+  // Stop audio on unmount or language change
   useEffect(() => {
-    let timer: any;
-    if (isPlaying) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(currentScriptText);
-        utterance.rate = 0.95;
-        utterance.pitch = selectedLang === 'pidgin' ? 1.1 : 1.0;
-        
-        if (selectedLang === 'yoruba') utterance.lang = 'yo-NG';
-        else if (selectedLang === 'hausa') utterance.lang = 'ha-NG';
-        else if (selectedLang === 'igbo') utterance.lang = 'ig-NG';
-        else utterance.lang = 'en-NG';
-
-        utterance.onend = () => {
-          setIsPlaying(false);
-          setPlaybackProgress(100);
-        };
-
-        window.speechSynthesis.speak(utterance);
-      }
-
-      timer = setInterval(() => {
-        setPlaybackProgress((prev) => {
-          if (prev >= 100) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 2.5;
-        });
-      }, (currentLangDetails.duration * 1000) / 40);
-    } else {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      if (timer) clearInterval(timer);
-    }
-
     return () => {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      if (timer) clearInterval(timer);
+      voiceAudioService.stop();
     };
-  }, [isPlaying, currentScriptText, selectedLang]);
+  }, [selectedLang]);
 
   const handleTogglePlay = () => {
-    setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      voiceAudioService.stop();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      setPlaybackProgress(0);
+
+      const langCode = selectedLang === 'yoruba' ? 'yo-NG' :
+                       selectedLang === 'hausa' ? 'ha-NG' :
+                       selectedLang === 'igbo' ? 'ig-NG' : 'en-NG';
+
+      voiceAudioService.speakVoiceNote(currentScriptText, {
+        rate: 0.95,
+        pitch: selectedLang === 'pidgin' ? 1.05 : 1.0,
+        lang: langCode,
+        voiceGender: currentLangDetails.gender as any,
+        onProgress: (pct) => setPlaybackProgress(pct),
+        onEnd: () => {
+          setIsPlaying(false);
+          setPlaybackProgress(100);
+        },
+        onError: () => {
+          setIsPlaying(false);
+        }
+      });
+    }
   };
 
   const handleCopyTranscript = async () => {

@@ -5,6 +5,24 @@ export type ResultType =
   | 'UNVERIFIED' 
   | 'NEEDS MORE VERIFICATION';
 
+export type AppLanguage = 'english' | 'yoruba' | 'igbo' | 'hausa' | 'pidgin';
+
+export interface LocalPushAlert {
+  id: string;
+  title: string;
+  message: string;
+  state: string;
+  lga?: string;
+  area?: string;
+  category: 'rumor' | 'suspicious_media' | 'price_surge' | 'scam_warning' | 'deepfake_alert';
+  verdict?: ResultType;
+  evidenceUrl?: string;
+  timestamp: string;
+  urgency: 'high' | 'urgent' | 'breaking';
+  read?: boolean;
+  sourcePlatform?: 'tiktok' | 'twitter' | 'facebook' | 'whatsapp' | 'local_spotter';
+}
+
 export type ReportStatus = 'pending' | 'checking' | 'verified' | 'disputed' | 'needs_review' | 'removed';
 
 export type TrustLevel = 'Bronze' | 'Silver' | 'Gold' | 'Trusted Contributor';
@@ -267,6 +285,10 @@ export interface UserProfile {
   role: 'member' | 'contributor' | 'verifier' | 'admin';
   trustLevel: TrustLevel;
   userTier?: UserTier; // 'Member' | 'Bronze' | 'Golden' | 'Deluxe'
+  phoneNumber?: string;
+  wantSabiFor?: string;
+  heardSabiFrom?: string;
+  isAuthenticated?: boolean;
   sabiPoints: number;
   completedVerificationsCount: number;
   submittedReportsCount: number;
@@ -296,6 +318,19 @@ export interface UserAccount extends UserProfile {
   isRegistered?: boolean;
 }
 
+export interface SabiSuggestion {
+  id: string;
+  userName: string;
+  userEmail: string;
+  phoneNumber?: string;
+  category: string;
+  suggestion: string;
+  state: string;
+  lga: string;
+  timestamp: string;
+  status: 'received' | 'reviewed' | 'dispatched_to_admin';
+}
+
 export interface SentEmailReport {
   id: string;
   recipient: string;
@@ -312,7 +347,7 @@ export interface AppNotification {
   id: string;
   title: string;
   message: string;
-  type: 'verification_request' | 'report_verified' | 'points_earned' | 'system_alert' | 'tier_upgrade';
+  type: 'verification_request' | 'report_verified' | 'points_earned' | 'system_alert' | 'tier_upgrade' | 'local_alert';
   timestamp: string;
   read: boolean;
   actionUrl?: string;

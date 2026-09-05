@@ -978,6 +978,246 @@ export const INITIAL_TRUTH_RESULTS: TruthResult[] = [
     debunkSourceOrg: 'AFP Fact Check International',
     debunkPlatform: 'youtube',
     debunkVideoThumbnail: 'https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'truth_011',
+    reportId: 'rep_mma2_blackout_tiktok',
+    claim: 'Viral TikTok video claiming Lagos Murtala Muhammed Airport Terminal 2 grounded flights due to power blackout',
+    originalClaimQuote: 'TikTok video caption: "Breaking news MMA2 terminal in Lagos in pitch darkness, zero flights taking off today everywhere shutdown!!"',
+    availableEvidenceQuote: 'FAAN and terminal operators (BASL) confirmed power supplies are operating smoothly. On-site camera feeds showed outbound flights departing on schedule.',
+    result: 'FALSE',
+    state: 'Lagos',
+    lga: 'Ikeja',
+    area: 'Murtala Muhammed Airport Terminal 2 (MMA2)',
+    country: 'Nigeria',
+    isWorldwide: false,
+    platform: 'tiktok',
+    socialMediaHandle: '@LagosFlightGist_TK',
+    socialMediaPostUrl: 'https://tiktok.com/@LagosFlightGist_TK/video/739182049102',
+    youtubeVideoId: 'dQw4w9WgXcQ',
+    videoUrl: 'https://images.unsplash.com/photo-1542296332-2e4473faf563?w=800&auto=format&fit=crop&q=80',
+    playableVideoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    verifiedAt: '15 mins ago',
+    contributorCount: 6,
+    rumorSummary: 'Viral TikTok video with sensationalized text overlay claiming MMA2 terminal in Ikeja suffered a catastrophic power failure resulting in flight cancellations.',
+    whatHappened: 'FAAN aviation security and MMA2 operators confirmed main power grid supply and dual redundant diesel generators operated continuously without power loss. Passenger check-ins and flight departures proceeded normally.',
+    whatBroughtAboutIt: 'A TikTok creator reuploaded old 2022 night maintenance footage during a 2-minute generator switch test and added fake breaking news captions to farm viral TikTok engagement.',
+    rumorClaimsList: [
+      'Claimed MMA2 airport terminal completely dark with passenger panic.',
+      'Claimed all domestic flights to Abuja, Port Harcourt, and Kano canceled.',
+      'Claimed radar systems went offline.'
+    ],
+    aiMediaAnalysis: {
+      status: 'completed',
+      details: 'TikTok video OCR matched 2022 archived footage. Audio re-dubbed with artificial alarm sounds.',
+      isOutdatedMedia: true,
+      confidenceScore: 98,
+      detectedOrigins: 'TikTok Viral Clip Archive 2022'
+    },
+    liveForensicData: {
+      opticalMotionScore: 94,
+      jumpCutsDetected: 2,
+      compressionArtifactScore: 68,
+      deepfakeProbability: 8,
+      audioVisualSyncStatus: 'synced',
+      frameRateFps: 30,
+      bitrateKbps: 2800,
+      detectedAnomalies: ['Reused 2022 Night Maintenance Video Track', 'Manipulated TikTok Text Banner']
+    },
+    confidence: 'High',
+    videoDurationSec: 20,
+    videoThumbnail: 'https://images.unsplash.com/photo-1542296332-2e4473faf563?w=800&auto=format&fit=crop&q=80',
+    audioNarrationText: 'SABI Verification: Viral TikTok claims alleging a blackout at Lagos MMA2 terminal are FALSE. Operations and flight departures remain on schedule.',
+    viewsCount: 38200,
+    sharesCount: 5400,
+    sources: ['FAAN Aviation Security', 'MMA2 Terminal Operations Desk', '3 Airport Spotters'],
+    factCheckUrl: 'https://dubawa.org/fact-check-lagos-airport-blackout-claims-false',
+    sourceOrg: 'Dubawa Nigeria & Channels TV',
+    debunkVideoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    debunkVideoTitle: 'Channels TV Fact Check: Debunking Fake TikTok Video on Lagos Airport Blackout',
+    debunkSourceOrg: 'Channels TV Aviation Desk',
+    debunkPlatform: 'youtube',
+    debunkVideoThumbnail: 'https://images.unsplash.com/photo-1542296332-2e4473faf563?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'truth_012',
+    reportId: 'rep_waec_cancel_facebook',
+    claim: 'Facebook post alleging WAEC canceled 2026 Senior Secondary Certificate Examinations',
+    originalClaimQuote: 'Facebook post: "WAEC official announcement: 2026 WASSCE canceled across all 36 states due to syllabus overhaul."',
+    availableEvidenceQuote: 'WAEC Nigeria Head of National Office issued an official disclaimer confirming the 2026 exam timetable is finalized and proceeds as scheduled.',
+    result: 'FALSE',
+    state: 'Nationwide',
+    lga: 'Abuja Municipal',
+    area: 'Federal Ministry of Education Desk',
+    country: 'Nigeria',
+    isWorldwide: false,
+    platform: 'facebook',
+    socialMediaHandle: 'Naija Education Today FB Page',
+    socialMediaPostUrl: 'https://facebook.com/NaijaEducationToday/posts/8821049281',
+    youtubeVideoId: 'L_LUpnjgPso',
+    videoUrl: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80',
+    playableVideoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    verifiedAt: '25 mins ago',
+    contributorCount: 8,
+    rumorSummary: 'Viral Facebook post claiming the West African Examinations Council (WAEC) canceled all 2026 WASSCE exams nationwide.',
+    whatHappened: 'WAEC Nigeria confirmed that all 2026 examination centers, school registrations, and timetables are fully active and proceeding according to the official national academic calendar.',
+    whatBroughtAboutIt: 'An unauthorized educational blog forged a graphic flyer using WAEC logos to lure students into joining a paid WhatsApp exam run group.',
+    rumorClaimsList: [
+      'Claimed 2026 May/June WASSCE exams postponed indefinitely.',
+      'Claimed WAEC portal closed to candidate registration.',
+      'Claimed students must re-register through third-party agents.'
+    ],
+    aiMediaAnalysis: {
+      status: 'completed',
+      details: 'Facebook image graphic contains forged corporate logo layout and fraudulent WhatsApp link.',
+      isOutdatedMedia: false,
+      confidenceScore: 99,
+      detectedOrigins: 'Facebook Clickbait Page'
+    },
+    liveForensicData: {
+      opticalMotionScore: 82,
+      jumpCutsDetected: 0,
+      compressionArtifactScore: 75,
+      deepfakeProbability: 2,
+      audioVisualSyncStatus: 'synced',
+      frameRateFps: 25,
+      bitrateKbps: 2100,
+      detectedAnomalies: ['Forged WAEC Crest Banner', 'Fraudulent External Link Header']
+    },
+    confidence: 'High',
+    videoDurationSec: 20,
+    videoThumbnail: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80',
+    audioNarrationText: 'SABI Education Alert: Facebook claims that WAEC canceled 2026 WASSCE examinations are completely FALSE. WAEC confirmed exams proceed as scheduled.',
+    viewsCount: 41000,
+    sharesCount: 8900,
+    sources: ['WAEC National Office Press Release', 'Federal Ministry of Education'],
+    factCheckUrl: 'https://factcheckhub.com/waec-denies-canceling-2026-wassce-exams',
+    sourceOrg: 'FactCheckHub & NTA News',
+    debunkVideoUrl: 'https://www.youtube.com/watch?v=L_LUpnjgPso',
+    debunkVideoTitle: 'NTA News Broadcast: WAEC Officially Debunks Exam Cancellation Rumors',
+    debunkSourceOrg: 'NTA News Network',
+    debunkPlatform: 'youtube',
+    debunkVideoThumbnail: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'truth_013',
+    reportId: 'rep_cbn_dom_cap_twitter',
+    claim: 'Viral Twitter (X) thread claiming CBN capped personal domiciliary withdrawals at $500 monthly',
+    originalClaimQuote: 'Twitter (X) thread: "Alert: CBN circular mandates max $500 monthly cash withdrawal limit on all personal USD domiciliary accounts effective today."',
+    availableEvidenceQuote: 'CBN Corporate Communications Department issued an official public notice confirming zero monthly withdrawal limits exist on legitimate domiciliary accounts.',
+    result: 'FALSE',
+    state: 'FCT - Abuja',
+    lga: 'Abuja Municipal',
+    area: 'CBN Central Headquarters',
+    country: 'Nigeria',
+    isWorldwide: false,
+    platform: 'twitter',
+    socialMediaHandle: '@NaijaFXWatch_X',
+    socialMediaPostUrl: 'https://x.com/NaijaFXWatch_X/status/18920194812',
+    youtubeVideoId: 'M7lc1UVf-VE',
+    videoUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80',
+    playableVideoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    verifiedAt: '40 mins ago',
+    contributorCount: 11,
+    rumorSummary: 'Viral Twitter (X) thread asserting that the Central Bank of Nigeria instituted an emergency $500 monthly limit on personal foreign currency account withdrawals.',
+    whatHappened: 'Commercial banks nationwide (Access, GTBank, Zenith, FirstBank) are fulfilling foreign currency cash withdrawals for domiciliary account holders in full compliance with customer requests.',
+    whatBroughtAboutIt: 'A speculative Twitter account misconstrued routine customer anti-money-laundering (AML) transaction documentation requirements at a bank branch as a new blanket central bank cap.',
+    rumorClaimsList: [
+      'Claimed $500 monthly ceiling on all personal domiciliary accounts.',
+      'Claimed compulsory conversion of excess foreign balance to Cedis or Naira.',
+      'Claimed commercial bank FX desks blocked wire transfers.'
+    ],
+    aiMediaAnalysis: {
+      status: 'completed',
+      details: 'Twitter thread analysis matched false policy memo graphic generated via fake text canvas tool.',
+      isOutdatedMedia: false,
+      confidenceScore: 99,
+      detectedOrigins: 'X/Twitter Viral Financial Account'
+    },
+    liveForensicData: {
+      opticalMotionScore: 88,
+      jumpCutsDetected: 1,
+      compressionArtifactScore: 50,
+      deepfakeProbability: 3,
+      audioVisualSyncStatus: 'synced',
+      frameRateFps: 30,
+      bitrateKbps: 2900,
+      detectedAnomalies: ['Forged Circular Graphic Template']
+    },
+    confidence: 'High',
+    videoDurationSec: 20,
+    videoThumbnail: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80',
+    audioNarrationText: 'SABI Financial Verification: Claims that CBN capped domiciliary account withdrawals at $500 per month are FALSE. No such restriction exists.',
+    viewsCount: 52000,
+    sharesCount: 12400,
+    sources: ['Central Bank of Nigeria Official Circular Desk', 'Chartered Institute of Bankers of Nigeria'],
+    factCheckUrl: 'https://africacheck.org/fact-checks/reports/cbn-denies-domiciliary-account-withdrawal-caps',
+    sourceOrg: 'Africa Check & BusinessDay',
+    debunkVideoUrl: 'https://www.youtube.com/watch?v=M7lc1UVf-VE',
+    debunkVideoTitle: 'BusinessDay TV: CBN Reaffirms Freedom of Domiciliary Account Cash Operations',
+    debunkSourceOrg: 'BusinessDay Financial Forensics',
+    debunkPlatform: 'youtube',
+    debunkVideoThumbnail: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'truth_014',
+    reportId: 'rep_dangote_pms_youtube',
+    claim: 'YouTube livestream claiming Dangote Refinery suspended petrol loadings to independent marketers',
+    originalClaimQuote: 'YouTube livestream title: "Emergency Dangote Refinery stops fuel supply to IPMAN independent marketers nationwide!"',
+    availableEvidenceQuote: 'NMDPRA and IPMAN executives confirmed daily PMS truck loadings exceed 35 million litres without stoppage at Lekki refinery gates.',
+    result: 'FALSE',
+    state: 'Lagos',
+    lga: 'Ibeju-Lekki',
+    area: 'Dangote Refinery Free Trade Zone',
+    country: 'Nigeria',
+    isWorldwide: false,
+    platform: 'youtube',
+    socialMediaHandle: 'Naija Energy Pulse YouTube',
+    socialMediaPostUrl: 'https://youtube.com/watch?v=dangote_pms_loading_status',
+    youtubeVideoId: '2Vv-BfVoq4g',
+    videoUrl: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80',
+    playableVideoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    verifiedAt: '1 hour ago',
+    contributorCount: 14,
+    rumorSummary: 'YouTube live stream claiming Dangote Refinery suspended petrol loadings for independent petroleum marketers across Nigeria.',
+    whatHappened: 'Gantry gates at Lekki Dangote Petroleum Refinery are dispatching hundreds of PMS road tankers daily to fill independent marketer stations in Lagos, Ogun, Oyo, Abuja, and Kano.',
+    whatBroughtAboutIt: 'A YouTube clickbait commentator misinterpreted a 30-minute scheduled pipeline pressure calibration test as an operational shutdown of refinery truck gantry bays.',
+    rumorClaimsList: [
+      'Claimed complete halt of PMS gantry tanker loadings.',
+      'Claimed independent marketers refused loading allocations.',
+      'Claimed imminent pump price surge to ₦1,500.'
+    ],
+    aiMediaAnalysis: {
+      status: 'completed',
+      details: 'YouTube stream uses sensational lower-third graphic banner over recycled tank farm drone footage.',
+      isOutdatedMedia: true,
+      confidenceScore: 97,
+      detectedOrigins: 'YouTube Clickbait Live Stream'
+    },
+    liveForensicData: {
+      opticalMotionScore: 91,
+      jumpCutsDetected: 3,
+      compressionArtifactScore: 60,
+      deepfakeProbability: 5,
+      audioVisualSyncStatus: 'synced',
+      frameRateFps: 29.97,
+      bitrateKbps: 3100,
+      detectedAnomalies: ['Sensationalized Clickbait Banner', 'Recycled Tanker Depot Footage']
+    },
+    confidence: 'High',
+    videoDurationSec: 20,
+    videoThumbnail: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80',
+    audioNarrationText: 'SABI Energy Alert: YouTube live stream claims that Dangote Refinery suspended PMS loadings are FALSE. Tanker loadings continue continuously.',
+    viewsCount: 68000,
+    sharesCount: 15200,
+    sources: ['NMDPRA Regulatory Monitor', 'IPMAN National Executive Committee', 'Lekki Gantry Log'],
+    factCheckUrl: 'https://dubawa.org/dangote-refinery-pms-loadings-continue-uninterrupted',
+    sourceOrg: 'Dubawa & Channels TV',
+    debunkVideoUrl: 'https://www.youtube.com/watch?v=2Vv-BfVoq4g',
+    debunkVideoTitle: 'Channels TV Energy Report: On-Site Inspection of Dangote Refinery Tanker Loadings',
+    debunkSourceOrg: 'Channels TV Energy Desk',
+    debunkPlatform: 'youtube',
+    debunkVideoThumbnail: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&auto=format&fit=crop&q=80'
   }
 ];
 
@@ -1594,6 +1834,878 @@ export const INITIAL_MARKET_ITEMS: MarketItem[] = [
         { date: 'Jun', price: 45000, reportsCount: 70, locationName: 'Mushin' },
         { date: 'Jul', price: 47000, reportsCount: 80, locationName: 'Mushin' },
         { date: 'Aug', price: 46000, reportsCount: 75, locationName: 'Mushin' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_semovita',
+    name: 'Semovita & Semolina Flour',
+    category: 'Grains',
+    imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 91,
+    totalReportsCount: 56,
+    seasonalityNote: 'Factory processed grain; stable supply across major depots.',
+    relatedRecipes: ['Semovita with Egusi Soup', 'Semolina with Ogbono Soup', 'Efo Riro'],
+    retailPortions: [
+      { name: '1kg Sealed Pack', unit: '1kg Bag', price: 1750, description: 'Standard single household meal pack', popularBrand: 'Golden Penny / Honeywell' },
+      { name: '2kg Sealed Pack', unit: '2kg Bag', price: 3400, description: 'Family size pack' },
+      { name: '5kg Family Pack', unit: '5kg Bag', price: 8200, description: 'Weekly staple family size' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Idumota / Mile 12 Depot',
+      largeUnitName: '10kg Bag (Carton / Sack)',
+      largeUnitPrice: 16500,
+      smallUnitName: '1kg Pack',
+      smallUnitPrice: 1750,
+      lastUpdated: '1 hour ago',
+      reportsCount: 22,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Oyo',
+        area: 'Bodija Market (Ibadan)',
+        largeUnitName: '10kg Bag',
+        largeUnitPrice: 15800,
+        smallUnitName: '1kg Pack',
+        smallUnitPrice: 1650,
+        lastUpdated: '3 hours ago',
+        reportsCount: 14,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 16500, reportsCount: 12, locationName: 'Mile 12' },
+        { date: 'Today', price: 16500, reportsCount: 22, locationName: 'Mile 12' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 16000, reportsCount: 30, locationName: 'Mile 12' },
+        { date: 'Week 4', price: 16500, reportsCount: 45, locationName: 'Mile 12' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 13500, reportsCount: 40, locationName: 'Mile 12' },
+        { date: 'Aug', price: 16500, reportsCount: 56, locationName: 'Mile 12' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_amala',
+    name: 'Yam Flour / Elubo (Amala)',
+    category: 'Tubers',
+    imageUrl: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 89,
+    totalReportsCount: 48,
+    seasonalityNote: 'Direct influx from Oyo, Kwara & Niger dry season processors.',
+    relatedRecipes: ['Amala with Ewedu and Gbegiri', 'Amala with Egusi Soup'],
+    retailPortions: [
+      { name: 'Derica Cup of Elubo', unit: '1 Derica Cup', price: 1100, description: 'Single meal portion' },
+      { name: 'Small Paint Bucket (4L)', unit: '4L Paint Rubber', price: 3800, description: 'Family weekend swallow size' },
+      { name: '10kg Sack', unit: '10kg Bag', price: 11500, description: 'Bulk home consumption' }
+    ],
+    primaryLocation: {
+      state: 'Oyo',
+      area: 'Bodija Market (Ibadan)',
+      largeUnitName: '25kg Wholesale Jute Bag',
+      largeUnitPrice: 28000,
+      smallUnitName: 'Small Paint Bucket (4L)',
+      smallUnitPrice: 3800,
+      lastUpdated: '2 hours ago',
+      reportsCount: 19,
+      priceTrend: 'down',
+      trendPercent: 5
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Oyingbo / Mile 12 Market',
+        largeUnitName: '25kg Bag',
+        largeUnitPrice: 31000,
+        smallUnitName: 'Small Paint Bucket (4L)',
+        smallUnitPrice: 4200,
+        lastUpdated: '1 hour ago',
+        reportsCount: 16,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 28500, reportsCount: 10, locationName: 'Bodija' },
+        { date: 'Today', price: 28000, reportsCount: 19, locationName: 'Bodija' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 29000, reportsCount: 25, locationName: 'Bodija' },
+        { date: 'Week 4', price: 28000, reportsCount: 35, locationName: 'Bodija' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 22000, reportsCount: 30, locationName: 'Bodija' },
+        { date: 'Aug', price: 28000, reportsCount: 48, locationName: 'Bodija' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_plantain',
+    name: 'Fresh Plantain Bunch (Unripe & Ripe)',
+    category: 'Tubers',
+    imageUrl: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 87,
+    totalReportsCount: 39,
+    seasonalityNote: 'Heavy harvest arrivals from Ondo, Edo & Cross River state farms.',
+    relatedRecipes: ['Fried Dodo', 'Unripe Plantain Porridge', 'Plantain Chips', 'Boli (Roasted Plantain)'],
+    retailPortions: [
+      { name: 'Single Small Cluster (3-4 fingers)', unit: '1 Small Cluster', price: 1200, description: 'Single breakfast fry size' },
+      { name: 'Medium Cluster (5-7 fingers)', unit: '1 Medium Cluster', price: 2200, description: 'Family dinner side portion' }
+    ],
+    primaryLocation: {
+      state: 'Ondo',
+      area: 'Ore / Akure Central Market',
+      largeUnitName: 'Big Wholesale Bunch (15+ Clusters)',
+      largeUnitPrice: 12000,
+      smallUnitName: '1 Medium Cluster (5-7 fingers)',
+      smallUnitPrice: 2200,
+      lastUpdated: '2 hours ago',
+      reportsCount: 15,
+      priceTrend: 'down',
+      trendPercent: 8
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Ketu / Mile 12 Market',
+        largeUnitName: 'Big Wholesale Bunch',
+        largeUnitPrice: 15500,
+        smallUnitName: '1 Medium Cluster',
+        smallUnitPrice: 2600,
+        lastUpdated: '1 hour ago',
+        reportsCount: 18,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 12500, reportsCount: 8, locationName: 'Ore' },
+        { date: 'Today', price: 12000, reportsCount: 15, locationName: 'Ore' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 13000, reportsCount: 20, locationName: 'Ore' },
+        { date: 'Week 4', price: 12000, reportsCount: 30, locationName: 'Ore' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 9000, reportsCount: 25, locationName: 'Ore' },
+        { date: 'Aug', price: 12000, reportsCount: 39, locationName: 'Ore' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_vegoil',
+    name: 'Vegetable Cooking Oil (Refined Pure Soya/Groundnut)',
+    category: 'Oils & Spices',
+    imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 94,
+    totalReportsCount: 61,
+    seasonalityNote: 'Refinery production active; Kings, Power Oil & Mamador steady.',
+    relatedRecipes: ['Fried Rice', 'Chicken Stew', 'Egg Sauce', 'Plantain Fry'],
+    retailPortions: [
+      { name: 'Single Sachet (70ml)', unit: '1 Sachet', price: 250, description: 'Single cooking oil pouch', popularBrand: 'Power Oil / Kings' },
+      { name: '1-Litre Refill Bottle', unit: '1L Bottle', price: 2400, description: 'Standard kitchen size bottle' },
+      { name: '3-Litre Family Keg', unit: '3L Keg', price: 6800, description: 'Monthly household cooking oil' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Oke-Arin / Idumota Market',
+      largeUnitName: '25-Litre Jerrycan',
+      largeUnitPrice: 52000,
+      smallUnitName: '1-Litre Bottle',
+      smallUnitPrice: 2400,
+      lastUpdated: '30 mins ago',
+      reportsCount: 28,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Kano',
+        area: 'Singa Market (Kano City)',
+        largeUnitName: '25-Litre Jerrycan',
+        largeUnitPrice: 48500,
+        smallUnitName: '1-Litre Bottle',
+        smallUnitPrice: 2200,
+        lastUpdated: '2 hours ago',
+        reportsCount: 19,
+        priceTrend: 'down',
+        trendPercent: 3
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 52000, reportsCount: 15, locationName: 'Oke-Arin' },
+        { date: 'Today', price: 52000, reportsCount: 28, locationName: 'Oke-Arin' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 53500, reportsCount: 35, locationName: 'Oke-Arin' },
+        { date: 'Week 4', price: 52000, reportsCount: 48, locationName: 'Oke-Arin' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 38000, reportsCount: 40, locationName: 'Oke-Arin' },
+        { date: 'Aug', price: 52000, reportsCount: 61, locationName: 'Oke-Arin' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_egusi',
+    name: 'Egusi Seeds (Handpeeled & Machine Ground Melon)',
+    category: 'Grains',
+    imageUrl: 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 90,
+    totalReportsCount: 44,
+    seasonalityNote: 'New melon harvest processing in Benue, Enugu & Taraba markets.',
+    relatedRecipes: ['Egusi Soup (Pounded Yam)', 'Efo Elegusi', 'Fried Egusi Soup'],
+    retailPortions: [
+      { name: 'Milk Tin Cup', unit: '1 Milk Tin Cup', price: 750, description: 'Single soup cooking portion' },
+      { name: 'Derica Cup', unit: '1 Derica Cup', price: 2100, description: 'Standard family soup measure' },
+      { name: 'Paint Bucket (4L)', unit: '4L Paint Rubber', price: 8500, description: 'Monthly bulk soup store' }
+    ],
+    primaryLocation: {
+      state: 'Enugu',
+      area: 'Ogbete Main Market',
+      largeUnitName: '50kg Large Jute Bag',
+      largeUnitPrice: 98000,
+      smallUnitName: '1 Derica Cup',
+      smallUnitPrice: 2100,
+      lastUpdated: '1 hour ago',
+      reportsCount: 18,
+      priceTrend: 'down',
+      trendPercent: 4
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Mile 12 Market',
+        largeUnitName: '50kg Bag',
+        largeUnitPrice: 106000,
+        smallUnitName: '1 Derica Cup',
+        smallUnitPrice: 2350,
+        lastUpdated: '2 hours ago',
+        reportsCount: 20,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 100000, reportsCount: 10, locationName: 'Ogbete' },
+        { date: 'Today', price: 98000, reportsCount: 18, locationName: 'Ogbete' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 102000, reportsCount: 25, locationName: 'Ogbete' },
+        { date: 'Week 4', price: 98000, reportsCount: 35, locationName: 'Ogbete' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 75000, reportsCount: 30, locationName: 'Ogbete' },
+        { date: 'Aug', price: 98000, reportsCount: 44, locationName: 'Ogbete' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_ogbono',
+    name: 'Ogbono Seeds (African Mango Seeds - Premium Draw)',
+    category: 'Grains',
+    imageUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 92,
+    totalReportsCount: 52,
+    seasonalityNote: 'High quality draw ogbono arrivals from Cross River, Ebonyi & Delta.',
+    relatedRecipes: ['Ogbono Soup with Okra', 'Fisherman Soup', 'Bitterleaf Ogbono'],
+    retailPortions: [
+      { name: 'Milk Tin Cup', unit: '1 Milk Tin Cup', price: 950, description: 'Single soup draw portion' },
+      { name: 'Derica Cup', unit: '1 Derica Cup', price: 2800, description: 'Standard family soup measure' }
+    ],
+    primaryLocation: {
+      state: 'Cross River',
+      area: 'Watt Market (Calabar)',
+      largeUnitName: '25kg Bag',
+      largeUnitPrice: 110000,
+      smallUnitName: '1 Derica Cup',
+      smallUnitPrice: 2800,
+      lastUpdated: '2 hours ago',
+      reportsCount: 24,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Oyingbo Market',
+        largeUnitName: '25kg Bag',
+        largeUnitPrice: 122000,
+        smallUnitName: '1 Derica Cup',
+        smallUnitPrice: 3100,
+        lastUpdated: '1 hour ago',
+        reportsCount: 19,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 110000, reportsCount: 12, locationName: 'Watt' },
+        { date: 'Today', price: 110000, reportsCount: 24, locationName: 'Watt' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 115000, reportsCount: 30, locationName: 'Watt' },
+        { date: 'Week 4', price: 110000, reportsCount: 40, locationName: 'Watt' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 85000, reportsCount: 35, locationName: 'Watt' },
+        { date: 'Aug', price: 110000, reportsCount: 52, locationName: 'Watt' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_pepper',
+    name: 'Fresh Rodo & Sombo Pepper',
+    category: 'Vegetables',
+    imageUrl: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 93,
+    totalReportsCount: 67,
+    seasonalityNote: 'Heavy pepper harvest influx from Katsina, Jigawa & Kano.',
+    relatedRecipes: ['Peppered Chicken', 'Ofada Stew (Ayamase)', 'Fisherman Pepper Soup'],
+    retailPortions: [
+      { name: 'Small Retail Heap', unit: '1 Small Heap', price: 500, description: 'Fresh fiery red rodo tray' },
+      { name: '4L Paint Bucket', unit: '4L Paint Rubber', price: 2800, description: 'Family weekly stew pepper' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Mile 12 International Market',
+      largeUnitName: 'Large Rafia Basket',
+      largeUnitPrice: 38000,
+      smallUnitName: 'Small Paint Bucket (4L)',
+      smallUnitPrice: 2800,
+      lastUpdated: '45 mins ago',
+      reportsCount: 31,
+      priceTrend: 'down',
+      trendPercent: 15
+    },
+    otherLocations: [
+      {
+        state: 'Kano',
+        area: 'Yan Kaba Market',
+        largeUnitName: 'Large Rafia Basket',
+        largeUnitPrice: 26000,
+        smallUnitName: 'Small Paint Bucket (4L)',
+        smallUnitPrice: 1800,
+        lastUpdated: '2 hours ago',
+        reportsCount: 21,
+        priceTrend: 'down',
+        trendPercent: 20
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 44000, reportsCount: 15, locationName: 'Mile 12' },
+        { date: 'Today', price: 38000, reportsCount: 31, locationName: 'Mile 12' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 48000, reportsCount: 40, locationName: 'Mile 12' },
+        { date: 'Week 4', price: 38000, reportsCount: 52, locationName: 'Mile 12' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 28000, reportsCount: 45, locationName: 'Mile 12' },
+        { date: 'Aug', price: 38000, reportsCount: 67, locationName: 'Mile 12' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_crayfish',
+    name: 'Oron Smoked Crayfish',
+    category: 'Proteins',
+    imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 90,
+    totalReportsCount: 58,
+    seasonalityNote: 'Direct coastal boat shipments from Akwa Ibom & Cross River.',
+    relatedRecipes: ['Efo Riro', 'Native Jollof Rice', 'Banga Soup', 'Edikang Ikong'],
+    retailPortions: [
+      { name: 'Milk Tin Cup', unit: '1 Milk Tin Cup', price: 600, description: 'Single meal aromatic flavor boost' },
+      { name: 'Derica Cup', unit: '1 Derica Cup', price: 1800, description: 'Standard family soup measure' },
+      { name: '4L Paint Bucket', unit: '4L Paint Rubber', price: 7200, description: 'Monthly bulk crayfish container' }
+    ],
+    primaryLocation: {
+      state: 'Akwa Ibom',
+      area: 'Oron Beach Market',
+      largeUnitName: 'Large Jute Bag (50kg)',
+      largeUnitPrice: 85000,
+      smallUnitName: '1 Derica Cup',
+      smallUnitPrice: 1800,
+      lastUpdated: '1 hour ago',
+      reportsCount: 26,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Sandgrouse / Oyingbo Market',
+        largeUnitName: 'Large Jute Bag',
+        largeUnitPrice: 96000,
+        smallUnitName: '1 Derica Cup',
+        smallUnitPrice: 2200,
+        lastUpdated: '2 hours ago',
+        reportsCount: 21,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 85000, reportsCount: 12, locationName: 'Oron' },
+        { date: 'Today', price: 85000, reportsCount: 26, locationName: 'Oron' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 88000, reportsCount: 30, locationName: 'Oron' },
+        { date: 'Week 4', price: 85000, reportsCount: 45, locationName: 'Oron' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 62000, reportsCount: 35, locationName: 'Oron' },
+        { date: 'Aug', price: 85000, reportsCount: 58, locationName: 'Oron' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_fish',
+    name: 'Dried Smoked Catfish & Stockfish (Cod)',
+    category: 'Proteins',
+    imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 88,
+    totalReportsCount: 51,
+    seasonalityNote: 'Owerri, Aba & Lagos wholesale fish depots fully stocked.',
+    relatedRecipes: ['Catfish Pepper Soup', 'Egusi Soup', 'Banga Soup', 'Ofe Nsala'],
+    retailPortions: [
+      { name: '1 Medium Smoked Catfish Piece', unit: '1 Fish Piece', price: 1500, description: 'Single oven smoked fish' },
+      { name: '3-Piece Smoked Catfish Bundle', unit: '3 Fish Bundle', price: 4200, description: 'Family soup fish bundle' },
+      { name: 'Stockfish Ear / Cut Piece', unit: '1 Cut Piece', price: 2500, description: 'Icelandic cod stockfish cut' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Makoko / Ebute Ero Market',
+      largeUnitName: 'Big Wholesale Carton / Fish Basket',
+      largeUnitPrice: 65000,
+      smallUnitName: '1 Medium Fish Piece',
+      smallUnitPrice: 1500,
+      lastUpdated: '1 hour ago',
+      reportsCount: 20,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Imo',
+        area: 'Relief Market (Owerri)',
+        largeUnitName: 'Big Fish Carton',
+        largeUnitPrice: 62000,
+        smallUnitName: '1 Medium Fish Piece',
+        smallUnitPrice: 1400,
+        lastUpdated: '3 hours ago',
+        reportsCount: 18,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 65000, reportsCount: 10, locationName: 'Makoko' },
+        { date: 'Today', price: 65000, reportsCount: 20, locationName: 'Makoko' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 67000, reportsCount: 28, locationName: 'Makoko' },
+        { date: 'Week 4', price: 65000, reportsCount: 38, locationName: 'Makoko' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 48000, reportsCount: 32, locationName: 'Makoko' },
+        { date: 'Aug', price: 65000, reportsCount: 51, locationName: 'Makoko' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_beef',
+    name: 'Fresh Beef & Goat Meat (Abattoir Butchered)',
+    category: 'Proteins',
+    imageUrl: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 95,
+    totalReportsCount: 73,
+    seasonalityNote: 'Direct live cattle & goat arrivals at Agege & Kara abattoir markets.',
+    relatedRecipes: ['Beef Stew', 'Goat Meat Pepper Soup', 'Suya', 'Party Fried Rice'],
+    retailPortions: [
+      { name: '1kg Fresh Beef Cut', unit: '1kg Cut', price: 5200, description: 'Fresh boneless/soft bone beef' },
+      { name: '1kg Goat Meat Cut', unit: '1kg Cut', price: 6500, description: 'Tender fresh goat meat' },
+      { name: 'Small Market Meat Heap', unit: '1 Small Heap', price: 2000, description: 'Single meal stew cuts' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Kara Cattle Market / Agege Abattoir',
+      largeUnitName: '1 Full Quarter Leg (Wholesale)',
+      largeUnitPrice: 75000,
+      smallUnitName: '1kg Fresh Cut',
+      smallUnitPrice: 5200,
+      lastUpdated: '30 mins ago',
+      reportsCount: 38,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Kaduna',
+        area: 'Central Market (Kaduna)',
+        largeUnitName: '1 Full Quarter Leg',
+        largeUnitPrice: 62000,
+        smallUnitName: '1kg Fresh Cut',
+        smallUnitPrice: 4400,
+        lastUpdated: '2 hours ago',
+        reportsCount: 22,
+        priceTrend: 'down',
+        trendPercent: 4
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 75000, reportsCount: 18, locationName: 'Kara' },
+        { date: 'Today', price: 75000, reportsCount: 38, locationName: 'Kara' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 76000, reportsCount: 45, locationName: 'Kara' },
+        { date: 'Week 4', price: 75000, reportsCount: 58, locationName: 'Kara' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 55000, reportsCount: 50, locationName: 'Kara' },
+        { date: 'Aug', price: 75000, reportsCount: 73, locationName: 'Kara' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_chicken',
+    name: 'Live & Frozen Chicken / Turkey',
+    category: 'Proteins',
+    imageUrl: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 89,
+    totalReportsCount: 42,
+    seasonalityNote: 'Poultry farm arrivals active; Orobo broilers & frozen cartons available.',
+    relatedRecipes: ['Peppered Chicken', 'Fried Chicken Stew', 'Grilled Turkey Wings'],
+    retailPortions: [
+      { name: '1 Whole Live Farm Bird (Layer)', unit: '1 Live Bird', price: 6500, description: 'Fresh live layer chicken' },
+      { name: '1 Whole Heavy Broiler Bird (Orobo)', unit: '1 Heavy Bird', price: 8500, description: 'Plump broiler live bird' },
+      { name: '1kg Frozen Chicken Lap / Wing', unit: '1kg Cut', price: 4200, description: 'Dressed frozen chicken cuts' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Iyana-Ipaja / Mile 12 Poultry Market',
+      largeUnitName: '10kg Wholesale Carton (Or 5 Live Birds)',
+      largeUnitPrice: 38000,
+      smallUnitName: '1 Whole Live Bird',
+      smallUnitPrice: 7500,
+      lastUpdated: '1 hour ago',
+      reportsCount: 18,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Ogun',
+        area: 'Kuto Market (Abeokuta)',
+        largeUnitName: '10kg Carton',
+        largeUnitPrice: 35000,
+        smallUnitName: '1 Whole Live Bird',
+        smallUnitPrice: 6800,
+        lastUpdated: '2 hours ago',
+        reportsCount: 12,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 38000, reportsCount: 8, locationName: 'Iyana-Ipaja' },
+        { date: 'Today', price: 38000, reportsCount: 18, locationName: 'Iyana-Ipaja' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 39000, reportsCount: 22, locationName: 'Iyana-Ipaja' },
+        { date: 'Week 4', price: 38000, reportsCount: 30, locationName: 'Iyana-Ipaja' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 28000, reportsCount: 25, locationName: 'Iyana-Ipaja' },
+        { date: 'Aug', price: 38000, reportsCount: 42, locationName: 'Iyana-Ipaja' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_cassava',
+    name: 'Cassava Flour (Fufu / Akpu / Lafun)',
+    category: 'Tubers',
+    imageUrl: 'https://images.unsplash.com/photo-1596560548464-f010549b84d7?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 86,
+    totalReportsCount: 35,
+    seasonalityNote: 'Processing active in Ogun, Oyo & Edo cassava mills.',
+    relatedRecipes: ['Fufu with Egusi Soup', 'Lafun with Ewedu', 'Akpu with Ofe Owerri'],
+    retailPortions: [
+      { name: '1 Wrap Fresh Wet Fufu', unit: '1 Wrap', price: 150, description: 'Single meal molded wrap' },
+      { name: '1 Derica Cup Dry Cassava Flour', unit: '1 Derica Cup', price: 800, description: 'Powdered cassava flour measure' }
+    ],
+    primaryLocation: {
+      state: 'Ogun',
+      area: 'Lafenwa Market (Abeokuta)',
+      largeUnitName: '50kg Wholesale Bag',
+      largeUnitPrice: 32000,
+      smallUnitName: 'Small Paint Bucket (4L)',
+      smallUnitPrice: 2600,
+      lastUpdated: '3 hours ago',
+      reportsCount: 14,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Mile 12 Market',
+        largeUnitName: '50kg Bag',
+        largeUnitPrice: 36000,
+        smallUnitName: 'Small Paint Bucket (4L)',
+        smallUnitPrice: 3000,
+        lastUpdated: '1 hour ago',
+        reportsCount: 15,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 32000, reportsCount: 6, locationName: 'Lafenwa' },
+        { date: 'Today', price: 32000, reportsCount: 14, locationName: 'Lafenwa' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 33000, reportsCount: 18, locationName: 'Lafenwa' },
+        { date: 'Week 4', price: 32000, reportsCount: 25, locationName: 'Lafenwa' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 22000, reportsCount: 20, locationName: 'Lafenwa' },
+        { date: 'Aug', price: 32000, reportsCount: 35, locationName: 'Lafenwa' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_potatoes',
+    name: 'Sweet Potatoes & Irish Potatoes',
+    category: 'Tubers',
+    imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 88,
+    totalReportsCount: 41,
+    seasonalityNote: 'Plateau & Kaduna potato harvest supplying southern markets.',
+    relatedRecipes: ['Fried Potato Chips', 'Boiled Sweet Potato with Egg Sauce', 'Potato Salad'],
+    retailPortions: [
+      { name: 'Small Market Potato Heap', unit: '1 Heap (5-6 tubers)', price: 1000, description: 'Fresh sorted potato heap' },
+      { name: '4L Paint Bucket', unit: '4L Paint Rubber', price: 2500, description: 'Family cooking bucket' }
+    ],
+    primaryLocation: {
+      state: 'Plateau',
+      area: 'Jos Building Materials / Farin Gada Market',
+      largeUnitName: '50kg Jute Bag',
+      largeUnitPrice: 35000,
+      smallUnitName: 'Small Paint Bucket (4L)',
+      smallUnitPrice: 2500,
+      lastUpdated: '2 hours ago',
+      reportsCount: 19,
+      priceTrend: 'down',
+      trendPercent: 10
+    },
+    otherLocations: [
+      {
+        state: 'Lagos',
+        area: 'Mile 12 Market',
+        largeUnitName: '50kg Bag',
+        largeUnitPrice: 46000,
+        smallUnitName: 'Small Paint Bucket (4L)',
+        smallUnitPrice: 3200,
+        lastUpdated: '1 hour ago',
+        reportsCount: 16,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 38000, reportsCount: 9, locationName: 'Farin Gada' },
+        { date: 'Today', price: 35000, reportsCount: 19, locationName: 'Farin Gada' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 40000, reportsCount: 22, locationName: 'Farin Gada' },
+        { date: 'Week 4', price: 35000, reportsCount: 30, locationName: 'Farin Gada' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 28000, reportsCount: 25, locationName: 'Farin Gada' },
+        { date: 'Aug', price: 35000, reportsCount: 41, locationName: 'Farin Gada' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_vegetables',
+    name: 'Fresh Soup Leaves (Ugwu, Ewedu, Okra, Afang, Bitterleaf)',
+    category: 'Vegetables',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 94,
+    totalReportsCount: 63,
+    seasonalityNote: 'Daily fresh farm harvests arriving at local markets every morning.',
+    relatedRecipes: ['Efo Riro', 'Edikang Ikong', 'Ewedu Soup', 'Okra Soup', 'Afang Soup'],
+    retailPortions: [
+      { name: '1 Retail Leaf Bunch (Ugwu / Ewedu)', unit: '1 Small Bunch', price: 300, description: 'Fresh green leaf tied bunch' },
+      { name: '1 Medium Bundle (3 bunches)', unit: '3 Bunch Bundle', price: 800, description: 'Standard family soup leaf bundle' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Mile 12 / Ketu Vegetable Wharf',
+      largeUnitName: 'Wholesale Large Farmer Bundle',
+      largeUnitPrice: 8500,
+      smallUnitName: '1 Retail Bunch',
+      smallUnitPrice: 300,
+      lastUpdated: '20 mins ago',
+      reportsCount: 32,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Anambra',
+        area: 'Relief Market (Onitsha)',
+        largeUnitName: 'Wholesale Large Bundle',
+        largeUnitPrice: 7200,
+        smallUnitName: '1 Retail Bunch',
+        smallUnitPrice: 250,
+        lastUpdated: '1 hour ago',
+        reportsCount: 21,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 8500, reportsCount: 15, locationName: 'Mile 12' },
+        { date: 'Today', price: 8500, reportsCount: 32, locationName: 'Mile 12' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 9000, reportsCount: 40, locationName: 'Mile 12' },
+        { date: 'Week 4', price: 8500, reportsCount: 50, locationName: 'Mile 12' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 6000, reportsCount: 42, locationName: 'Mile 12' },
+        { date: 'Aug', price: 8500, reportsCount: 63, locationName: 'Mile 12' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_noodles',
+    name: 'Noodles & Spaghetti (Indomie, Golden Penny, Dangote)',
+    category: 'Grains',
+    imageUrl: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 96,
+    totalReportsCount: 82,
+    seasonalityNote: 'Factory production high; nationwide retail distribution steady.',
+    relatedRecipes: ['Fried Indomie with Eggs & Veggies', 'Spaghetti Bolognese / Jollof'],
+    retailPortions: [
+      { name: '1 Single Super Pack Noodle (120g)', unit: '1 Pack', price: 350, description: 'Single meal noodle pack', popularBrand: 'Indomie' },
+      { name: '1 Single Spaghetti Pack (500g)', unit: '1 Pack', price: 1100, description: 'Single family spaghetti pack', popularBrand: 'Golden Penny / Dangote' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Oke-Arin / Idumota Wholesale Depot',
+      largeUnitName: '1 Carton (40 Super Packs)',
+      largeUnitPrice: 12500,
+      smallUnitName: '1 Single Pack (120g)',
+      smallUnitPrice: 350,
+      lastUpdated: '15 mins ago',
+      reportsCount: 45,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Kano',
+        area: 'Sabon Gari Market',
+        largeUnitName: '1 Carton (40 Packs)',
+        largeUnitPrice: 11800,
+        smallUnitName: '1 Single Pack',
+        smallUnitPrice: 320,
+        lastUpdated: '1 hour ago',
+        reportsCount: 28,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 12500, reportsCount: 20, locationName: 'Oke-Arin' },
+        { date: 'Today', price: 12500, reportsCount: 45, locationName: 'Oke-Arin' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 12800, reportsCount: 50, locationName: 'Oke-Arin' },
+        { date: 'Week 4', price: 12500, reportsCount: 65, locationName: 'Oke-Arin' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 9800, reportsCount: 60, locationName: 'Oke-Arin' },
+        { date: 'Aug', price: 12500, reportsCount: 82, locationName: 'Oke-Arin' }
+      ]
+    }
+  },
+  {
+    id: 'mkt_spices',
+    name: 'Suya Spice (Yaji) & Local Seasonings (Iru / Ogiri)',
+    category: 'Oils & Spices',
+    imageUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop&q=80',
+    baseConfidence: 91,
+    totalReportsCount: 38,
+    seasonalityNote: 'Traditional spice blenders active; Northern kuli-kuli yaji blend fresh.',
+    relatedRecipes: ['Beef Suya', 'Ofada Stew', 'Ofe Onugbu', 'Efo Riro'],
+    retailPortions: [
+      { name: '1 Small Leaf Wrap Iru / Locust Beans', unit: '1 Small Wrap', price: 200, description: 'Fresh fermented locust beans' },
+      { name: '1 Small Cup Yaji Suya Spice', unit: '1 Small Cup', price: 500, description: 'Peanut & pepper suya blend' }
+    ],
+    primaryLocation: {
+      state: 'Lagos',
+      area: 'Mile 12 / Oyingbo Market',
+      largeUnitName: '5kg Wholesale Pack',
+      largeUnitPrice: 14000,
+      smallUnitName: '1 Small Cup/Wrap',
+      smallUnitPrice: 300,
+      lastUpdated: '2 hours ago',
+      reportsCount: 18,
+      priceTrend: 'stable',
+      trendPercent: 0
+    },
+    otherLocations: [
+      {
+        state: 'Kano',
+        area: 'Kurmi Market',
+        largeUnitName: '5kg Wholesale Pack',
+        largeUnitPrice: 11000,
+        smallUnitName: '1 Small Cup',
+        smallUnitPrice: 200,
+        lastUpdated: '3 hours ago',
+        reportsCount: 14,
+        priceTrend: 'stable',
+        trendPercent: 0
+      }
+    ],
+    history: {
+      '7Days': [
+        { date: 'Mon', price: 14000, reportsCount: 8, locationName: 'Mile 12' },
+        { date: 'Today', price: 14000, reportsCount: 18, locationName: 'Mile 12' }
+      ],
+      '30Days': [
+        { date: 'Week 1', price: 14500, reportsCount: 22, locationName: 'Mile 12' },
+        { date: 'Week 4', price: 14000, reportsCount: 28, locationName: 'Mile 12' }
+      ],
+      '6Months': [
+        { date: 'Mar', price: 10500, reportsCount: 25, locationName: 'Mile 12' },
+        { date: 'Aug', price: 14000, reportsCount: 38, locationName: 'Mile 12' }
       ]
     }
   }

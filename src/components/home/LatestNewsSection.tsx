@@ -26,6 +26,7 @@ import { NewsArticle, SocialTrend } from '../../types';
 import { SOCIAL_TRENDS_DATA } from '../../data/mockData';
 import { NewsAnchorSimulation } from './NewsAnchorSimulation';
 import { SabiEvidenceModal } from '../evidence/SabiEvidenceModal';
+import { SocialPlatformIcon, SocialPlatformBadge } from '../common/SocialPlatformIcon';
 
 interface LatestNewsSectionProps {
   onShowToast?: (points: number, message: string) => void;
@@ -46,11 +47,12 @@ const NIGERIAN_STATES = [
 ];
 
 const PLATFORMS = [
-  { id: 'all', label: 'All Feeds', icon: '🌐' },
-  { id: 'youtube', label: 'YouTube', icon: '▶️', color: 'hover:border-red-400' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵', color: 'hover:border-pink-500' },
-  { id: 'twitter', label: 'Twitter (X)', icon: '🐦', color: 'hover:border-sky-400' },
-  { id: 'instagram', label: 'Instagram', icon: '📸', color: 'hover:border-purple-400' }
+  { id: 'all', label: 'All Feeds', icon: 'all' },
+  { id: 'tiktok', label: 'TikTok', icon: 'tiktok' },
+  { id: 'facebook', label: 'Facebook', icon: 'facebook' },
+  { id: 'twitter', label: 'Twitter (X)', icon: 'twitter' },
+  { id: 'youtube', label: 'YouTube', icon: 'youtube' },
+  { id: 'instagram', label: 'Instagram', icon: 'instagram' }
 ];
 
 export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToast }) => {
@@ -250,7 +252,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToas
           </div>
 
           {/* Trend Platform Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] font-bold">
+          <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] font-bold scrollbar-none">
             {PLATFORMS.map(p => (
               <button
                 key={p.id}
@@ -258,13 +260,13 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToas
                   setActiveTrendPlatform(p.id);
                   fetchTrends(p.id);
                 }}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                className={`px-2.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTrendPlatform === p.id
                     ? 'bg-[#FFD60A] text-[#0A3D2E] font-black shadow-xs'
                     : 'bg-white/10 text-gray-200 hover:bg-white/20'
                 }`}
               >
-                <span>{p.icon}</span>
+                {p.id !== 'all' && <SocialPlatformIcon platform={p.icon} className="w-3.5 h-3.5 shrink-0" />}
                 <span>{p.label}</span>
               </button>
             ))}
@@ -280,9 +282,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToas
               className="bg-white/10 hover:bg-white/15 border border-white/10 hover:border-[#FFD60A]/50 rounded-xl p-3 transition-all cursor-pointer space-y-1.5 group"
             >
               <div className="flex items-center justify-between text-[10px]">
-                <span className="bg-white/20 text-[#FFD60A] px-2 py-0.5 rounded-full font-bold uppercase">
-                  {trend.platform}
-                </span>
+                <SocialPlatformBadge platform={trend.platform} showText={true} />
                 <span className="text-gray-300 font-semibold">{trend.volume}</span>
               </div>
               <h5 className="text-xs font-bold text-white group-hover:text-[#FFD60A] transition-colors line-clamp-1">
@@ -319,7 +319,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToas
                   : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
               }`}
             >
-              <span>{p.icon}</span>
+              {p.id !== 'all' && <SocialPlatformIcon platform={p.icon} className="w-3.5 h-3.5 shrink-0" />}
               <span>{p.label}</span>
             </button>
           ))}
@@ -368,9 +368,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ onShowToas
                     <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${getCategoryBadge(item.category)}`}>
                       {item.category}
                     </span>
-                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase ${platformBadge.style}`}>
-                      {platformBadge.label}
-                    </span>
+                    <SocialPlatformBadge platform={item.socialPlatform} showText={true} />
                     {item.state && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 flex items-center gap-0.5">
                         <MapPin className="w-2.5 h-2.5 text-rose-500" />

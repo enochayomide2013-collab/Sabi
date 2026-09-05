@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { NIGERIAN_STATES } from '../../data/nigerianLocations';
 import { storageService, SelectedLocation } from '../../services/storageService';
+import { locationService } from '../../services/locationService';
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -25,12 +26,15 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
   const [selectedState, setSelectedState] = useState<string>(currentLocation.state);
   const [selectedLga, setSelectedLga] = useState<string>(currentLocation.lga);
   const [areaInput, setAreaInput] = useState<string>(currentLocation.area);
+  const [streetInput, setStreetInput] = useState<string>(currentLocation.street || '');
   const [countryInput, setCountryInput] = useState<string>(currentLocation.country || 'Nigeria');
   const [customPlaceInput, setCustomPlaceInput] = useState<string>(
     currentLocation.rawAddress || `${currentLocation.area}, ${currentLocation.state}`
   );
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [gpsStatus, setGpsStatus] = useState<string | null>(null);
+  const [detectedCoords, setDetectedCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
+  const [isTracing, setIsTracing] = useState<boolean>(storageService.isTracingEnabled());
 
   // Get LGAs for selected state
   const stateData = NIGERIAN_STATES.find(s => s.state.toLowerCase() === selectedState.toLowerCase()) || NIGERIAN_STATES[0];
@@ -45,75 +49,34 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
 
   if (!isOpen) return null;
 
-  const handleUseGps = () => {
+  const handleUseGps = async () => {
     setIsLocating(true);
     setGpsStatus(null);
 
-    if (!navigator.geolocation) {
-      setIsLocating(false);
-      setGpsStatus('Geolocation is not supported by your browser. Please select or input your location manually.');
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        try {
-          // Call secure backend reverse-geocode service
-          const res = await fetch(`/api/reverse-geocode?lat=${latitude}&lon=${longitude}`);
-          if (res.ok) {
-            const geocoded = await res.json();
-            const detectedArea = geocoded.area || 'Detected Area';
-            const detectedLga = geocoded.lga || detectedArea;
-            const detectedState = geocoded.state || 'Lagos';
-            const detectedCountry = geocoded.country || 'Nigeria';
-
-            // Check if detected state exists in Nigerian states
-            const matchedState = NIGERIAN_STATES.find(
-              s => s.state.toLowerCase().includes(detectedState.toLowerCase()) ||
-                   detectedState.toLowerCase().includes(s.state.toLowerCase())
-            );
-
-            if (matchedState) {
-              setSelectedState(matchedState.state);
-              const matchedLga = matchedState.lgas.find(
-                l => l.name.toLowerCase().includes(detectedLga.toLowerCase()) ||
-                     detectedLga.toLowerCase().includes(l.name.toLowerCase())
-              );
-              setSelectedLga(matchedLga ? matchedLga.name : matchedState.lgas[0]?.name || detectedLga);
-            } else {
-              setSelectedState(detectedState);
-              setSelectedLga(detectedLga);
-            }
-
-            setAreaInput(detectedArea);
-            setCountryInput(detectedCountry);
-            setCustomPlaceInput(geocoded.displayName || `${detectedArea}, ${detectedState}, ${detectedCountry}`);
-            setGpsStatus(`📍 Actual Location Detected: ${detectedArea}, ${detectedState} (${detectedCountry}). Accuracy: ±${Math.round(accuracy)}m`);
-          } else {
-            // Geocoder returned non-200, use coordinate fallback
-            setSelectedState('Lagos');
-            setSelectedLga('Lagos Mainland');
-            setAreaInput('Yaba');
-            setCountryInput('Nigeria');
-            setGpsStatus(`📍 Location Found via GPS coordinates (${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E).`);
-          }
-        } catch (e) {
-          setSelectedState('Lagos');
-          setSelectedLga('Lagos Mainland');
-          setAreaInput('Yaba');
-          setCountryInput('Nigeria');
-          setGpsStatus(`📍 Location Found via GPS coordinates (${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E).`);
-        } finally {
-          setIsLocating(false);
+    try {
+      const loc = await locationService.trackAndApplyUserLocation();
+      if (loc) {
+        setSelectedState(loc.state);
+        setSelectedLga(loc.lga);
+        setAreaInput(loc.area);
+        setCountryInput(loc.country || 'Nigeria');
+        setCustomPlaceInput(loc.rawAddress || `${loc.area}, ${loc.state}`);
+        if (loc.latitude && loc.longitude) {
+          setDetectedCoords({
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            accuracy: loc.accuracyMeters || 15
+          });
         }
-      },
-      (err) => {
-        setIsLocating(false);
-        setGpsStatus('Location permission denied or unavailable. Please enter or select your location manually below.');
-      },
-      { timeout: 9000, enableHighAccuracy: true }
-    );
+        setGpsStatus(`📍 Accurate GPS Location Applied: ${loc.area || loc.lga}, ${loc.state} (${loc.country || 'Nigeria'}). Accuracy: ±${Math.round(loc.accuracyMeters || 15)}m`);
+      } else {
+        setGpsStatus('Could not determine exact location. Please select your location manually.');
+      }
+    } catch (err: any) {
+      setGpsStatus('Location permission denied or unavailable. Please select your location manually.');
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   const handleSave = () => {
@@ -131,16 +94,24 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
         area: area,
         country: country,
         rawAddress: customPlaceInput.trim(),
-        isGpsDerived: !!gpsStatus
+        isGpsDerived: !!gpsStatus,
+        latitude: detectedCoords?.latitude,
+        longitude: detectedCoords?.longitude,
+        accuracyMeters: detectedCoords?.accuracy
       };
     } else {
       loc = {
         state: selectedState,
         lga: selectedLga,
         area: areaInput.trim() || selectedLga,
+        street: streetInput.trim() || undefined,
+        exactAddress: streetInput.trim() ? `${streetInput.trim()}, ${areaInput.trim() || selectedLga}, ${selectedState}` : undefined,
         country: countryInput || 'Nigeria',
-        rawAddress: `${areaInput.trim() || selectedLga}, ${selectedLga}, ${selectedState}`,
-        isGpsDerived: !!gpsStatus
+        rawAddress: `${streetInput.trim() ? streetInput.trim() + ', ' : ''}${areaInput.trim() || selectedLga}, ${selectedLga}, ${selectedState}`,
+        isGpsDerived: !!gpsStatus,
+        latitude: detectedCoords?.latitude,
+        longitude: detectedCoords?.longitude,
+        accuracyMeters: detectedCoords?.accuracy
       };
     }
 
@@ -181,6 +152,62 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
           
+          {/* REAL-TIME GEOLOCATION TRACING TOGGLE */}
+          <div className={`p-4 rounded-2xl border transition-all ${
+            isTracing 
+              ? 'bg-emerald-50/70 border-emerald-300 dark:bg-emerald-950/20 dark:border-emerald-800/40' 
+              : 'bg-gray-50 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700/60'
+          }`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${isTracing ? 'bg-emerald-500 animate-ping' : 'bg-gray-400'}`} />
+                  <span className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white font-display">
+                    Real-Time Geolocation Tracing
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">
+                  {isTracing 
+                    ? 'Tracing mode is ON: High-priority proximity safety warnings & nearby rumor alerts are active.'
+                    : 'Tracing mode is OFF: Automatic proximity rumor detection is paused.'}
+                </p>
+              </div>
+
+              {/* TOGGLE SWITCH */}
+              <button
+                type="button"
+                id="location-tracing-toggle-btn"
+                onClick={() => {
+                  const next = !isTracing;
+                  setIsTracing(next);
+                  storageService.setTracingEnabled(next);
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  isTracing ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-gray-700'
+                }`}
+                role="switch"
+                aria-checked={isTracing}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    isTracing ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="mt-2.5 pt-2 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-[10px]">
+              <span className={`font-black uppercase px-2 py-0.5 rounded-md ${
+                isTracing 
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+              }`}>
+                STATUS: {isTracing ? 'TRACING ACTIVE' : 'TRACING PAUSED'}
+              </span>
+              <span className="text-gray-400">Strictly on-device privacy guarantee</span>
+            </div>
+          </div>
+
           {/* GPS Location Button */}
           <div>
             <button
@@ -357,6 +384,27 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Street / Exact Location Input */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  Exact Street Name / Road (Optional)
+                </label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 text-[#0A3D2E] absolute left-3.5 top-3" />
+                  <input
+                    type="text"
+                    id="location-street-input"
+                    placeholder="e.g. Herbert Macaulay Way, Awolowo Road..."
+                    value={streetInput}
+                    onChange={(e) => setStreetInput(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-medium focus:ring-2 focus:ring-[#0A3D2E] focus:outline-none"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-500">
+                  Adding your street enables instant proximity notifications whenever a rumor is spotted near you.
+                </p>
               </div>
             </div>
           )}

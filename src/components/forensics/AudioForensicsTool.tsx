@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { ForensicReportShare } from './ForensicReportShare';
+import { voiceAudioService } from '../../services/voiceAudioService';
 
 interface AudioForensicsToolProps {
   user: UserProfile;
@@ -49,6 +50,8 @@ interface AudioSample {
   technicalIndicators: Array<{ name: string; observation: string; risk: 'safe' | 'warning' | 'danger' }>;
   guidanceText: string;
   waveformData: number[];
+  audioTranscript?: string;
+  audioBlobUrl?: string;
 }
 
 const SAMPLE_VOICE_NOTES: AudioSample[] = [
@@ -56,7 +59,7 @@ const SAMPLE_VOICE_NOTES: AudioSample[] = [
     id: 'sample-1',
     name: 'Viral WhatsApp Voice Memo: Fuel Price Emergency Hike',
     source: 'WhatsApp Forward (Circulating in Lagos)',
-    durationSeconds: 18,
+    durationSeconds: 16,
     verdict: 'Potential AI Voice Clone',
     verdictRiskLevel: 'danger',
     confidenceScore: 94,
@@ -66,6 +69,7 @@ const SAMPLE_VOICE_NOTES: AudioSample[] = [
     splicingPointsCount: 3,
     backgroundProfile: 'Unnatural Room Silence (Zero Ambient Noise Baseline)',
     summary: 'Acoustic spectrum analysis detected robotic formants, missing natural breath pauses, and a completely flat background noise floor characteristic of neural text-to-speech synthesis.',
+    audioTranscript: 'Good afternoon everyone, please listen to this urgent voice memo. As I am speaking to you right now, fuel pump prices have climbed to one thousand eight hundred Naira per litre across all filling stations in Lagos. Rush to the stations immediately before gates are locked!',
     technicalIndicators: [
       { name: 'Neural Speech Formants', observation: 'Over-smoothed frequency transitions in upper harmonics', risk: 'danger' },
       { name: 'Breath Pause Density', observation: '0 breath sounds detected across 18 seconds of rapid speech', risk: 'danger' },
@@ -79,7 +83,7 @@ const SAMPLE_VOICE_NOTES: AudioSample[] = [
     id: 'sample-2',
     name: 'Authentic Audio Memo: Kano Market Trade Association Announcement',
     source: 'Verified WhatsApp Community Group (Kano)',
-    durationSeconds: 24,
+    durationSeconds: 18,
     verdict: 'Likely Authentic Voice Note',
     verdictRiskLevel: 'safe',
     confidenceScore: 96,
@@ -89,6 +93,7 @@ const SAMPLE_VOICE_NOTES: AudioSample[] = [
     splicingPointsCount: 0,
     backgroundProfile: 'Genuine Outdoor Ambient (Market Chatter & Distant Generator Hum)',
     summary: 'Organic acoustic signature verified with natural human vocal jitter, chest resonance, breath pauses, and consistent ambient background noise across the entire recording.',
+    audioTranscript: 'Salam alaikum yan kasuwa. Wannan sanarwa ce daga shugabannin kasuwar Sabon Gari a Kano. Kasuwa na nan a bude kamar yadda aka saba. Babu wani tashin hankali ko matsala. Ku ci gaba da harkokin kasuwanci cikin aminci.',
     technicalIndicators: [
       { name: 'Acoustic Background', observation: 'Continuous ~45dB ambient noise floor with spatial reverberation', risk: 'safe' },
       { name: 'Vocal Micro-Jitter', observation: 'Normal human vocal cord frequency micro-variations present', risk: 'safe' },
@@ -101,7 +106,7 @@ const SAMPLE_VOICE_NOTES: AudioSample[] = [
     id: 'sample-3',
     name: 'Edited Audio Recording: Political Rally Excerpt Splicing',
     source: 'Twitter (X) Audio Clip (Viral Post)',
-    durationSeconds: 15,
+    durationSeconds: 14,
     verdict: 'Spliced / Edited Audio',
     verdictRiskLevel: 'warning',
     confidenceScore: 88,
@@ -111,6 +116,7 @@ const SAMPLE_VOICE_NOTES: AudioSample[] = [
     splicingPointsCount: 4,
     backgroundProfile: 'Abrupt Background Noise Jumps (Crowd Noise Cut Mid-Sentence)',
     summary: 'While the voice is genuine, two separate sentences have been spliced out of order, creating a misleading sentence structure that alters the speaker\'s original meaning.',
+    audioTranscript: 'Fellow citizens, under our newly enacted economic resolution, we have decided to immediately cancel all public support subsidies for local small businesses.',
     technicalIndicators: [
       { name: 'Acoustic Environment Jump', observation: 'Abrupt 12dB drop in crowd background noise at timestamp 0:07', risk: 'danger' },
       { name: 'Sentence Pitch Discontinuity', observation: 'Unnatural fundamental frequency (F0) jump from 140Hz to 210Hz', risk: 'warning' },
@@ -132,36 +138,23 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(90);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisComplete, setAnalysisComplete] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'spectrogram' | 'telemetry'>('overview');
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
 
-  const playbackTimerRef = useRef<any>(null);
   const recordTimerRef = useRef<any>(null);
 
-  // Playback Simulation Effect
+  // Clean up audio playback on unmount
   useEffect(() => {
-    if (isPlaying) {
-      playbackTimerRef.current = setInterval(() => {
-        setPlaybackProgress((prev) => {
-          if (prev >= 100) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 2;
-        });
-      }, (selectedSample.durationSeconds * 1000) / 50);
-    } else {
-      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
-    }
     return () => {
-      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+      voiceAudioService.stop();
     };
-  }, [isPlaying, selectedSample]);
+  }, []);
 
-  // Audio Recording Simulation Effect
+  // Audio Recording Simulation Timer
   useEffect(() => {
     if (isRecording) {
       recordTimerRef.current = setInterval(() => {
@@ -180,6 +173,7 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
 
   const handleSelectSample = (sample: AudioSample) => {
+    voiceAudioService.stop();
     setIsPlaying(false);
     setPlaybackProgress(0);
     setSelectedSample(sample);
@@ -193,10 +187,60 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
     }, 1200);
   };
 
+  // Play / Pause Real Audible Audio
+  const handlePlayToggle = () => {
+    if (isPlaying) {
+      voiceAudioService.stop();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      setPlaybackProgress(0);
+
+      const effectiveVolume = isMuted ? 0 : (volume / 100);
+
+      if (selectedSample.audioBlobUrl) {
+        voiceAudioService.playAudioUrl(selectedSample.audioBlobUrl, {
+          volume: effectiveVolume,
+          onProgress: (pct) => setPlaybackProgress(pct),
+          onEnd: () => {
+            setIsPlaying(false);
+            setPlaybackProgress(100);
+          },
+          onError: () => {
+            setIsPlaying(false);
+          }
+        });
+      } else {
+        const textToSpeak = selectedSample.audioTranscript || selectedSample.summary;
+        voiceAudioService.speakVoiceNote(textToSpeak, {
+          volume: effectiveVolume,
+          pitch: selectedSample.verdictRiskLevel === 'danger' ? 0.92 : 1.0,
+          rate: 0.95,
+          lang: selectedSample.id === 'sample-2' ? 'ha-NG' : 'en-NG',
+          onProgress: (pct) => setPlaybackProgress(pct),
+          onEnd: () => {
+            setIsPlaying(false);
+            setPlaybackProgress(100);
+          }
+        });
+      }
+    }
+  };
+
+  const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newPct = Math.max(0, Math.min(100, (clickX / rect.width) * 100));
+    setPlaybackProgress(newPct);
+  };
+
   // Real Microphone Audio Recording
   const handleToggleRecording = async () => {
     if (isRecording) {
       // Stop recording
+      voiceAudioService.stop();
+      setIsPlaying(false);
+
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
@@ -205,6 +249,13 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
       setAnalysisComplete(false);
 
       setTimeout(() => {
+        let recordedUrl: string | undefined;
+        if (audioChunksRef.current.length > 0) {
+          const mimeType = audioChunksRef.current[0].type || 'audio/webm';
+          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          recordedUrl = URL.createObjectURL(blob);
+        }
+
         const recordedSample: AudioSample = {
           id: `rec_${Date.now()}`,
           name: `Live Recorded Voice Note (${recordingSeconds || 5}s)`,
@@ -219,6 +270,8 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
           splicingPointsCount: 0,
           backgroundProfile: 'Genuine Room Noise & Vocal Micro-Jitter',
           summary: 'Live microphone capture verified. Organic human vocal cords, natural chest resonance, and un-spliced acoustic wave continuity detected.',
+          audioTranscript: 'Live voice recording captured through microphone. Acoustic spectrum analysis confirms natural vocal formants and room ambience.',
+          audioBlobUrl: recordedUrl,
           technicalIndicators: [
             { name: 'Acoustic Room Resonance', observation: 'Natural room decay and ambient mic noise present', risk: 'safe' },
             { name: 'Vocal Micro-Jitter & Pitch', observation: 'Human pitch variation (120Hz-240Hz)', risk: 'safe' },
@@ -230,10 +283,12 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
         setSelectedSample(recordedSample);
         setIsAnalyzing(false);
         setAnalysisComplete(true);
-        onShowToast?.(10, 'Live voice memo captured and analyzed!');
+        onShowToast?.(10, 'Live voice memo captured and analyzed! Press Play to listen.');
       }, 1400);
     } else {
       // Start recording
+      voiceAudioService.stop();
+      setIsPlaying(false);
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorderRef.current = new MediaRecorder(stream);
@@ -257,9 +312,12 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    voiceAudioService.stop();
+    setIsPlaying(false);
     setIsAnalyzing(true);
     setAnalysisComplete(false);
 
+    const fileUrl = URL.createObjectURL(file);
     const isAiNamed = file.name.toLowerCase().includes('ai') || file.name.toLowerCase().includes('clone') || file.name.toLowerCase().includes('elevenlabs') || file.name.toLowerCase().includes('synthetic');
 
     setTimeout(() => {
@@ -279,6 +337,8 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
         summary: isAiNamed
           ? 'Synthetic speech markers detected: over-smoothed harmonic formants and unnatural digital silence beneath vocal tracks.'
           : 'Acoustic waveform analysis verified natural human vocal cadence, breath intervals, and continuous background audio floor.',
+        audioBlobUrl: fileUrl,
+        audioTranscript: `Playing uploaded audio recording: ${file.name}. Acoustic analysis complete.`,
         technicalIndicators: [
           { name: 'Spectral Harmonics', observation: isAiNamed ? 'Neural synthesis artifact detected' : 'Natural human vocal harmonic overtones', risk: isAiNamed ? 'danger' : 'safe' },
           { name: 'Acoustic Background', observation: isAiNamed ? 'Digital zero noise floor' : 'Natural environment noise', risk: isAiNamed ? 'danger' : 'safe' },
@@ -293,7 +353,7 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
       setSelectedSample(uploadedSample);
       setIsAnalyzing(false);
       setAnalysisComplete(true);
-      onShowToast?.(15, `Analyzed audio file: ${file.name}`);
+      onShowToast?.(15, `Analyzed audio file: ${file.name}. Press Play to listen!`);
     }, 1500);
   };
 
@@ -436,20 +496,24 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
             </span>
           </div>
 
-          {/* Waveform Equalizer Bars */}
-          <div className="h-28 flex items-center justify-between gap-1 px-2 pt-2 pb-1 relative">
+          {/* Waveform Equalizer Bars with click-to-seek */}
+          <div 
+            onClick={handleWaveformClick}
+            className="h-28 flex items-end justify-between gap-1 px-2 pt-2 pb-1 relative cursor-pointer group/wave select-none"
+            title="Click anywhere to jump playback position"
+          >
             {selectedSample.waveformData.map((height, idx) => {
               const isActive = (idx / selectedSample.waveformData.length) * 100 <= playbackProgress;
               const isAnomaly = selectedSample.verdictRiskLevel === 'danger' && idx > 12 && idx < 18;
               return (
-                <div key={idx} className="flex-1 h-full flex items-end justify-center group relative">
+                <div key={idx} className="flex-1 h-full flex items-end justify-center relative">
                   <div
                     className={`w-full rounded-t-sm transition-all duration-150 ${
                       isAnomaly
                         ? 'bg-rose-500 border-t-2 border-rose-300'
                         : isActive
                         ? 'bg-[#FFD60A]'
-                        : 'bg-gray-800 group-hover:bg-gray-700'
+                        : 'bg-gray-800 group-hover/wave:bg-gray-700'
                     }`}
                     style={{
                       height: `${isPlaying ? Math.min(100, Math.max(15, height + (Math.sin(idx + playbackProgress) * 20))) : height}%`
@@ -461,25 +525,44 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
 
             {/* Scrubber Line */}
             <div
-              className="absolute top-0 bottom-0 w-0.5 bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] z-10 transition-all duration-75"
+              className="absolute top-0 bottom-0 w-0.5 bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] z-10 transition-all duration-75 pointer-events-none"
               style={{ left: `${playbackProgress}%` }}
             />
           </div>
 
+          {/* Active Audio Narration Alert Banner */}
+          {isPlaying && (
+            <div className="bg-emerald-950/80 border border-emerald-500/40 rounded-xl px-3.5 py-2 flex items-center justify-between gap-3 text-xs text-emerald-200 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="font-bold text-white">Voice Note Audio Streaming:</span>
+                <span>Active & hearable through speakers/headphones</span>
+              </div>
+              <span className="text-[11px] font-mono text-emerald-300">
+                {Math.round(playbackProgress)}%
+              </span>
+            </div>
+          )}
+
           {/* Player Controls Bar */}
-          <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-800/80">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-800/80 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={handlePlayToggle}
                 className="w-10 h-10 rounded-xl bg-[#0A3D2E] hover:bg-[#0d4f3b] text-[#FFD60A] border border-[#FFD60A]/40 flex items-center justify-center transition-all cursor-pointer shadow-md"
+                title={isPlaying ? "Pause voice playback" : "Play and hear voice memo"}
               >
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
               </button>
 
               <button
                 type="button"
-                onClick={() => setPlaybackProgress(0)}
+                onClick={() => {
+                  voiceAudioService.stop();
+                  setIsPlaying(false);
+                  setPlaybackProgress(0);
+                }}
                 className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all cursor-pointer"
                 title="Reset Playback"
               >
@@ -488,11 +571,39 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
 
               <button
                 type="button"
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={() => {
+                  const nextMute = !isMuted;
+                  setIsMuted(nextMute);
+                  if (isPlaying) {
+                    handlePlayToggle();
+                    setTimeout(handlePlayToggle, 50);
+                  }
+                }}
                 className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all cursor-pointer"
+                title={isMuted ? "Unmute audio" : "Mute audio"}
               >
                 {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
               </button>
+
+              {/* Volume Slider */}
+              <div className="hidden sm:flex items-center gap-1.5 bg-gray-900/90 px-2.5 py-1.5 rounded-xl border border-gray-800">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => {
+                    const newVol = Number(e.target.value);
+                    setVolume(newVol);
+                    if (isMuted && newVol > 0) setIsMuted(false);
+                  }}
+                  className="w-16 h-1.5 accent-[#FFD60A] cursor-pointer"
+                  title={`Volume: ${isMuted ? 0 : volume}%`}
+                />
+                <span className="text-[10px] font-mono text-gray-400 w-7">
+                  {isMuted ? '0%' : `${volume}%`}
+                </span>
+              </div>
             </div>
 
             {/* Real-time Telemetry Metrics */}
@@ -510,6 +621,40 @@ export const AudioForensicsTool: React.FC<AudioForensicsToolProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Voice Note Spoken Audio Transcript */}
+        {selectedSample.audioTranscript && (
+          <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-[#0A3D2E] text-[#FFD60A] shrink-0 mt-0.5">
+              <Volume2 className="w-4 h-4" />
+            </div>
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold font-mono text-[#FFD60A] uppercase tracking-wider">
+                  Audio Speech Transcript (Audible Audio Memo):
+                </span>
+                {isPlaying ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    PLAYING AUDIO
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePlayToggle}
+                    className="text-[11px] font-mono text-[#FFD60A] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <Play className="w-3 h-3" />
+                    Click to Listen
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-200 leading-relaxed italic">
+                "{selectedSample.audioTranscript}"
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Forensic Scores Matrix Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -28,6 +28,7 @@ import { storageService, ADMIN_DEFAULT_EMAIL } from '../../services/storageServi
 import { AiService, ClaimExtractionResult } from '../../services/aiService';
 import { EvidenceItem, VerificationTask } from '../../types';
 import { EmailNotificationService } from '../../services/emailNotificationService';
+import { NigerianLanguageTranslator } from './NigerianLanguageTranslator';
 
 interface ReportViewProps {
   onNavigate: (tab: string, extraData?: any) => void;
@@ -47,6 +48,22 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
   const [audioRecordingTime, setAudioRecordingTime] = useState<number>(0);
   const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
+  const [audioPlayCurrentTime, setAudioPlayCurrentTime] = useState<number>(0);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlayAudio = () => {
+    if (!audioPlayerRef.current) return;
+    if (isPlayingAudio) {
+      audioPlayerRef.current.pause();
+      setIsPlayingAudio(false);
+    } else {
+      audioPlayerRef.current.play().then(() => {
+        setIsPlayingAudio(true);
+      }).catch((e) => {
+        console.warn('Audio play failed:', e);
+      });
+    }
+  };
 
   // AI Extraction state
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -278,20 +295,56 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
   const handleUseGps = () => {
     setIsLocatingGps(true);
     setGpsStatus(null);
+    if (!navigator.geolocation) {
+      setIsLocatingGps(false);
+      setGpsStatus('Geolocation is not supported by your browser.');
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setIsLocatingGps(false);
-        const accuracy = Math.round(pos.coords.accuracy || 20);
-        setSelectedState('Lagos');
-        setSelectedLga('Lagos Mainland');
-        setAreaInput('Yaba');
-        setGpsStatus(`Location Found: Yaba, Lagos (Approximate accuracy: ${accuracy}m). Exact coordinates are kept private.`);
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        try {
+          const res = await fetch(`/api/reverse-geocode?lat=${latitude}&lon=${longitude}`);
+          if (res.ok) {
+            const geocoded = await res.json();
+            const detectedArea = geocoded.area || 'Detected Area';
+            const detectedLga = geocoded.lga || detectedArea;
+            const detectedState = geocoded.state || 'Lagos';
+
+            const matchedState = NIGERIAN_STATES.find(
+              s => s.state.toLowerCase().includes(detectedState.toLowerCase()) ||
+                   detectedState.toLowerCase().includes(s.state.toLowerCase())
+            );
+
+            if (matchedState) {
+              setSelectedState(matchedState.state);
+              const matchedLga = matchedState.lgas.find(
+                l => l.name.toLowerCase().includes(detectedLga.toLowerCase()) ||
+                     detectedLga.toLowerCase().includes(l.name.toLowerCase())
+              );
+              setSelectedLga(matchedLga ? matchedLga.name : matchedState.lgas[0]?.name || detectedLga);
+            } else {
+              setSelectedState(detectedState);
+              setSelectedLga(detectedLga);
+            }
+
+            setAreaInput(detectedArea);
+            setGpsStatus(`📍 Accurate Location Verified: ${detectedArea}, ${detectedState} (Accuracy: ±${Math.round(accuracy)}m)`);
+          } else {
+            setGpsStatus(`📍 Coordinates Detected (${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E).`);
+          }
+        } catch (e) {
+          setGpsStatus(`📍 Coordinates Detected (${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E).`);
+        } finally {
+          setIsLocatingGps(false);
+        }
       },
       () => {
         setIsLocatingGps(false);
         setGpsStatus('GPS permission unavailable. Please select your location manually.');
       },
-      { timeout: 6000 }
+      { timeout: 8000, enableHighAccuracy: true }
     );
   };
 
@@ -515,54 +568,32 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
 
                   <div className="space-y-1">
                     <h3 className="text-base font-bold text-gray-900 font-display">
-                      Upload Screenshot, Image, Video or Voice Note
+                      Upload Screenshot, Image or Video Evidence
                     </h3>
                     <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                      Supports JPG, PNG, WEBP, MP4, MOV, MP3, WAV (Max 50MB)
+                      Supports JPG, PNG, WEBP, MP4, MOV (Max 50MB)
                     </p>
                   </div>
 
-                  {/* 3 Action Buttons: Camera, Upload, Voice */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  {/* 2 Action Buttons: Camera and Upload */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-md mx-auto">
                     
                     {/* Take Photo */}
                     <button
                       onClick={startCamera}
-                      className="bg-emerald-50 hover:bg-emerald-100 text-[#0A3D2E] border border-emerald-200 p-3.5 rounded-2xl flex flex-col items-center gap-1.5 transition-all active:scale-95"
+                      className="bg-emerald-50 hover:bg-emerald-100 text-[#0A3D2E] border border-emerald-200 p-4 rounded-2xl flex flex-col items-center gap-2 transition-all active:scale-95 cursor-pointer shadow-xs"
                     >
-                      <Camera className="w-6 h-6" />
-                      <span className="text-xs font-bold font-display">Take Photo</span>
+                      <Camera className="w-7 h-7" />
+                      <span className="text-xs font-bold font-display">Take Live Photo</span>
                     </button>
 
                     {/* Upload File */}
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 p-3.5 rounded-2xl flex flex-col items-center gap-1.5 transition-all active:scale-95"
+                      className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 p-4 rounded-2xl flex flex-col items-center gap-2 transition-all active:scale-95 cursor-pointer shadow-xs"
                     >
-                      <Upload className="w-6 h-6" />
-                      <span className="text-xs font-bold font-display">Upload File</span>
-                    </button>
-
-                    {/* Record Voice Note */}
-                    <button
-                      onClick={isRecordingAudio ? stopAudioRecording : startAudioRecording}
-                      className={`border p-3.5 rounded-2xl flex flex-col items-center gap-1.5 transition-all active:scale-95 ${
-                        isRecordingAudio 
-                          ? 'bg-red-600 text-white border-red-700 animate-pulse' 
-                          : 'bg-blue-50 hover:bg-blue-100 text-blue-900 border-blue-200'
-                      }`}
-                    >
-                      {isRecordingAudio ? (
-                        <>
-                          <Square className="w-6 h-6" />
-                          <span className="text-xs font-bold font-display">Stop ({audioRecordingTime}s)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="w-6 h-6" />
-                          <span className="text-xs font-bold font-display">Record Voice</span>
-                        </>
-                      )}
+                      <Upload className="w-7 h-7" />
+                      <span className="text-xs font-bold font-display">Upload Screenshot / Video</span>
                     </button>
 
                   </div>
@@ -644,7 +675,8 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
               
               {/* Evidence Uploaded Card */}
               {uploadedEvidence && (
-                <div className="bg-white rounded-3xl p-4 border border-gray-200 shadow-sm flex items-center justify-between gap-3">
+                <>
+                  <div className="bg-white rounded-3xl p-4 border border-gray-200 shadow-sm flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     {uploadedEvidence.type === 'image' || uploadedEvidence.type === 'screenshot' ? (
                       <img
@@ -685,9 +717,71 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
                     </button>
                   </div>
                 </div>
-              )}
 
-              {/* AI CLAIM EXTRACTION SECTION */}
+                {/* Audible Voice Note Player */}
+                {uploadedEvidence.type === 'audio' && (
+                  <div className="bg-[#0A3D2E] text-white rounded-3xl p-4.5 border border-emerald-500/40 shadow-md space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[#FFD60A] text-[#0A3D2E] flex items-center justify-center font-black">
+                          <Mic className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Voice Note Audio Player</p>
+                          <p className="text-[10px] text-emerald-200">Hearable speech playback & waveform verification</p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={togglePlayAudio}
+                        className="bg-[#FFD60A] hover:bg-[#ffe033] text-[#0A3D2E] font-black text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-xs cursor-pointer"
+                      >
+                        {isPlayingAudio ? (
+                          <>
+                            <Pause className="w-4 h-4" />
+                            <span>Pause Audio</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-4 h-4 fill-current" />
+                            <span>Listen to Voice Note</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Waveform indicator */}
+                    <div className="flex items-center gap-1 h-8 bg-black/30 rounded-xl px-3 py-1">
+                      {[35, 75, 45, 90, 60, 30, 85, 95, 50, 40, 80, 65, 45, 90, 70, 40, 85, 60, 30, 75].map((h, i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 rounded-full transition-all duration-150 ${
+                            isPlayingAudio ? 'bg-[#FFD60A]' : 'bg-emerald-300/40'
+                          }`}
+                          style={{
+                            height: isPlayingAudio ? `${Math.max(20, (h + (i % 3) * 10) % 100)}%` : `${h * 0.4}%`
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <audio
+                      ref={audioPlayerRef}
+                      src={uploadedEvidence.url}
+                      onTimeUpdate={(e) => setAudioPlayCurrentTime(Math.round(e.currentTarget.currentTime))}
+                      onEnded={() => {
+                        setIsPlayingAudio(false);
+                        setAudioPlayCurrentTime(0);
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* AI CLAIM EXTRACTION SECTION */}
               <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -770,6 +864,16 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, onShowPoints
                         </p>
                       )}
                     </div>
+
+                    {/* Nigerian Language Translation (Yoruba, Igbo, Hausa, Pidgin & English) */}
+                    <NigerianLanguageTranslator 
+                      claimText={claimText}
+                      onApplyTranslation={(translated) => {
+                        setClaimText(translated);
+                        onShowPointsToast(10, 'Applied Nigerian language translation to claim (+10 PTS)!');
+                      }}
+                      onShowToast={onShowPointsToast}
+                    />
 
                     <div className="pt-2 flex justify-end">
                       <button

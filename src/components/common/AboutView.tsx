@@ -131,54 +131,105 @@ export const AboutView: React.FC<AboutViewProps> = ({ onNavigate }) => {
       </div>
 
       {/* CREATOR PROFILE SECTION */}
-      <div className="bg-emerald-50/50 rounded-3xl p-6 sm:p-8 border border-emerald-100 shadow-2xs space-y-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-emerald-100">
+      <div className="bg-emerald-50/70 dark:bg-emerald-950/40 rounded-3xl p-6 sm:p-8 border border-emerald-200 dark:border-emerald-800 shadow-2xs space-y-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-emerald-200 dark:border-emerald-800">
           <div className="space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">
-              Meet The Creator 🇳🇬
+            <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-700">
+              Meet The Owner & Founder 🇳🇬
             </span>
-            <h2 className="text-2xl font-black text-gray-900 font-display">
-              Ayomide Adebayo
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white font-display">
+              Enoch Ayomide
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600 font-medium">
-              Ambitious Nigerian Teen Developer & Community Innovator
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">
+              Lead Platform Developer, Creator & Community Architect
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 bg-white border border-emerald-200 px-4 py-2.5 rounded-2xl shadow-3xs shrink-0">
-            <MapPin className="w-4 h-4 text-emerald-700" />
+          <div className="flex items-center gap-2.5 bg-white dark:bg-gray-800 border border-emerald-200 dark:border-emerald-700 px-4 py-2.5 rounded-2xl shadow-3xs shrink-0">
+            <MapPin className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             <div className="text-left">
               <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider">State of Origin</span>
-              <span className="text-xs font-black text-[#0A3D2E]">Osun State, Ile-Ife</span>
+              <span className="text-xs font-black text-[#0A3D2E] dark:text-emerald-300">Osun State, Ile-Ife</span>
             </div>
           </div>
         </div>
 
+        {/* OWNER DIRECT CONTACT BADGES */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-700 space-y-3">
+          <h3 className="text-xs font-extrabold text-gray-900 dark:text-white uppercase tracking-wider">
+            Direct Owner Contact & Social Media
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <a
+              href="https://wa.me/2348032813855?text=Hello%20Enoch%20Ayomide,%20I%20am%20a%20SABI%20web%20user"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl flex items-center gap-2.5 font-bold transition-all shadow-2xs"
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                💬
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[9px] text-emerald-200 uppercase font-black">WhatsApp Contact</span>
+                <span className="text-xs font-mono font-bold">+234 8032813855</span>
+              </div>
+            </a>
+
+            <a
+              href="https://www.youtube.com/@EnochAyomide"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl flex items-center gap-2.5 font-bold transition-all shadow-2xs"
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                📺
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[9px] text-red-200 uppercase font-black">YouTube Channel</span>
+                <span className="text-xs font-bold truncate block">Enoch Ayomide (51 Subs)</span>
+              </div>
+            </a>
+
+            <a
+              href="mailto:enochayomide67@gmail.com"
+              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl flex items-center gap-2.5 font-bold transition-all shadow-2xs"
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                ✉️
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[9px] text-blue-200 uppercase font-black">Direct Owner Email</span>
+                <span className="text-xs font-mono font-bold truncate block">enochayomide67@gmail.com</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3 text-xs text-gray-700 leading-relaxed">
+          <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
             <p>
-              SABI was envisioned and designed by <strong className="text-gray-950">Ayomide Adebayo</strong>, an ambitious Nigerian teenage developer from the ancient historical city of <strong className="text-gray-950">Ile-Ife in Osun State</strong>. Driven by the mission of engineering practical digital solutions for everyday Nigerian challenges, Ayomide built SABI to unite technology and grassroots citizen journalism.
+              SABI was envisioned and designed by <strong className="text-gray-950 dark:text-white">Enoch Ayomide</strong>, an ambitious Nigerian teenage developer from the ancient historical city of <strong className="text-gray-950 dark:text-white">Ile-Ife in Osun State</strong>. Driven by the mission of engineering practical digital solutions for everyday Nigerian challenges, Enoch built SABI to unite technology, real-time market prices, and grassroots citizen journalism.
             </p>
             <p>
-              Observing how viral social media hoaxes and sudden food price fluctuations in local markets directly impact average households, Ayomide crafted a platform that pairs advanced generative AI tools (such as forensic computer vision) with the collective honesty of local spotters on the ground.
+              Observing how viral social media hoaxes and sudden food price fluctuations in local markets directly impact average households, Enoch crafted a platform that pairs advanced generative AI tools with the collective honesty of local spotters on the ground.
             </p>
           </div>
 
           <div className="space-y-4">
-            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-3xs space-y-2">
-              <span className="text-[10px] text-emerald-800 font-black uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-3xs space-y-2">
+              <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>The Developer's Vision</span>
               </span>
-              <p className="text-[11px] text-gray-600 leading-relaxed">
-                "As a teenager coding in Osun State, I saw firsthand how fast fake WhatsApp broadcasts spread panic. I built SABI to give Nigerians a clean, interactive tool where people can instantly crosscheck facts with neighbors on the street and see live market food prices across Bodija, Mile 12, or Dawanau."
+              <p className="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
+                "As a developer coding in Nigeria, I saw firsthand how fast fake WhatsApp broadcasts spread panic and how hard it is to know true market prices. I built SABI to give Nigerians a clean, interactive tool where people can instantly crosscheck facts with neighbors on the street and see live market food prices."
               </p>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
-              <span className="text-[11px] font-bold text-gray-500">
-                Proudly representing Ile-Ife technological innovation on the national scale.
+              <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400">
+                Proudly representing technological innovation on the national scale.
               </span>
             </div>
           </div>

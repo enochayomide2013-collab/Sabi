@@ -41,6 +41,7 @@ import { DirectEvidenceLinksGrid } from './DirectEvidenceLinksGrid';
 import { ImageAuthenticityCheck } from '../forensics/ImageAuthenticityCheck';
 import { VideoAnalysisTool } from '../forensics/VideoAnalysisTool';
 import { AiService } from '../../services/aiService';
+import { SocialPlatformBadge, SocialPlatformIcon } from '../common/SocialPlatformIcon';
 
 interface TruthViewProps {
   initialTruthId?: string;
@@ -246,44 +247,7 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, initialTab
   };
 
   const getPlatformBadge = (platform?: string) => {
-    switch (platform) {
-      case 'tiktok':
-        return (
-          <span className="inline-flex items-center gap-1 bg-black text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
-            <span>🎵</span> TikTok Video
-          </span>
-        );
-      case 'twitter':
-        return (
-          <span className="inline-flex items-center gap-1 bg-sky-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
-            <span>𝕏</span> Twitter (X) Video
-          </span>
-        );
-      case 'instagram':
-        return (
-          <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
-            <span>📸</span> Instagram Video
-          </span>
-        );
-      case 'facebook':
-        return (
-          <span className="inline-flex items-center gap-1 bg-blue-700 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
-            <span>📘</span> Facebook Video
-          </span>
-        );
-      case 'youtube':
-        return (
-          <span className="inline-flex items-center gap-1 bg-red-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
-            <span>▶️</span> YouTube Video
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 bg-emerald-700 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold font-display">
-            <span>🎥</span> Video Evidence
-          </span>
-        );
-    }
+    return <SocialPlatformBadge platform={platform} showText={true} />;
   };
 
   const getResultBadge = (result: string) => {
@@ -520,27 +484,42 @@ export const TruthView: React.FC<TruthViewProps> = ({ initialTruthId, initialTab
               </div>
 
               {/* Video Platform Filters */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
-                <span className="text-[11px] font-bold text-gray-500 mr-1">Video Source:</span>
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+                <span className="text-[11px] font-extrabold text-gray-500 mr-1 shrink-0">Source:</span>
                 {[
-                  { key: 'ALL', label: 'All Video Sources' },
-                  { key: 'tiktok', label: '🎵 TikTok' },
-                  { key: 'twitter', label: '𝕏 Twitter (X)' },
-                  { key: 'youtube', label: '▶️ YouTube' },
-                  { key: 'facebook', label: '📘 Facebook' }
-                ].map(p => (
-                  <button
-                    key={p.key}
-                    onClick={() => setPlatformFilter(p.key as any)}
-                    className={`text-[11px] px-2 py-0.5 rounded-lg font-bold shrink-0 transition-all ${
-                      platformFilter === p.key
-                        ? 'bg-emerald-800 text-white shadow-sm'
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
+                  { key: 'ALL', label: 'All Feeds', icon: 'all' },
+                  { key: 'tiktok', label: 'TikTok', icon: 'tiktok' },
+                  { key: 'facebook', label: 'Facebook', icon: 'facebook' },
+                  { key: 'twitter', label: 'Twitter (X)', icon: 'twitter' },
+                  { key: 'youtube', label: 'YouTube', icon: 'youtube' },
+                  { key: 'instagram', label: 'Instagram', icon: 'instagram' }
+                ].map(p => {
+                  const isActive = platformFilter === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => setPlatformFilter(p.key as any)}
+                      className={`text-[11px] px-2.5 py-1 rounded-xl font-extrabold shrink-0 transition-all flex items-center gap-1.5 border shadow-2xs ${
+                        isActive
+                          ? p.key === 'tiktok'
+                            ? 'bg-black text-cyan-300 border-pink-500 shadow-md ring-2 ring-pink-500/30'
+                            : p.key === 'facebook'
+                            ? 'bg-[#1877F2] text-white border-blue-400 shadow-md ring-2 ring-blue-400/30'
+                            : p.key === 'twitter'
+                            ? 'bg-black text-white border-gray-600 shadow-md ring-2 ring-sky-400/30'
+                            : p.key === 'youtube'
+                            ? 'bg-[#FF0000] text-white border-red-500 shadow-md ring-2 ring-red-500/30'
+                            : p.key === 'instagram'
+                            ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white border-transparent shadow-md'
+                            : 'bg-[#0A3D2E] text-[#FFD60A] border-[#FFD60A] shadow-md ring-2 ring-[#FFD60A]/30'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      {p.key !== 'ALL' && <SocialPlatformIcon platform={p.icon} className="w-3.5 h-3.5 shrink-0" />}
+                      <span>{p.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
             </div>

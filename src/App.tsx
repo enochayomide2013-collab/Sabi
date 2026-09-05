@@ -26,6 +26,7 @@ import { SabiationView } from './components/sabiation/SabiationView';
 import { SaboAiModal } from './components/sabo/SaboAiModal';
 import { AboutView } from './components/common/AboutView';
 import { RumorMapView } from './components/map/RumorMapView';
+import { UMapView } from './components/map/UMapView';
 import { RumorStatsDashboard } from './components/stats/RumorStatsDashboard';
 import { DeluxeForensicsContainer } from './components/forensics/DeluxeForensicsContainer';
 import { Sparkles, Bot } from 'lucide-react';
@@ -55,6 +56,7 @@ export const App: React.FC = () => {
 
   const [onlineCount, setOnlineCount] = useState<number>(0);
   const [currentUser, setCurrentUser] = useState<UserProfile>(storageService.getUser());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => storageService.isAuthenticated());
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('sabi_dark_mode') === 'true';
@@ -73,6 +75,7 @@ export const App: React.FC = () => {
     const unsubscribe = storageService.subscribe(() => {
       setLocation(storageService.getLocation());
       setCurrentUser(storageService.getUser());
+      setIsAuthenticated(storageService.isAuthenticated());
     });
     
     // Check onboarding & show interactive tutorial when user lands
@@ -231,143 +234,162 @@ export const App: React.FC = () => {
         onDragEnd={handleDragEnd}
         dragElastic={0.1}
       >
-        {activeTab === 'home' && (
-          <HomeView 
-            onNavigate={handleNavigate} 
-            onOpenLocationModal={() => setIsLocationModalOpen(true)}
-            onShowPointsToast={handleShowPointsToast}
-          />
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
+            className="w-full"
+          >
+            {activeTab === 'home' && (
+              <HomeView 
+                onNavigate={handleNavigate} 
+                onOpenLocationModal={() => setIsLocationModalOpen(true)}
+                onShowPointsToast={handleShowPointsToast}
+                onlineCount={onlineCount}
+              />
+            )}
 
-        {activeTab === 'report' && (
-          <ReportView 
-            onNavigate={handleNavigate} 
-            onShowPointsToast={handleShowPointsToast}
-          />
-        )}
+            {activeTab === 'report' && (
+              <ReportView 
+                onNavigate={handleNavigate} 
+                onShowPointsToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'verify' && (
-          <VerifyView 
-            initialTaskId={extraViewData?.taskId}
-            onNavigate={handleNavigate}
-            onShowPointsToast={handleShowPointsToast}
-          />
-        )}
+            {activeTab === 'verify' && (
+              <VerifyView 
+                initialTaskId={extraViewData?.taskId}
+                onNavigate={handleNavigate}
+                onShowPointsToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'truth' && (
-          <TruthView 
-            initialTruthId={extraViewData?.truthId}
-            onNavigate={handleNavigate}
-          />
-        )}
+            {activeTab === 'truth' && (
+              <TruthView 
+                initialTruthId={extraViewData?.truthId}
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {(activeTab === 'deepfake' || activeTab === 'xray') && (
-          <TruthView 
-            initialTab="xray"
-            onNavigate={handleNavigate}
-          />
-        )}
+            {(activeTab === 'deepfake' || activeTab === 'xray') && (
+              <TruthView 
+                initialTab="xray"
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {(activeTab === 'image-authenticity' || activeTab === 'deluxe-image') && (
-          <DeluxeForensicsContainer
-            user={currentUser}
-            initialTool="image"
-            onNavigate={handleNavigate}
-            onShowToast={handleShowPointsToast}
-          />
-        )}
+            {(activeTab === 'image-authenticity' || activeTab === 'deluxe-image') && (
+              <DeluxeForensicsContainer
+                user={currentUser}
+                initialTool="image"
+                onNavigate={handleNavigate}
+                onShowToast={handleShowPointsToast}
+              />
+            )}
 
-        {(activeTab === 'video-analysis' || activeTab === 'deluxe-video') && (
-          <DeluxeForensicsContainer
-            user={currentUser}
-            initialTool="video"
-            onNavigate={handleNavigate}
-            onShowToast={handleShowPointsToast}
-          />
-        )}
+            {(activeTab === 'video-analysis' || activeTab === 'deluxe-video') && (
+              <DeluxeForensicsContainer
+                user={currentUser}
+                initialTool="video"
+                onNavigate={handleNavigate}
+                onShowToast={handleShowPointsToast}
+              />
+            )}
 
-        {(activeTab === 'deluxe-forensics' || activeTab === 'forensics') && (
-          <DeluxeForensicsContainer
-            user={currentUser}
-            initialTool="image"
-            onNavigate={handleNavigate}
-            onShowToast={handleShowPointsToast}
-          />
-        )}
+            {(activeTab === 'deluxe-forensics' || activeTab === 'forensics') && (
+              <DeluxeForensicsContainer
+                user={currentUser}
+                initialTool="image"
+                onNavigate={handleNavigate}
+                onShowToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'truth-detail' && (
-          <TruthView 
-            initialTruthId={extraViewData}
-            onNavigate={handleNavigate}
-          />
-        )}
+            {activeTab === 'truth-detail' && (
+              <TruthView 
+                initialTruthId={extraViewData}
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {activeTab === 'market' && (
-          <MarketView 
-            initialItemId={extraViewData?.itemId}
-            onNavigate={handleNavigate}
-            onShowPointsToast={handleShowPointsToast}
-          />
-        )}
+            {activeTab === 'market' && (
+              <MarketView 
+                initialItemId={extraViewData?.itemId}
+                onNavigate={handleNavigate}
+                onShowPointsToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'sabiers' && (
-          <SabiersChatView 
-            onNavigate={handleNavigate}
-            onShowPointsToast={handleShowPointsToast}
-            onOpenSaboAi={() => setIsSaboAiOpen(true)}
-            onlineCount={onlineCount}
-          />
-        )}
+            {activeTab === 'sabiers' && (
+              <SabiersChatView 
+                onNavigate={handleNavigate}
+                onShowPointsToast={handleShowPointsToast}
+                onOpenSaboAi={() => setIsSaboAiOpen(true)}
+                onlineCount={onlineCount}
+              />
+            )}
 
-        {activeTab === 'sabiation' && (
-          <SabiationView
-            onNavigate={handleNavigate}
-            onShowToast={handleShowPointsToast}
-          />
-        )}
+            {activeTab === 'sabiation' && (
+              <SabiationView
+                onNavigate={handleNavigate}
+                onShowToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'recipe' && (
-          <RecipeView 
-            onNavigate={handleNavigate}
-            onShowPointsToast={handleShowPointsToast}
-          />
-        )}
+            {activeTab === 'recipe' && (
+              <RecipeView 
+                onNavigate={handleNavigate}
+                onShowPointsToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'profile' && (
-          <ProfileView 
-            onNavigate={handleNavigate}
-            onShowPointsToast={handleShowPointsToast}
-          />
-        )}
+            {activeTab === 'profile' && (
+              <ProfileView 
+                onNavigate={handleNavigate}
+                onShowPointsToast={handleShowPointsToast}
+              />
+            )}
 
-        {activeTab === 'admin' && (
-          <AdminView 
-            onNavigate={handleNavigate}
-            onShowToast={handleShowPointsToast}
-            onExitAdmin={() => handleNavigate('home')}
-          />
-        )}
+            {activeTab === 'admin' && (
+              <AdminView 
+                onNavigate={handleNavigate}
+                onShowToast={handleShowPointsToast}
+                onExitAdmin={() => handleNavigate('home')}
+              />
+            )}
 
-        {activeTab === 'about' && (
-          <AboutView 
-            onNavigate={handleNavigate}
-          />
-        )}
+            {activeTab === 'about' && (
+              <AboutView 
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {activeTab === 'map' && (
-          <RumorMapView 
-            onNavigate={handleNavigate}
-          />
-        )}
+            {activeTab === 'map' && (
+              <RumorMapView 
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {activeTab === 'stats' && (
-          <RumorStatsDashboard 
-            onNavigate={handleNavigate}
-            onVerifyQuery={(query) => {
-              setIsSaboAiOpen(true);
-            }}
-          />
-        )}
+            {activeTab === 'umap' && (
+              <UMapView 
+                onNavigate={handleNavigate}
+                onShowPointsToast={handleShowPointsToast}
+              />
+            )}
+
+            {activeTab === 'stats' && (
+              <RumorStatsDashboard 
+                onNavigate={handleNavigate}
+                onVerifyQuery={(query) => {
+                  setIsSaboAiOpen(true);
+                }}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </motion.main>
 
       {/* Floating Sabo AI Quick Launcher with 30-second breathing pulse animation */}
@@ -419,6 +441,9 @@ export const App: React.FC = () => {
       <BottomNav
         currentTab={activeTab}
         onNavigate={handleNavigate}
+        onOpenNotifications={() => setIsNotificationsModalOpen(true)}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
 
       {/* Sabo AI Modal */}
@@ -448,13 +473,29 @@ export const App: React.FC = () => {
         }}
       />
 
-      {/* Sign In / Sign Up / Admin Passkey Auth Modal */}
+      {/* Sign In / Sign Up / Admin Passkey Auth Modal & Mandatory Gate */}
       <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authInitialMode}
+        isOpen={!isAuthenticated || isAuthModalOpen}
+        isMandatoryGate={!isAuthenticated}
+        onClose={() => {
+          if (isAuthenticated) {
+            setIsAuthModalOpen(false);
+          }
+        }}
+        initialMode={!isAuthenticated ? 'signup' : authInitialMode}
+        onSuccess={(user, isAdmin) => {
+          setIsAuthenticated(true);
+          setIsAuthModalOpen(false);
+          if (isAdmin) {
+            handleNavigate('admin');
+          }
+        }}
         onAuthSuccess={(msg) => handleShowPointsToast(msg.includes('Signed up') ? 100 : 0, msg)}
-        onAdminSuccess={() => handleNavigate('admin')}
+        onAdminSuccess={() => {
+          setIsAuthenticated(true);
+          setIsAuthModalOpen(false);
+          handleNavigate('admin');
+        }}
       />
 
       {/* Onboarding & Interactive Tutorial Modal */}

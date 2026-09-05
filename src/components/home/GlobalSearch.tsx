@@ -36,12 +36,14 @@ interface GlobalSearchProps {
 const POPULAR_SEARCH_SUGGESTIONS = [
   'Tomatoes',
   'Rice 50kg',
-  'Fuel Subsidy',
-  'Third Mainland Bridge',
-  'Garri',
+  'Garri (Yellow/White)',
+  'Beans (Oloyin)',
+  'Semovita',
   'Palm Oil',
-  'Onions',
-  'Lagos Market'
+  'Pepper & Rodo',
+  'Egusi & Ogbono',
+  'Fresh Beef',
+  'Yam Tubers'
 ];
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({
@@ -420,20 +422,56 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                         </div>
                       </div>
 
-                      <div className="bg-gray-50 rounded-xl p-2.5 space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">{loc.largeUnitName}:</span>
-                          <span className="font-extrabold text-[#0A3D2E]">₦{loc.largeUnitPrice.toLocaleString()}</span>
+                      <div className="bg-emerald-50/70 rounded-xl p-3 border border-emerald-200/80 space-y-2">
+                        {/* Big Price */}
+                        <div className="flex items-center justify-between pb-1.5 border-b border-emerald-200/60">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[10px] font-black uppercase text-emerald-900 bg-emerald-200 px-1.5 py-0.5 rounded shrink-0">
+                              BIG PRICE
+                            </span>
+                            <span className="text-xs font-semibold text-gray-700 truncate max-w-[110px] sm:max-w-[130px]" title={loc.largeUnitName}>
+                              {loc.largeUnitName}
+                            </span>
+                          </div>
+                          <span className="text-base font-black text-[#0A3D2E] shrink-0">
+                            ₦{loc.largeUnitPrice.toLocaleString()}
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-gray-500">{loc.smallUnitName}:</span>
-                          <span className="font-bold text-gray-800">₦{loc.smallUnitPrice.toLocaleString()}</span>
+
+                        {/* Small Price */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[10px] font-black uppercase text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded shrink-0">
+                              SMALL PRICE
+                            </span>
+                            <span className="text-xs font-semibold text-gray-700 truncate max-w-[110px] sm:max-w-[130px]" title={loc.smallUnitName}>
+                              {loc.smallUnitName}
+                            </span>
+                          </div>
+                          <span className="text-sm font-extrabold text-gray-900 shrink-0">
+                            ₦{loc.smallUnitPrice.toLocaleString()}
+                          </span>
                         </div>
+
+                        {/* Retail Portions Preview */}
+                        {item.retailPortions && item.retailPortions.length > 0 && (
+                          <div className="pt-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                            {item.retailPortions.slice(0, 3).map((p, idx) => (
+                              <span key={idx} className="shrink-0 text-[10px] bg-white border border-emerald-100 px-1.5 py-0.5 rounded font-medium text-gray-700">
+                                {p.unit}: <strong className="text-[#0A3D2E]">₦{p.price.toLocaleString()}</strong>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] font-bold text-[#0A3D2E] pt-1">
-                        <span>{item.totalReportsCount} verified reports</span>
-                        <span className="flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                      {/* People Verified Badge */}
+                      <div className="flex items-center justify-between text-xs pt-1">
+                        <span className="inline-flex items-center gap-1 text-[#0A3D2E] font-extrabold bg-[#0A3D2E]/10 px-2.5 py-1 rounded-lg border border-[#0A3D2E]/15">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#0A3D2E] shrink-0" />
+                          <span>Verified by {item.totalReportsCount} Sabiers</span>
+                        </span>
+                        <span className="flex items-center gap-0.5 font-bold text-xs text-[#0A3D2E] group-hover:translate-x-0.5 transition-transform">
                           Check Trend <ArrowRight className="w-3 h-3" />
                         </span>
                       </div>
